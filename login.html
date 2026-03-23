@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gardian Login</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        input { display: block; margin: 10px 0; padding: 8px; }
+        button { padding: 10px 20px; cursor: pointer; }
+    </style>
+</head>
+<body>
+ 
+<h2>Register</h2>
+<input id="r_user" placeholder="username">
+<input id="r_pass" placeholder="password" type="password">
+<button onclick="register()">Register</button>
+ 
+<h2>Login</h2>
+<input id="l_user" placeholder="username">
+<input id="l_pass" placeholder="password" type="password">
+<button onclick="login()">Login</button>
+ 
+<script>
+async function register() {
+    await fetch('/backend/api.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            action: 'register',
+            username: r_user.value,
+            password: r_pass.value
+        })
+    });
+    alert('registered');
+}
+ 
+async function login() {
+    const res = await fetch('/backend/api.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            action: 'login',
+            username: l_user.value,
+            password: l_pass.value
+        })
+    });
+    const data = await res.json();
+    if (data.success) {
+        alert('login ok');
+    } else {
+        alert('login falsch');
+    }
+}
+</script>
+ 
+</body>
+</html>
