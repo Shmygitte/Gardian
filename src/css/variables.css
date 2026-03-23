@@ -1,0 +1,38 @@
+/* variables.css */
+:root {
+    /* Colors - Light Theme */
+    --color-bg: #F5F7FA;
+    --color-surface: #FFFFFF;
+    --color-text: #2C3E50;
+    --color-text-muted: #7F8C8D;
+    --color-primary: #4CAF50;
+    --color-primary-dark: #388E3C;
+    --color-primary-light: #C8E6C9;
+    --color-accent: #FF9800;
+    --color-border: #E2E8F0;
+    --color-shadow: rgba(0, 0, 0, 0.05);
+
+    /* Spacing */
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 32px;
+
+    /* Transitions */
+    --transition-fast: 0.2s ease;
+    --transition-base: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-theme="dark"] {
+    --color-bg: #1A202C;
+    --color-surface: #2D3748;
+    --color-text: #F7FAFC;
+    --color-text-muted: #A0AEC0;
+    --color-primary: #81C784;
+    --color-primary-dark: #4CAF50;
+    --color-primary-light: #1B2E1C;
+    --color-accent: #FFB74D;
+    --color-border: rgba(255, 255, 255, 0.1);
+    --color-shadow: rgba(0, 0, 0, 0.3);
+}
