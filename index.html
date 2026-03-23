@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gardian - Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="src/css/main.css">
+</head>
+<body>
+    <div class="l-app-shell">
+        <header class="l-header">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <img src="assets/logo.png" alt="Logo" style="height: 40px; border-radius: 50%;">
+                <h1 style="font-size: 1.5rem; color: var(--primary-dark);">Gardian</h1>
+            </div>
+            <nav class="c-nav">
+                <!-- Navigation items would go here -->
+                <button class="c-btn c-btn--text" onclick="location.href='login.html'">Abmelden</button>
+            </nav>
+        </header>
+        
+        <div class="l-app-body">
+            <aside class="l-sidebar">
+                <div class="c-form-group">
+                    <label class="c-label">Menü</label>
+                    <nav style="display: flex; flex-direction: column; gap: 8px;">
+                        <button class="c-btn c-btn--secondary" style="justify-content: flex-start;">Dashboard</button>
+                        <button class="c-btn c-btn--text" style="justify-content: flex-start;">Pflanzen</button>
+                        <button class="c-btn c-btn--text" style="justify-content: flex-start;">Einstellungen</button>
+                    </nav>
+                </div>
+            </aside>
+            
+            <main class="l-main-content">
+                <div class="c-card">
+                    <div class="c-card__header">
+                        <h2 class="c-card__title">Willkommen bei Gardian</h2>
+                    </div>
+                    <div class="c-card__body">
+                        <p>Dein Garten-Manager ist bereit. Hier werden bald deine Pflanzen, der Gartenplan und deine Aufgaben erscheinen.</p>
+                    </div>
+                    <div class="c-card__footer">
+                        <button class="c-btn c-btn--primary">Pflanze hinzufügen</button>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <script>
+        // Simple theme toggle for testing
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme');
+            html.setAttribute('data-theme', current === 'light' ? 'dark' : 'light');
+        }
+    </script>
+</body>
+</html>

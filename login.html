@@ -1,61 +1,168 @@
 <!DOCTYPE html>
-<html>
+<html lang="de" data-theme="light">
 <head>
-    <title>Gardian Login</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gardian - Login</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <!-- Main CSS Bundle -->
+    <link rel="stylesheet" href="src/css/main.css">
     <style>
-        body { font-family: sans-serif; padding: 20px; }
-        input { display: block; margin: 10px 0; padding: 8px; }
-        button { padding: 10px 20px; cursor: pointer; }
+        /* Special layout for login page to center the card */
+        .l-login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--bg-app) 0%, var(--primary-light) 100%);
+            padding: 20px;
+        }
+        
+        .c-login-card {
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            background-color: rgba(255, 255, 255, 0.82);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+        
+        [data-theme="dark"] .c-login-card {
+            background-color: rgba(45, 55, 72, 0.82);
+            border-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .c-login-card__logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            border-radius: 50%;
+            object-fit: cover;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .c-login-card__title {
+            color: var(--primary-dark);
+            margin-bottom: 0.5rem;
+            font-size: 2rem;
+            font-weight: 800;
+        }
+
+        .c-login-card__subtitle {
+            margin-bottom: 2.5rem;
+            opacity: 0.8;
+        }
+
+        .c-message {
+            margin-bottom: 1.5rem;
+            padding: 10px;
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
+            display: none;
+        }
+
+        .c-message--error {
+            display: block;
+            background-color: rgba(231, 76, 60, 0.1);
+            color: var(--danger);
+        }
     </style>
 </head>
 <body>
- 
-<div style="text-align: center; margin-bottom: 20px;">
-    <img src="logo.png" alt="Gardian Logo" style="max-width: 250px; height: auto; border-radius: 50%;">
-</div>
+    <div class="l-login-container">
+        <div class="c-card c-login-card">
+            <img src="assets/logo.png" alt="Gardian Logo" class="c-login-card__logo">
+            <h1 class="c-login-card__title">Gardian</h1>
+            <p class="c-login-card__subtitle">Dein digitaler Gartenbegleiter</p>
+            
+            <div id="error-msg" class="c-message"></div>
+            
+            <div class="c-form-group">
+                <label class="c-label" for="username">Benutzername</label>
+                <input type="text" id="username" class="c-input" placeholder="z.B. GärtnerKlaus">
+            </div>
+            
+            <div class="c-form-group">
+                <label class="c-label" for="password">Passwort</label>
+                <input type="password" id="password" class="c-input" placeholder="••••••••">
+            </div>
+            
+            <div style="margin-top: 2rem; display: flex; flex-direction: column; gap: 12px;">
+                <button id="btn-login" class="c-btn c-btn--primary" onclick="login()">Anmelden</button>
+                <button id="btn-register" class="c-btn c-btn--secondary" onclick="register()">Neues Konto erstellen</button>
+            </div>
+        </div>
+    </div>
 
-<h2>Register</h2>
-<input id="r_user" placeholder="username">
-<input id="r_pass" placeholder="password" type="password">
-<button onclick="register()">Register</button>
- 
-<h2>Login</h2>
-<input id="l_user" placeholder="username">
-<input id="l_pass" placeholder="password" type="password">
-<button onclick="login()">Login</button>
- 
-<script>
-async function register() {
-    await fetch('/backend/api.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            action: 'register',
-            username: r_user.value,
-            password: r_pass.value
-        })
-    });
-    alert('registered');
-}
- 
-async function login() {
-    const res = await fetch('/backend/api.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            action: 'login',
-            username: l_user.value,
-            password: l_pass.value
-        })
-    });
-    const data = await res.json();
-    if (data.success) {
-        alert('login ok');
-    } else {
-        alert('login falsch');
-    }
-}
-</script>
- 
+    <script>
+        const errorMsg = document.getElementById('error-msg');
+        const userInp = document.getElementById('username');
+        const passInp = document.getElementById('password');
+
+        function showMessage(text, isError = true) {
+            errorMsg.textContent = text;
+            errorMsg.classList.toggle('c-message--error', isError);
+            errorMsg.style.display = 'block';
+        }
+
+        async function register() {
+            if (!userInp.value || !passInp.value) {
+                showMessage('Bitte Benutzername und Passwort eingeben');
+                return;
+            }
+
+            try {
+                const res = await fetch('/backend/api.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'register',
+                        username: userInp.value,
+                        password: passInp.value
+                    })
+                });
+                showMessage('Erfolgreich registriert!', false);
+            } catch (err) {
+                showMessage('Registrierung fehlgeschlagen: ' + err.message);
+            }
+        }
+         
+        async function login() {
+            if (!userInp.value || !passInp.value) {
+                showMessage('Bitte Benutzername und Passwort eingeben');
+                return;
+            }
+
+            try {
+                const res = await fetch('/backend/api.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'login',
+                        username: userInp.value,
+                        password: passInp.value
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    location.href = 'index.html';
+                } else {
+                    showMessage('Login fehlgeschlagen: Benutzername oder Passwort falsch');
+                }
+            } catch (err) {
+                showMessage('Login-Fehler: ' + err.message);
+            }
+        }
+
+        // Allow Enter key to submit
+        [userInp, passInp].forEach(el => {
+            el.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') login();
+            });
+        });
+    </script>
 </body>
 </html>
