@@ -1,0 +1,16 @@
+# Betriebssystem
+.DS_Store
+Thumbs.db
+
+# Node / npm
+node_modules/
+npm-debug.log*
+
+# Editoren (VS Code, IntelliJ etc.)
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporäre Dateien
+.env
