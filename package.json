@@ -1,0 +1,8 @@
+{
+  "name": "gardian",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "rm -rf ../Gardian-runtime/* && mkdir -p ../Gardian-runtime/src ../Gardian-runtime/backend && cp -r backend/* ../Gardian-runtime/backend/ && cp -r src/* ../Gardian-runtime/src/ && cp login.html logo.png ../Gardian-runtime/",
+    "start": "php -S localhost:8888 -t ../Gardian-runtime/"
+  }
+}
