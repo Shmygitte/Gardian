@@ -1,0 +1,40 @@
+/* layout.css */
+.app {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.app__header {
+    height: 64px;
+    background-color: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.app__body {
+    display: flex;
+    flex: 1;
+}
+
+.app__sidebar {
+    width: 280px;
+    background-color: var(--color-surface);
+    border-right: 1px solid var(--color-border);
+    transition: var(--transition-base);
+}
+
+.app__content {
+    flex: 1;
+    padding: var(--space-lg);
+    overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+    .app__sidebar {
+        width: 0;
+        overflow: hidden;
+    }
+}

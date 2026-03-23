@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gardian - Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="src/css/main.css">
+</head>
+<body class="app">
+    <header class="app__header header">
+        <div class="header__logo">
+            <span>🌿</span> Gardian
+        </div>
+        <nav class="header__nav">
+            <button class="header__btn header__btn--active">Gartenkarte</button>
+            <button class="header__btn">Liste</button>
+            <button class="header__btn">Galerie</button>
+            <button class="header__btn" onclick="toggleTheme()">🌓 Theme</button>
+        </nav>
+    </header>
+
+    <div class="app__body">
+        <aside class="app__sidebar sidebar">
+            <section class="sidebar__section">
+                <h3 class="sidebar__title">Kategorien</h3>
+                <div class="sidebar__item sidebar__item--active">🌳 Bäume</div>
+                <div class="sidebar__item">🌿 Sträucher</div>
+                <div class="sidebar__item">🌸 Blumen</div>
+            </section>
+            
+            <section class="sidebar__section">
+                <h3 class="sidebar__title">Filter</h3>
+                <div class="sidebar__item">📅 Blütezeit</div>
+                <div class="sidebar__item">❄️ Winterhart</div>
+            </section>
+        </aside>
+
+        <main class="app__content">
+            <div class="map">
+                <div class="map__controls">
+                    <button class="map__btn" onclick="document.getElementById('map-upload-input').click()">Gartenplan hochladen</button>
+                    <input type="file" id="map-upload-input" style="display: none;" accept="image/*">
+                    <button class="map__btn">Alle anzeigen</button>
+                </div>
+                <div class="map__canvas">
+                    Gartenkarte Platzhalter (Noch kein Plan hochgeladen)
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="src/js/app.js"></script>
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme');
+            html.setAttribute('data-theme', current === 'light' ? 'dark' : 'light');
+        }
+    </script>
+</body>
+</html>

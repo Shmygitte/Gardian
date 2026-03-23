@@ -1,7 +1,7 @@
 <?php
 function getDB() {
     return new PDO(
-        "mysql:host=localhost;dbname=neueapp_db;charset=utf8",
+        "mysql:host=127.0.0.1;port=8889;dbname=gardian;charset=utf8mb4",
         "root",
         "root",
         [
