@@ -36,10 +36,10 @@ if ($action === 'register') {
  
     try {
         $stmt = $db->prepare("
-            INSERT INTO neueapp_users (username, password_hash)
-            VALUES (?, ?)
+            INSERT INTO gd_users (username, password_hash, email)
+            VALUES (?, ?, ?)
         ");
-        $stmt->execute([$username, $hash]);
+        $stmt->execute([$username, $hash, $username . '@example.com']); // Added dummy email to satisfy NOT NULL
         echo json_encode(['success' => true]);
     } catch (PDOException $e) {
         echo json_encode(['success' => false]);
@@ -52,7 +52,7 @@ if ($action === 'register') {
 // =========================
 if ($action === 'login') {
     $stmt = $db->prepare("
-        SELECT * FROM neueapp_users WHERE username = ?
+        SELECT * FROM gd_users WHERE username = ?
     ");
     $stmt->execute([$data['username']]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
