@@ -2,11 +2,11 @@
 -- Gardian – Database Setup & Schema (Final)
 -- ============================================================
  
-CREATE DATABASE IF NOT EXISTS gardian
+CREATE DATABASE IF NOT EXISTS `dev-gardian`
     CHARACTER SET utf8mb4
     COLLATE utf8mb4_unicode_ci;
- 
-USE gardian;
+
+USE `dev-gardian`;
  
 -- ============================================================
 -- Gardian – Database Schema (Final)
