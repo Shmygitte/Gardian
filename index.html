@@ -4,50 +4,50 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gardian - Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="src/css/main.css">
 </head>
-<body class="app">
-    <header class="app__header header">
-        <div class="header__logo">
-            <span>🌿</span> Gardian
-        </div>
-        <nav class="header__nav">
-            <button class="header__btn header__btn--active">Gartenkarte</button>
-            <button class="header__btn">Liste</button>
-            <button class="header__btn">Galerie</button>
-            <button class="header__btn" onclick="toggleTheme()">🌓 Theme</button>
-        </nav>
-    </header>
-
-    <div class="app__body">
-        <aside class="app__sidebar sidebar">
-            <section class="sidebar__section">
-                <h3 class="sidebar__title">Kategorien</h3>
-                <div class="sidebar__item sidebar__item--active">🌳 Bäume</div>
-                <div class="sidebar__item">🌿 Sträucher</div>
-                <div class="sidebar__item">🌸 Blumen</div>
-            </section>
-            
-            <section class="sidebar__section">
-                <h3 class="sidebar__title">Filter</h3>
-                <div class="sidebar__item">📅 Blütezeit</div>
-                <div class="sidebar__item">❄️ Winterhart</div>
-            </section>
-        </aside>
-
-        <main class="app__content">
-            <div class="map">
-                <div class="map__controls">
-                    <button class="map__btn" onclick="document.getElementById('map-upload-input').click()">Gartenplan hochladen</button>
-                    <input type="file" id="map-upload-input" style="display: none;" accept="image/*">
-                    <button class="map__btn">Alle anzeigen</button>
-                </div>
-                <div class="map__canvas">
-                    Gartenkarte Platzhalter (Noch kein Plan hochgeladen)
-                </div>
+<body>
+    <div class="l-app-shell">
+        <header class="l-header">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <img src="assets/logo.png" alt="Logo" style="height: 40px; border-radius: 50%;">
+                <h1 style="font-size: 1.5rem; color: var(--primary-dark);">Gardian</h1>
             </div>
-        </main>
+            <nav class="c-nav">
+                <!-- Navigation items would go here -->
+                <button class="c-btn c-btn--text" onclick="location.href='login.html'">Abmelden</button>
+            </nav>
+        </header>
+
+        <div class="l-app-body">
+            <aside class="l-sidebar">
+                <div class="c-form-group">
+                    <label class="c-label">Menü</label>
+                    <nav style="display: flex; flex-direction: column; gap: 8px;">
+                        <button class="c-btn c-btn--secondary" style="justify-content: flex-start;">Dashboard</button>
+                        <button class="c-btn c-btn--text" style="justify-content: flex-start;">Pflanzen</button>
+                        <button class="c-btn c-btn--text" style="justify-content: flex-start;">Einstellungen</button>
+                    </nav>
+                </div>
+            </aside>
+
+            <main class="l-main-content">
+                <div class="c-card">
+                    <div class="c-card__header">
+                        <h2 class="c-card__title">Willkommen bei Gardian</h2>
+                    </div>
+                    <div class="c-card__body">
+                        <p>Dein Garten-Manager ist bereit. Hier werden bald deine Pflanzen, der Gartenplan und deine Aufgaben erscheinen.</p>
+                    </div>
+                    <div class="c-card__footer">
+                        <button class="c-btn c-btn--primary">Pflanze hinzufügen</button>
+                    </div>
+                </div>
+            </main>
+        </div>
     </div>
 
     <script src="src/js/app.js"></script>

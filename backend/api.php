@@ -39,7 +39,6 @@ if ($action === 'register') {
             INSERT INTO gd_users (username, email, password_hash)
             VALUES (?, ?, ?)
         ");
-        // Email wird aus Username generiert falls nicht angegeben
         $email = $data['email'] ?? $username . '@gardian.local';
         $stmt->execute([$username, $email, $hash]);
         echo json_encode(['success' => true]);

@@ -1,40 +1,78 @@
-/* layout.css */
+/* 3. App Shell Layout (l-*) */
+
+.l-app-shell,
 .app {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
 }
 
+.l-header,
 .app__header {
-    height: 64px;
-    background-color: var(--color-surface);
-    border-bottom: 1px solid var(--color-border);
+    height: 70px;
+    background-color: var(--bg-card);
+    box-shadow: var(--shadow-soft);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
     position: sticky;
     top: 0;
     z-index: 100;
 }
 
+.l-app-body,
 .app__body {
     display: flex;
     flex: 1;
 }
 
+.l-sidebar,
 .app__sidebar {
     width: 280px;
-    background-color: var(--color-surface);
-    border-right: 1px solid var(--color-border);
-    transition: var(--transition-base);
+    background-color: var(--bg-card);
+    border-right: 1px solid rgba(0,0,0,0.05);
+    padding: 24px;
+    transition: var(--transition);
 }
 
+.l-main-content,
 .app__content {
     flex: 1;
-    padding: var(--space-lg);
+    padding: 32px;
+    background-color: var(--bg-app);
     overflow-y: auto;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
+    .l-sidebar,
     .app__sidebar {
-        width: 0;
-        overflow: hidden;
+        width: 80px;
+        padding: 16px;
+    }
+
+    .l-sidebar__text {
+        display: none;
+    }
+}
+
+@media (max-width: 600px) {
+    .l-app-body,
+    .app__body {
+        flex-direction: column-reverse;
+    }
+
+    .l-sidebar,
+    .app__sidebar {
+        width: 100%;
+        height: 60px;
+        border-right: none;
+        border-top: 1px solid rgba(0,0,0,0.05);
+        position: fixed;
+        bottom: 0;
+        padding: 0;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
     }
 }

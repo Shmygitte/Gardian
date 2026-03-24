@@ -1,0 +1,70 @@
+/* 4. Button Component (.c-btn) */
+
+.c-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 24px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    border: none;
+    transition: var(--transition);
+    white-space: nowrap;
+    user-select: none;
+}
+
+/* Primary Styling */
+.c-btn--primary {
+    background-color: var(--primary);
+    color: white;
+}
+
+.c-btn--primary:hover {
+    background-color: var(--primary-dark);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+/* Secondary/Ghost */
+.c-btn--secondary {
+    background-color: var(--primary-light);
+    color: var(--primary-dark);
+}
+
+.c-btn--secondary:hover {
+    background-color: #B9DAB0;
+}
+
+/* Danger variant */
+.c-btn--danger {
+    background-color: var(--danger);
+    color: white;
+}
+
+.c-btn--danger:hover {
+    filter: brightness(0.9);
+}
+
+/* Text variant */
+.c-btn--text {
+    background: transparent;
+    color: var(--text-muted);
+    padding: 8px 12px;
+}
+
+.c-btn--text:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    color: var(--text-main);
+}
+
+[data-theme="dark"] .c-btn--text:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.c-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+}
