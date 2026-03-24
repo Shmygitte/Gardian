@@ -13,7 +13,10 @@
     <div class="l-app-shell">
         <header class="l-header">
             <div style="display: flex; align-items: center; gap: 12px;">
-                <img src="assets/logo.png" alt="Logo" style="height: 40px; border-radius: 50%;">
+                <label style="cursor: pointer;" title="Profilbild ändern">
+                    <img id="user-avatar" src="assets/logo.png" alt="Profilbild" style="height: 40px; width: 40px; border-radius: 50%; object-fit: cover;">
+                    <input type="file" id="avatar-upload" accept="image/*" style="display: none;">
+                </label>
                 <h1 style="font-size: 1.5rem; color: var(--primary-dark);">Gardian</h1>
             </div>
             <nav class="c-nav">
@@ -99,6 +102,36 @@
     <script src="src/js/app.js"></script>
     <script src="src/js/pflanzen.js"></script>
     <script>
+        // Avatar laden
+        async function loadAvatar() {
+            const res = await fetch('backend/api.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'getAvatar' })
+            });
+            const data = await res.json();
+            if (data.success && data.avatar) {
+                document.getElementById('user-avatar').src = data.avatar;
+            }
+        }
+
+        // Avatar Upload
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAvatar();
+            document.getElementById('avatar-upload').addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const formData = new FormData();
+                formData.append('action', 'uploadAvatar');
+                formData.append('avatar', file);
+                const res = await fetch('backend/api.php', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('user-avatar').src = data.avatar + '?t=' + Date.now();
+                }
+            });
+        });
+
         const views = ['dashboard', 'pflanzen', 'einstellungen'];
 
         function showView(name) {

@@ -69,7 +69,7 @@ if ($action === 'login') {
 
     if ($user && password_verify($data['password'], $user['password_hash'])) {
         $_SESSION['user_id'] = $user['id'];
-        echo json_encode(['success' => true]);
+        echo json_encode(['success' => true, 'avatar' => $user['avatar_path']]);
     } else {
         echo json_encode(['success' => false]);
     }
@@ -142,6 +142,49 @@ if ($action === 'getPlantDetails') {
         }
     } catch (PDOException $e) {
         echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+    exit;
+}
+
+// =========================
+// GET AVATAR
+// =========================
+if ($action === 'getAvatar') {
+    $stmt = $db->prepare("SELECT avatar_path FROM gd_users WHERE id = ?");
+    $stmt->execute([$_SESSION['user_id']]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    echo json_encode(['success' => true, 'avatar' => $row['avatar_path']]);
+    exit;
+}
+
+// =========================
+// UPLOAD AVATAR
+// =========================
+if ($action === 'uploadAvatar') {
+    if (!isset($_FILES['avatar'])) {
+        echo json_encode(['success' => false, 'message' => 'Keine Datei']);
+        exit;
+    }
+    $file      = $_FILES['avatar'];
+    $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    $allowed   = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    if (!in_array($extension, $allowed)) {
+        echo json_encode(['success' => false, 'message' => 'Ungültiges Dateiformat']);
+        exit;
+    }
+    $targetDir = __DIR__ . '/../assets/avatars/';
+    if (!is_dir($targetDir)) mkdir($targetDir, 0777, true);
+
+    $filename   = 'user_' . $_SESSION['user_id'] . '.' . $extension;
+    $targetPath = $targetDir . $filename;
+    $dbPath     = 'assets/avatars/' . $filename;
+
+    if (move_uploaded_file($file['tmp_name'], $targetPath)) {
+        $stmt = $db->prepare("UPDATE gd_users SET avatar_path = ? WHERE id = ?");
+        $stmt->execute([$dbPath, $_SESSION['user_id']]);
+        echo json_encode(['success' => true, 'avatar' => $dbPath]);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Upload fehlgeschlagen']);
     }
     exit;
 }
