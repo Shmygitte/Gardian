@@ -82,14 +82,15 @@ if ($action === 'login') {
 if ($action === 'getPins') {
     try {
         $stmt = $db->prepare("
-            SELECT 
-                p.id, 
-                p.x, 
-                p.y,
-                COALESCE(p.name, ug.group_name, dg.group_name) as name,
-                COALESCE(p.type, ug.type, dg.type) as type,
-                COALESCE(p.bloom_history, ug.bloom_months, dg.bloom_months) as bloom_months,
-                COALESCE(p.is_evergreen, ug.is_evergreen, dg.is_evergreen) as is_evergreen,
+            SELECT
+                p.id,
+                p.pos_x,
+                p.pos_y,
+                dg.name,
+                COALESCE(ug.type, dg.type) as type,
+                COALESCE(p.marker_color, ug.marker_color, dg.marker_color) as marker_color,
+                COALESCE(p.marker_icon, ug.marker_icon, dg.marker_icon) as marker_icon,
+                COALESCE(p.evergreen, dg.evergreen) as evergreen,
                 p.group_id
             FROM gd_user_plants p
             JOIN gd_default_groups dg ON p.group_id = dg.id
@@ -139,6 +140,90 @@ if ($action === 'getPlantDetails') {
         } else {
             echo json_encode(['success' => false, 'message' => 'Plant not found']);
         }
+    } catch (PDOException $e) {
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+    exit;
+}
+
+// =========================
+// GET DEFAULT GROUPS (Pflanzenwahl-Modal)
+// =========================
+if ($action === 'getGroups') {
+    try {
+        $stmt = $db->prepare("SELECT id, name, type, marker_icon, marker_color FROM gd_default_groups ORDER BY name");
+        $stmt->execute();
+        echo json_encode(['success' => true, 'groups' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+    } catch (PDOException $e) {
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+    exit;
+}
+
+// =========================
+// ADD PLANT
+// =========================
+if ($action === 'addPlant') {
+    $groupId = $data['group_id'] ?? null;
+    $posX    = $data['pos_x']   ?? null;
+    $posY    = $data['pos_y']   ?? null;
+    if (!$groupId || $posX === null || $posY === null) {
+        echo json_encode(['success' => false, 'error' => 'Fehlende Parameter']);
+        exit;
+    }
+    try {
+        $stmt = $db->prepare("INSERT INTO gd_user_plants (user_id, group_id, pos_x, pos_y) VALUES (?, ?, ?, ?)");
+        $stmt->execute([$_SESSION['user_id'], $groupId, $posX, $posY]);
+        echo json_encode(['success' => true, 'id' => $db->lastInsertId()]);
+    } catch (PDOException $e) {
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+    exit;
+}
+
+// =========================
+// MOVE PLANT
+// =========================
+if ($action === 'movePlant') {
+    $plantId = $data['id']    ?? null;
+    $posX    = $data['pos_x'] ?? null;
+    $posY    = $data['pos_y'] ?? null;
+    if (!$plantId || $posX === null || $posY === null) {
+        echo json_encode(['success' => false, 'error' => 'Fehlende Parameter']);
+        exit;
+    }
+    try {
+        $stmt = $db->prepare("UPDATE gd_user_plants SET pos_x = ?, pos_y = ? WHERE id = ? AND user_id = ?");
+        $stmt->execute([$posX, $posY, $plantId, $_SESSION['user_id']]);
+        echo json_encode(['success' => true]);
+    } catch (PDOException $e) {
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+    exit;
+}
+
+// =========================
+// DUPLICATE PLANT
+// =========================
+if ($action === 'duplicatePlant') {
+    $plantId = $data['id'] ?? null;
+    if (!$plantId) {
+        echo json_encode(['success' => false, 'error' => 'Fehlende ID']);
+        exit;
+    }
+    try {
+        $stmt = $db->prepare("SELECT * FROM gd_user_plants WHERE id = ? AND user_id = ?");
+        $stmt->execute([$plantId, $_SESSION['user_id']]);
+        $plant = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$plant) {
+            echo json_encode(['success' => false, 'error' => 'Pflanze nicht gefunden']);
+            exit;
+        }
+        $newX = min(100, $plant['pos_x'] + 3);
+        $newY = min(100, $plant['pos_y'] + 3);
+        $stmt = $db->prepare("INSERT INTO gd_user_plants (user_id, group_id, pos_x, pos_y, bloom_start, bloom_end, marker_icon, marker_color, marker_size) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$_SESSION['user_id'], $plant['group_id'], $newX, $newY, $plant['bloom_start'], $plant['bloom_end'], $plant['marker_icon'], $plant['marker_color'], $plant['marker_size']]);
+        echo json_encode(['success' => true, 'id' => $db->lastInsertId()]);
     } catch (PDOException $e) {
         echo json_encode(['success' => false, 'error' => $e->getMessage()]);
     }

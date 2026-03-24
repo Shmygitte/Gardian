@@ -8,7 +8,14 @@ const state = {
     panY: 0,
     isPanning: false,
     panStartPos: { x: 0, y: 0 },
-    pins: []
+    pins: [],
+    // Drag
+    isDragging: false,
+    draggingPinId: null,
+    hasMoved: false,
+    dragStartPos: { x: 0, y: 0 },
+    // Click-to-place
+    pendingCoords: null
 };
 
 let elements = {};
@@ -51,6 +58,7 @@ function setupMapStructure() {
 function setupEventListeners() {
     elements.mapCanvas.addEventListener('wheel', handleWheel, { passive: false });
     elements.mapCanvas.addEventListener('mousedown', handleMouseDown);
+    elements.mapCanvas.addEventListener('click', handleMapClick);
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
 
@@ -139,24 +147,26 @@ function renderMarkers() {
     const overlay = elements.mapCanvas.querySelector('.map__markers-overlay');
     if (!overlay) return;
     overlay.innerHTML = '';
-    
+
     state.pins.forEach(pin => {
         const marker = document.createElement('div');
         marker.className = 'marker';
-        marker.style.left = `${pin.x}px`;
-        marker.style.top = `${pin.y}px`;
+        marker.dataset.id = pin.id;
+        marker.style.left = `${pin.pos_x}%`;
+        marker.style.top = `${pin.pos_y}%`;
         marker.style.position = 'absolute';
         marker.style.pointerEvents = 'auto';
         marker.style.transform = 'translate(-50%, -50%)';
-        marker.style.cursor = 'pointer';
-        
+        marker.style.cursor = 'grab';
+        marker.title = `${pin.name} (Alt+Drag = duplizieren)`;
+
         marker.innerHTML = `
-            <div style="background: #4CAF50; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+            <div style="background:${pin.marker_color || '#4CAF50'}; color:white; border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center; border:2px solid white; box-shadow:0 2px 4px rgba(0,0,0,0.2);">
                 <span>${getEmoji(pin.type)}</span>
             </div>
         `;
-        
-        marker.title = pin.name;
+
+        marker.addEventListener('mousedown', (e) => handleMarkerMouseDown(e, String(pin.id)));
         overlay.appendChild(marker);
     });
 }
@@ -193,7 +203,28 @@ function handleMouseDown(e) {
     elements.mapCanvas.style.cursor = 'grabbing';
 }
 
+function getOverlayCoords(clientX, clientY) {
+    const overlay = elements.mapWrapper.querySelector('.map__markers-overlay');
+    const rect = overlay.getBoundingClientRect();
+    return {
+        x: Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100)),
+        y: Math.max(0, Math.min(100, ((clientY - rect.top) / rect.height) * 100))
+    };
+}
+
 function handleMouseMove(e) {
+    if (state.isDragging) {
+        const dist = Math.sqrt(Math.pow(e.clientX - state.dragStartPos.x, 2) + Math.pow(e.clientY - state.dragStartPos.y, 2));
+        if (dist > 5) state.hasMoved = true;
+
+        if (state.hasMoved) {
+            const { x, y } = getOverlayCoords(e.clientX, e.clientY);
+            const el = document.querySelector(`.marker[data-id="${state.draggingPinId}"]`);
+            if (el) { el.style.left = `${x}%`; el.style.top = `${y}%`; }
+        }
+        return;
+    }
+
     if (state.isPanning) {
         state.panX = e.clientX - state.panStartPos.x;
         state.panY = e.clientY - state.panStartPos.y;
@@ -201,7 +232,46 @@ function handleMouseMove(e) {
     }
 }
 
-function handleMouseUp() {
+async function handleMouseUp(e) {
+    if (state.isDragging) {
+        const id = state.draggingPinId;
+        const el = document.querySelector(`.marker[data-id="${id}"]`);
+        if (el) el.classList.remove('dragging');
+
+        const { x, y } = getOverlayCoords(e.clientX, e.clientY);
+        const isPending = id.startsWith('pending_');
+
+        if (isPending) {
+            const clone = state.pins.find(p => p.id === id);
+            if (clone) {
+                const finalX = state.hasMoved ? x : clone.pos_x;
+                const finalY = state.hasMoved ? y : clone.pos_y;
+                const res = await fetch('backend/api.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'addPlant', group_id: clone.group_id, pos_x: finalX, pos_y: finalY })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    state.pins = state.pins.map(p => p.id === id ? { ...p, id: String(data.id), pos_x: finalX, pos_y: finalY } : p);
+                    renderMarkers();
+                }
+            }
+        } else if (state.hasMoved) {
+            await fetch('backend/api.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'movePlant', id, pos_x: x, pos_y: y })
+            });
+            state.pins = state.pins.map(p => String(p.id) === id ? { ...p, pos_x: x, pos_y: y } : p);
+        }
+
+        state.isDragging = false;
+        state.draggingPinId = null;
+        setTimeout(() => { state.hasMoved = false; }, 50);
+        return;
+    }
+
     state.isPanning = false;
     elements.mapCanvas.style.cursor = 'default';
 }
@@ -210,6 +280,96 @@ function updateTransform() {
     if (elements.mapWrapper) {
         elements.mapWrapper.style.transform = `translate(${state.panX}px, ${state.panY}px) scale(${state.zoom})`;
     }
+}
+
+// =========================
+// CLICK-TO-PLACE
+// =========================
+function handleMapClick(e) {
+    if (state.hasMoved) return;
+    if (e.target.closest('.marker')) return;
+    if (e.target.closest('.map__controls')) return;
+
+    const img = elements.mapWrapper.querySelector('.map__img');
+    if (!img || img.style.display === 'none') return;
+
+    const { x, y } = getOverlayCoords(e.clientX, e.clientY);
+    state.pendingCoords = { x, y };
+    openPlantModal();
+}
+
+async function openPlantModal() {
+    const modal = document.getElementById('modal-pflanze');
+    const select = document.getElementById('modal-group-select');
+    modal.style.display = 'flex';
+
+    if (select.options.length <= 1) {
+        const res = await fetch('backend/api.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'getGroups' })
+        });
+        const data = await res.json();
+        if (data.success) {
+            data.groups.forEach(g => {
+                const opt = document.createElement('option');
+                opt.value = g.id;
+                opt.textContent = g.name;
+                select.appendChild(opt);
+            });
+        }
+    }
+}
+
+function closeModal() {
+    document.getElementById('modal-pflanze').style.display = 'none';
+    state.pendingCoords = null;
+}
+
+async function confirmAddPlant() {
+    const groupId = document.getElementById('modal-group-select').value;
+    if (!groupId || !state.pendingCoords) return;
+
+    const res = await fetch('backend/api.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            action: 'addPlant',
+            group_id: groupId,
+            pos_x: state.pendingCoords.x,
+            pos_y: state.pendingCoords.y
+        })
+    });
+    const data = await res.json();
+    if (data.success) {
+        closeModal();
+        await loadPins();
+    }
+}
+
+// =========================
+// MARKER DRAG
+// =========================
+function handleMarkerMouseDown(e, id) {
+    e.stopPropagation();
+
+    if (e.altKey) {
+        const original = state.pins.find(p => String(p.id) === id);
+        if (original) {
+            const clone = { ...original, id: 'pending_' + Date.now() };
+            state.pins.push(clone);
+            renderMarkers();
+            id = clone.id;
+        }
+    }
+
+    state.isDragging = true;
+    state.draggingPinId = id;
+    state.hasMoved = false;
+    state.dragStartPos = { x: e.clientX, y: e.clientY };
+
+    const el = document.querySelector(`.marker[data-id="${id}"]`);
+    if (el) el.classList.add('dragging');
 }
 
 document.addEventListener('DOMContentLoaded', init);
