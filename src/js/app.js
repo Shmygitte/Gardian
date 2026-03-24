@@ -306,27 +306,97 @@ function handleMapClick(e) {
     openPlantModal();
 }
 
+const NEW_GROUP_FIELDS = [
+    { key: 'name',         label: 'Name *',            type: 'text',     required: true },
+    { key: 'type',         label: 'Typ *',             type: 'select',   options: [{v:'tree',l:'Baum'},{v:'shrub',l:'Strauch'},{v:'flower',l:'Blume'},{v:'s_flower',l:'Saisonblume'}], required: true },
+    { key: 'bloom_start',  label: 'Blüte von (Monat)', type: 'number' },
+    { key: 'bloom_end',    label: 'Blüte bis (Monat)', type: 'number' },
+    { key: 'marker_color', label: 'Marker-Farbe',      type: 'color' },
+    { key: 'height',       label: 'Höhe',              type: 'text' },
+    { key: 'location',     label: 'Standort',          type: 'text' },
+    { key: 'spacing',      label: 'Pflanzabstand',     type: 'text' },
+    { key: 'care',         label: 'Pflege',            type: 'textarea' },
+    { key: 'water',        label: 'Wasser',            type: 'textarea' },
+    { key: 'hardy',        label: 'Winterhart',        type: 'checkbox' },
+    { key: 'scented',      label: 'Duftend',           type: 'checkbox' },
+    { key: 'cutflower',    label: 'Schnittblume',      type: 'checkbox' },
+    { key: 'lifespan',     label: 'Lebenszeit',        type: 'text' },
+    { key: 'features',     label: 'Besonderheiten',    type: 'textarea' },
+    { key: 'evergreen',    label: 'Immergrün',         type: 'checkbox' },
+];
+
 async function openPlantModal() {
-    const modal = document.getElementById('modal-pflanze');
+    const modal  = document.getElementById('modal-pflanze');
     const select = document.getElementById('modal-group-select');
     modal.style.display = 'flex';
 
-    if (select.options.length <= 1) {
-        const res = await fetch('backend/api.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'getGroups' })
+    // Gruppen immer neu laden (könnten sich geändert haben)
+    const res  = await fetch('backend/api.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'getGroups' })
+    });
+    const data = await res.json();
+
+    // Select zurücksetzen (Optionen 0=leer, 1=neu bleiben erhalten)
+    while (select.options.length > 2) select.remove(2);
+    select.value = '';
+
+    if (data.success) {
+        data.groups.forEach(g => {
+            const opt = document.createElement('option');
+            opt.value = g.id;
+            opt.dataset.source = g.source; // 'default' oder 'user'
+            opt.textContent = g.name;
+            select.appendChild(opt);
         });
-        const data = await res.json();
-        if (data.success) {
-            data.groups.forEach(g => {
-                const opt = document.createElement('option');
-                opt.value = g.id;
-                opt.textContent = g.name;
-                select.appendChild(opt);
-            });
-        }
     }
+
+    // Formular zurücksetzen
+    document.getElementById('modal-new-group-form').style.display = 'none';
+    document.getElementById('modal-submit-btn').textContent = 'Hinzufügen';
+}
+
+function onGroupSelectChange() {
+    const val  = document.getElementById('modal-group-select').value;
+    const form = document.getElementById('modal-new-group-form');
+    const btn  = document.getElementById('modal-submit-btn');
+
+    if (val === '__new__') {
+        form.style.display = 'block';
+        btn.textContent = 'Gruppe anlegen & Pflanze platzieren';
+        renderNewGroupForm();
+    } else {
+        form.style.display = 'none';
+        btn.textContent = 'Hinzufügen';
+    }
+}
+
+function renderNewGroupForm() {
+    const container = document.getElementById('modal-new-group-fields');
+    container.innerHTML = NEW_GROUP_FIELDS.map(f => {
+        if (f.type === 'select') {
+            const opts = f.options.map(o => `<option value="${o.v}">${o.l}</option>`).join('');
+            return `<div style="margin-bottom:10px;"><label style="font-size:0.8rem;color:var(--text-muted);">${f.label}</label><br><select id="ngf-${f.key}" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:var(--radius-sm);margin-top:2px;"><option value="">—</option>${opts}</select></div>`;
+        }
+        if (f.type === 'checkbox') {
+            return `<div style="margin-bottom:10px;display:flex;align-items:center;gap:8px;"><input type="checkbox" id="ngf-${f.key}"><label for="ngf-${f.key}" style="font-size:0.85rem;">${f.label}</label></div>`;
+        }
+        if (f.type === 'textarea') {
+            return `<div style="margin-bottom:10px;"><label style="font-size:0.8rem;color:var(--text-muted);">${f.label}</label><br><textarea id="ngf-${f.key}" rows="2" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:var(--radius-sm);margin-top:2px;box-sizing:border-box;"></textarea></div>`;
+        }
+        return `<div style="margin-bottom:10px;"><label style="font-size:0.8rem;color:var(--text-muted);">${f.label}</label><br><input type="${f.type}" id="ngf-${f.key}" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:var(--radius-sm);margin-top:2px;box-sizing:border-box;"></div>`;
+    }).join('');
+}
+
+function getNewGroupFormData() {
+    const obj = {};
+    NEW_GROUP_FIELDS.forEach(f => {
+        const el = document.getElementById('ngf-' + f.key);
+        if (!el) return;
+        obj[f.key] = f.type === 'checkbox' ? (el.checked ? 1 : 0) : (el.value || null);
+    });
+    return obj;
 }
 
 function closeModal() {
@@ -335,18 +405,55 @@ function closeModal() {
 }
 
 async function confirmAddPlant() {
-    const groupId = document.getElementById('modal-group-select').value;
-    if (!groupId || !state.pendingCoords) return;
+    const selectVal = document.getElementById('modal-group-select').value;
+    if (!selectVal || !state.pendingCoords) return;
+
+    // Neue Gruppe anlegen
+    if (selectVal === '__new__') {
+        const groupData = getNewGroupFormData();
+        if (!groupData.name) { alert('Bitte einen Gruppennamen eingeben.'); return; }
+
+        const res  = await fetch('backend/api.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'createUserGroup', ...groupData })
+        });
+        const data = await res.json();
+        if (!data.success) { alert(data.error || 'Fehler beim Anlegen der Gruppe'); return; }
+
+        // Pflanze in neuer Gruppe platzieren (group_id = null, da reine User-Gruppe)
+        const plantRes  = await fetch('backend/api.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'addPlant', group_id: null, user_group_id: data.id, pos_x: state.pendingCoords.x, pos_y: state.pendingCoords.y })
+        });
+        const plantData = await plantRes.json();
+        if (plantData.success) {
+            closeModal();
+            await loadPins();
+            await loadFilterGroups();
+        }
+        return;
+    }
+
+    const selectedOpt = document.getElementById('modal-group-select').selectedOptions[0];
+    const isUserGroup  = selectedOpt?.dataset.source === 'user';
+
+    const payload = {
+        action: 'addPlant',
+        pos_x: state.pendingCoords.x,
+        pos_y: state.pendingCoords.y
+    };
+    if (isUserGroup) {
+        payload.user_group_id = selectVal;
+    } else {
+        payload.group_id = selectVal;
+    }
 
     const res = await fetch('backend/api.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            action: 'addPlant',
-            group_id: groupId,
-            pos_x: state.pendingCoords.x,
-            pos_y: state.pendingCoords.y
-        })
+        body: JSON.stringify(payload)
     });
     const data = await res.json();
     if (data.success) {
