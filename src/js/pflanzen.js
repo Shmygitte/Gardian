@@ -50,6 +50,12 @@ function renderFieldTable(obj, fields) {
 const GROUP_FIELDS = ['type','bloom_start','bloom_end','marker_icon','marker_color','marker_size','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen'];
 const PLANT_FIELDS = ['pos_x','pos_y','bloom_start','bloom_end','marker_icon','marker_color','marker_size','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen','created_at'];
 
+let _pflanzenData = null;
+
+function renderPflanzenListeFiltered() {
+    if (_pflanzenData) renderPflanzenListe(_pflanzenData);
+}
+
 async function loadPflanzenListe() {
     const container = document.getElementById('pflanzen-liste');
     container.innerHTML = '<p style="color:var(--text-muted)">Lade...</p>';
@@ -66,12 +72,30 @@ async function loadPflanzenListe() {
         return;
     }
 
-    if (!data.groups.length) {
-        container.innerHTML = '<p style="color:var(--text-muted)">Noch keine Pflanzengruppen vorhanden.</p>';
+    _pflanzenData = data;
+    renderPflanzenListe(data);
+}
+
+function renderPflanzenListe(data) {
+    const container = document.getElementById('pflanzen-liste');
+    if (!container) return;
+
+    // Filter anwenden
+    let groups = data.groups;
+    if (typeof filterState !== 'undefined') {
+        groups = groups.filter(g => {
+            if (filterState.types.length && g.type && !filterState.types.includes(g.type)) return false;
+            if (filterState.groups !== null && !filterState.groups.has(String(g.group_id || g.id))) return false;
+            return true;
+        });
+    }
+
+    if (!groups.length) {
+        container.innerHTML = '<p style="color:var(--text-muted)">Keine Pflanzengruppen für aktiven Filter.</p>';
         return;
     }
 
-    container.innerHTML = data.groups.map((group, gi) => {
+    container.innerHTML = groups.map((group, gi) => {
         const groupId = `group-${gi}`;
         const plantsHtml = group.plants.length
             ? group.plants.map((plant, pi) => {

@@ -37,6 +37,7 @@ async function init() {
     // 2. Data
     await loadGardenConfig();
     await loadPins();
+    loadFilterGroups();
 
     // 3. Events
     setupEventListeners();
@@ -148,7 +149,14 @@ function renderMarkers() {
     if (!overlay) return;
     overlay.innerHTML = '';
 
-    state.pins.forEach(pin => {
+    const pins = state.pins.filter(pin => {
+        if (typeof filterState === 'undefined') return true;
+        if (!filterState.types.includes(pin.type)) return false;
+        if (filterState.groups !== null && !filterState.groups.has(String(pin.group_id))) return false;
+        return true;
+    });
+
+    pins.forEach(pin => {
         const marker = document.createElement('div');
         marker.className = 'marker';
         marker.dataset.id = pin.id;
@@ -344,6 +352,7 @@ async function confirmAddPlant() {
     if (data.success) {
         closeModal();
         await loadPins();
+        await loadFilterGroups();
     }
 }
 

@@ -36,6 +36,19 @@
                         <button id="nav-admin" class="c-btn c-btn--text" style="justify-content: flex-start; display:none; color: var(--danger);" onclick="showView('admin')">Admin</button>
                     </nav>
                 </div>
+                <hr style="border:none; border-top:1px solid var(--border); margin:16px 0;">
+                <div class="c-form-group">
+                    <label class="c-label">Filter</label>
+                    <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Typ</p>
+                    <div id="filter-types" style="display:flex; flex-direction:column; gap:4px;">
+                        <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="tree"     checked onchange="applyFilter()"> Baum</label>
+                        <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="shrub"    checked onchange="applyFilter()"> Strauch</label>
+                        <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="flower"   checked onchange="applyFilter()"> Blume</label>
+                        <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="s_flower" checked onchange="applyFilter()"> Saisonblume</label>
+                    </div>
+                    <p style="font-size:0.75rem; color:var(--text-muted); margin:12px 0 6px;">Pflanzengruppen</p>
+                    <div id="filter-groups" style="display:flex; flex-direction:column; gap:4px;"></div>
+                </div>
             </aside>
 
             <main class="l-main-content">
@@ -118,6 +131,7 @@
     </div>
 
     <script src="src/js/app.js"></script>
+    <script src="src/js/filter.js"></script>
     <script src="src/js/pflanzen.js"></script>
     <script src="src/js/admin.js"></script>
     <script>
