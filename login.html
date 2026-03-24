@@ -20,7 +20,7 @@
             background: linear-gradient(135deg, var(--bg-app) 0%, var(--primary-light) 100%);
             padding: 20px;
         }
-        
+
         .c-login-card {
             width: 100%;
             max-width: 420px;
@@ -29,7 +29,7 @@
             background-color: rgba(255, 255, 255, 0.82);
             border: 1px solid rgba(255, 255, 255, 0.4);
         }
-        
+
         [data-theme="dark"] .c-login-card {
             background-color: rgba(45, 55, 72, 0.82);
             border-color: rgba(255, 255, 255, 0.05);
@@ -77,19 +77,19 @@
             <img src="assets/logo.png" alt="Gardian Logo" class="c-login-card__logo">
             <h1 class="c-login-card__title">Gardian</h1>
             <p class="c-login-card__subtitle">Dein digitaler Gartenbegleiter</p>
-            
+
             <div id="error-msg" class="c-message"></div>
-            
+
             <div class="c-form-group">
                 <label class="c-label" for="username">Benutzername</label>
                 <input type="text" id="username" class="c-input" placeholder="z.B. GärtnerKlaus">
             </div>
-            
+
             <div class="c-form-group">
                 <label class="c-label" for="password">Passwort</label>
                 <input type="password" id="password" class="c-input" placeholder="••••••••">
             </div>
-            
+
             <div style="margin-top: 2rem; display: flex; flex-direction: column; gap: 12px;">
                 <button id="btn-login" class="c-btn c-btn--primary" onclick="login()">Anmelden</button>
                 <button id="btn-register" class="c-btn c-btn--secondary" onclick="register()">Neues Konto erstellen</button>
@@ -129,7 +129,7 @@
                 showMessage('Registrierung fehlgeschlagen: ' + err.message);
             }
         }
-         
+
         async function login() {
             if (!userInp.value || !passInp.value) {
                 showMessage('Bitte Benutzername und Passwort eingeben');
