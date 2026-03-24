@@ -21,6 +21,8 @@
     justify-content: center;
     color: var(--color-text-muted);
     font-style: italic;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 .map__controls {
