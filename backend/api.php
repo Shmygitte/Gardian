@@ -21,6 +21,15 @@ if (!in_array($action, ['login', 'register'])) {
 }
 
 // =========================
+// LOGOUT
+// =========================
+if ($action === 'logout') {
+    session_destroy();
+    echo json_encode(['success' => true]);
+    exit;
+}
+
+// =========================
 // REGISTER
 // =========================
 if ($action === 'register') {

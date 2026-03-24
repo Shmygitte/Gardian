@@ -18,7 +18,7 @@
             </div>
             <nav class="c-nav">
                 <!-- Navigation items would go here -->
-                <button class="c-btn c-btn--text" onclick="location.href='login.html'">Abmelden</button>
+                <button class="c-btn c-btn--text" onclick="logout()">Abmelden</button>
             </nav>
         </header>
 
@@ -50,6 +50,15 @@
 
     <script src="src/js/app.js"></script>
     <script>
+        async function logout() {
+            await fetch('backend/api.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'logout' })
+            });
+            location.href = 'login.html';
+        }
+
         function toggleTheme() {
             const html = document.documentElement;
             const current = html.getAttribute('data-theme');
