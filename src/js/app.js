@@ -152,7 +152,8 @@ function renderMarkers() {
     const pins = state.pins.filter(pin => {
         if (typeof filterState === 'undefined') return true;
         if (!filterState.types.includes(pin.type)) return false;
-        if (filterState.groups !== null && !filterState.groups.has(String(pin.group_id))) return false;
+        const pinGroupKey = pin.user_group_id ? `u${pin.user_group_id}` : String(pin.group_id);
+        if (filterState.groups !== null && !filterState.groups.has(pinGroupKey)) return false;
         return true;
     });
 
@@ -430,8 +431,8 @@ async function confirmAddPlant() {
         const plantData = await plantRes.json();
         if (plantData.success) {
             closeModal();
-            await loadPins();
             await loadFilterGroups();
+            await loadPins();
         }
         return;
     }
@@ -458,8 +459,8 @@ async function confirmAddPlant() {
     const data = await res.json();
     if (data.success) {
         closeModal();
-        await loadPins();
         await loadFilterGroups();
+        await loadPins();
     }
 }
 

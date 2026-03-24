@@ -44,12 +44,15 @@ async function loadFilterGroups() {
         return;
     }
 
-    container.innerHTML = data.groups.map(g => `
+    container.innerHTML = data.groups.map(g => {
+        const key = g.group_id ? String(g.group_id) : 'u' + g.id;
+        return `
         <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;">
-            <input type="checkbox" value="${g.group_id || g.id}" checked onchange="applyFilter()">
+            <input type="checkbox" value="${key}" checked onchange="applyFilter()">
             ${g.name || '(Unbenannt)'}
-        </label>`).join('');
+        </label>`;
+    }).join('');
 
     // Initialen filterState setzen
-    filterState.groups = new Set(data.groups.map(g => String(g.group_id || g.id)));
+    filterState.groups = new Set(data.groups.map(g => g.group_id ? String(g.group_id) : 'u' + g.id));
 }
