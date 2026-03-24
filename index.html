@@ -110,21 +110,27 @@
 
     <!-- Modal: Pflanze hinzufügen -->
     <div id="modal-pflanze" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:1000; align-items:center; justify-content:center;">
-        <div class="c-card" style="width:360px; max-height:80vh; overflow-y:auto;">
+        <div class="c-card" style="width:460px; max-height:85vh; overflow-y:auto;">
             <div class="c-card__header">
                 <h2 class="c-card__title">Pflanze hinzufügen</h2>
                 <button class="c-btn c-btn--text" onclick="closeModal()">✕</button>
             </div>
             <div class="c-card__body">
                 <div class="c-form-group">
-                    <label class="c-label">Pflanzengruppe wählen</label>
-                    <select id="modal-group-select" class="c-input" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:var(--radius-md);">
+                    <label class="c-label">Pflanzengruppe</label>
+                    <select id="modal-group-select" class="c-input" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:var(--radius-md);" onchange="onGroupSelectChange()">
                         <option value="">-- Bitte wählen --</option>
+                        <option value="__new__">+ Neue Gruppe anlegen...</option>
                     </select>
+                </div>
+                <!-- Formular neue Gruppe -->
+                <div id="modal-new-group-form" style="display:none; margin-top:16px; border-top:1px solid var(--border); padding-top:16px;">
+                    <p style="font-weight:600; margin-bottom:12px; font-size:0.9rem;">Neue Pflanzengruppe</p>
+                    <div id="modal-new-group-fields"></div>
                 </div>
             </div>
             <div class="c-card__footer">
-                <button class="c-btn c-btn--primary" onclick="confirmAddPlant()">Hinzufügen</button>
+                <button id="modal-submit-btn" class="c-btn c-btn--primary" onclick="confirmAddPlant()">Hinzufügen</button>
                 <button class="c-btn c-btn--text" onclick="closeModal()">Abbrechen</button>
             </div>
         </div>

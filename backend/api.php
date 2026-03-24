@@ -256,9 +256,39 @@ if ($action === 'getPlantsList') {
 // =========================
 if ($action === 'getGroups') {
     try {
-        $stmt = $db->prepare("SELECT id, name, type, marker_icon, marker_color FROM gd_default_groups ORDER BY name");
+        // Standard-Gruppen vom Admin
+        $stmt = $db->prepare("SELECT id, name, type, marker_icon, marker_color, 'default' AS source FROM gd_default_groups ORDER BY name");
         $stmt->execute();
-        echo json_encode(['success' => true, 'groups' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+        $groups = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Eigene User-Gruppen (ohne Default-Backing)
+        $stmtUser = $db->prepare("SELECT id, name, type, marker_icon, marker_color, 'user' AS source FROM gd_user_groups WHERE user_id = ? AND group_id IS NULL ORDER BY name");
+        $stmtUser->execute([$_SESSION['user_id']]);
+        $userGroups = $stmtUser->fetchAll(PDO::FETCH_ASSOC);
+
+        echo json_encode(['success' => true, 'groups' => array_merge($groups, $userGroups)]);
+    } catch (PDOException $e) {
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+    exit;
+}
+
+// =========================
+// CREATE USER GROUP
+// =========================
+if ($action === 'createUserGroup') {
+    $name = trim($data['name'] ?? '');
+    if (!$name) {
+        echo json_encode(['success' => false, 'error' => 'Name erforderlich']);
+        exit;
+    }
+    $fields = ['name','group_id','type','bloom_start','bloom_end','marker_icon','marker_color','marker_size','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen'];
+    $vals   = array_map(fn($f) => ($data[$f] ?? null) !== '' ? ($data[$f] ?? null) : null, $fields);
+    $cols   = implode(',', $fields);
+    $ph     = implode(',', array_fill(0, count($fields), '?'));
+    try {
+        $db->prepare("INSERT INTO gd_user_groups (user_id, $cols) VALUES (?, $ph)")->execute(array_merge([$_SESSION['user_id']], $vals));
+        echo json_encode(['success' => true, 'id' => $db->lastInsertId()]);
     } catch (PDOException $e) {
         echo json_encode(['success' => false, 'error' => $e->getMessage()]);
     }
@@ -269,24 +299,31 @@ if ($action === 'getGroups') {
 // ADD PLANT
 // =========================
 if ($action === 'addPlant') {
-    $groupId = $data['group_id'] ?? null;
-    $posX    = $data['pos_x']   ?? null;
-    $posY    = $data['pos_y']   ?? null;
-    if (!$groupId || $posX === null || $posY === null) {
+    $groupId     = $data['group_id']      ?? null;
+    $userGroupId = $data['user_group_id'] ?? null;
+    $posX        = $data['pos_x']         ?? null;
+    $posY        = $data['pos_y']         ?? null;
+
+    if ((!$groupId && !$userGroupId) || $posX === null || $posY === null) {
         echo json_encode(['success' => false, 'error' => 'Fehlende Parameter']);
         exit;
     }
     try {
-        // User-Gruppe anlegen falls noch nicht vorhanden
-        $check = $db->prepare("SELECT id FROM gd_user_groups WHERE user_id = ? AND group_id = ?");
-        $check->execute([$_SESSION['user_id'], $groupId]);
-        if (!$check->fetch()) {
-            $ins = $db->prepare("INSERT INTO gd_user_groups (user_id, group_id) VALUES (?, ?)");
-            $ins->execute([$_SESSION['user_id'], $groupId]);
+        if ($userGroupId) {
+            // Eigene User-Gruppe — direkt speichern
+            $stmt = $db->prepare("INSERT INTO gd_user_plants (user_id, user_group_id, pos_x, pos_y) VALUES (?, ?, ?, ?)");
+            $stmt->execute([$_SESSION['user_id'], $userGroupId, $posX, $posY]);
+        } else {
+            // Standard-Gruppe — User-Gruppe anlegen falls noch nicht vorhanden
+            $check = $db->prepare("SELECT id FROM gd_user_groups WHERE user_id = ? AND group_id = ?");
+            $check->execute([$_SESSION['user_id'], $groupId]);
+            if (!$check->fetch()) {
+                $ins = $db->prepare("INSERT INTO gd_user_groups (user_id, group_id) VALUES (?, ?)");
+                $ins->execute([$_SESSION['user_id'], $groupId]);
+            }
+            $stmt = $db->prepare("INSERT INTO gd_user_plants (user_id, group_id, pos_x, pos_y) VALUES (?, ?, ?, ?)");
+            $stmt->execute([$_SESSION['user_id'], $groupId, $posX, $posY]);
         }
-
-        $stmt = $db->prepare("INSERT INTO gd_user_plants (user_id, group_id, pos_x, pos_y) VALUES (?, ?, ?, ?)");
-        $stmt->execute([$_SESSION['user_id'], $groupId, $posX, $posY]);
         echo json_encode(['success' => true, 'id' => $db->lastInsertId()]);
     } catch (PDOException $e) {
         echo json_encode(['success' => false, 'error' => $e->getMessage()]);
