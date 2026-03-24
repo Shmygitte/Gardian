@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS gd_users (
     username      VARCHAR(100)  NOT NULL UNIQUE,
     email         VARCHAR(255)  NOT NULL UNIQUE,
     avatar_path   VARCHAR(500)  NULL,
+    last_login    TIMESTAMP     NULL,
     password_hash VARCHAR(255)  NOT NULL,
     role          ENUM('admin', 'user') NOT NULL DEFAULT 'user',
     created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP

@@ -33,6 +33,7 @@
                         <button id="nav-dashboard" class="c-btn c-btn--secondary" style="justify-content: flex-start;" onclick="showView('dashboard')">Gartenkarte</button>
                         <button id="nav-pflanzen" class="c-btn c-btn--text" style="justify-content: flex-start;" onclick="showView('pflanzen')">Pflanzen</button>
                         <button id="nav-einstellungen" class="c-btn c-btn--text" style="justify-content: flex-start;" onclick="showView('einstellungen')">Einstellungen</button>
+                        <button id="nav-admin" class="c-btn c-btn--text" style="justify-content: flex-start; display:none; color: var(--danger);" onclick="showView('admin')">Admin</button>
                     </nav>
                 </div>
             </aside>
@@ -47,6 +48,23 @@
                         </div>
                         <div class="c-card__body">
                             <div id="pflanzen-liste"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View: Admin -->
+                <div id="view-admin" style="display: none; padding: 32px; overflow-y: auto;">
+                    <div class="c-card">
+                        <div class="c-card__header">
+                            <h2 class="c-card__title">Administration</h2>
+                        </div>
+                        <div class="c-card__body">
+                            <div style="display:flex; gap:8px; margin-bottom:20px;">
+                                <button id="admin-tab-users" class="c-btn c-btn--secondary" onclick="switchAdminTab('users')">Benutzer</button>
+                                <button id="admin-tab-groups" class="c-btn c-btn--text" onclick="switchAdminTab('groups')">Pflanzengruppen</button>
+                            </div>
+                            <div id="admin-panel-users"></div>
+                            <div id="admin-panel-groups" style="display:none;"></div>
                         </div>
                     </div>
                 </div>
@@ -101,8 +119,9 @@
 
     <script src="src/js/app.js"></script>
     <script src="src/js/pflanzen.js"></script>
+    <script src="src/js/admin.js"></script>
     <script>
-        // Avatar laden
+        // Avatar + Rolle laden
         async function loadAvatar() {
             const res = await fetch('backend/api.php', {
                 method: 'POST',
@@ -112,6 +131,9 @@
             const data = await res.json();
             if (data.success && data.avatar) {
                 document.getElementById('user-avatar').src = data.avatar;
+            }
+            if (data.role === 'admin') {
+                document.getElementById('nav-admin').style.display = 'flex';
             }
         }
 
@@ -132,7 +154,7 @@
             });
         });
 
-        const views = ['dashboard', 'pflanzen', 'einstellungen'];
+        const views = ['dashboard', 'pflanzen', 'einstellungen', 'admin'];
 
         function showView(name) {
             views.forEach(v => {
@@ -142,6 +164,7 @@
                 btn.style.justifyContent = 'flex-start';
             });
             if (name === 'pflanzen') loadPflanzenListe();
+            if (name === 'admin') loadAdminView();
         }
 
         async function logout() {
