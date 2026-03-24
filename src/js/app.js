@@ -61,7 +61,7 @@ function setupEventListeners() {
 
 async function loadGardenConfig() {
     try {
-        const res = await fetch('/Gardian-runtime/backend/api.php', {
+        const res = await fetch('backend/api.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'getGardenConfig' })
@@ -85,11 +85,13 @@ async function loadGardenConfig() {
 function updateMapBackground(url) {
     const img = elements.mapWrapper.querySelector('.map__img');
     const placeholder = elements.mapWrapper.querySelector('.map__placeholder-bg');
+    const controls = document.getElementById('map-controls');
     if (img && placeholder) {
-        img.src = '/Gardian-runtime/' + url;
+        img.src = url;
         img.style.display = 'block';
         placeholder.style.display = 'none';
     }
+    if (controls) controls.style.display = 'none';
 }
 
 async function handleMapUpload(e) {
@@ -101,7 +103,7 @@ async function handleMapUpload(e) {
     formData.append('map', file);
 
     try {
-        const res = await fetch('/Gardian-runtime/backend/api.php', {
+        const res = await fetch('backend/api.php', {
             method: 'POST',
             body: formData
         });
@@ -118,7 +120,7 @@ async function handleMapUpload(e) {
 
 async function loadPins() {
     try {
-        const res = await fetch('/Gardian-runtime/backend/api.php', {
+        const res = await fetch('backend/api.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'getPins' })
