@@ -98,15 +98,17 @@ if ($action === 'getPins') {
                 p.id,
                 p.pos_x,
                 p.pos_y,
-                dg.name,
-                COALESCE(ug.type, dg.type) as type,
-                COALESCE(p.marker_color, ug.marker_color, dg.marker_color) as marker_color,
-                COALESCE(p.marker_icon, ug.marker_icon, dg.marker_icon) as marker_icon,
-                COALESCE(p.evergreen, dg.evergreen) as evergreen,
-                p.group_id
+                COALESCE(ug_direct.name, dg.name) as name,
+                COALESCE(ug_direct.type, ug.type, dg.type) as type,
+                COALESCE(p.marker_color, ug_direct.marker_color, ug.marker_color, dg.marker_color) as marker_color,
+                COALESCE(p.marker_icon, ug_direct.marker_icon, ug.marker_icon, dg.marker_icon) as marker_icon,
+                COALESCE(p.evergreen, ug_direct.evergreen, dg.evergreen) as evergreen,
+                p.group_id,
+                p.user_group_id
             FROM gd_user_plants p
-            JOIN gd_default_groups dg ON p.group_id = dg.id
+            LEFT JOIN gd_default_groups dg ON p.group_id = dg.id
             LEFT JOIN gd_user_groups ug ON p.group_id = ug.group_id AND p.user_id = ug.user_id
+            LEFT JOIN gd_user_groups ug_direct ON p.user_group_id = ug_direct.id
             WHERE p.user_id = ?
         ");
         $stmt->execute([$_SESSION['user_id']]);
