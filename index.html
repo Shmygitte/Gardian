@@ -37,13 +37,13 @@
             <main class="l-main-content">
 
                 <!-- View: Pflanzen -->
-                <div id="view-pflanzen" style="display: none; padding: 32px;">
+                <div id="view-pflanzen" style="display: none; padding: 32px; overflow-y: auto;">
                     <div class="c-card">
                         <div class="c-card__header">
-                            <h2 class="c-card__title">Pflanzen</h2>
+                            <h2 class="c-card__title">Meine Pflanzen</h2>
                         </div>
                         <div class="c-card__body">
-                            Dieser Bereich wird in Kürze verfügbar sein.
+                            <div id="pflanzen-liste"></div>
                         </div>
                     </div>
                 </div>
@@ -97,6 +97,7 @@
     </div>
 
     <script src="src/js/app.js"></script>
+    <script src="src/js/pflanzen.js"></script>
     <script>
         const views = ['dashboard', 'pflanzen', 'einstellungen'];
 
@@ -105,7 +106,9 @@
                 document.getElementById('view-' + v).style.display = v === name ? (v === 'dashboard' ? 'flex' : 'block') : 'none';
                 const btn = document.getElementById('nav-' + v);
                 btn.className = 'c-btn ' + (v === name ? 'c-btn--secondary' : 'c-btn--text');
+                btn.style.justifyContent = 'flex-start';
             });
+            if (name === 'pflanzen') loadPflanzenListe();
         }
 
         async function logout() {

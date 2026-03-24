@@ -147,6 +147,56 @@ if ($action === 'getPlantDetails') {
 }
 
 // =========================
+// GET PLANTS LIST (Pflanzen-View)
+// =========================
+if ($action === 'getPlantsList') {
+    try {
+        // User-Gruppen laden (inkl. Default-Gruppen-Name als Fallback)
+        $stmt = $db->prepare("
+            SELECT
+                ug.id,
+                COALESCE(ug.name, dg.name) AS name,
+                ug.group_id,
+                ug.type, ug.bloom_start, ug.bloom_end,
+                ug.marker_icon, ug.marker_color, ug.marker_size,
+                ug.height, ug.location, ug.spacing,
+                ug.care, ug.water, ug.hardy, ug.scented,
+                ug.cutflower, ug.lifespan, ug.features, ug.evergreen
+            FROM gd_user_groups ug
+            LEFT JOIN gd_default_groups dg ON ug.group_id = dg.id
+            WHERE ug.user_id = ?
+            ORDER BY name
+        ");
+        $stmt->execute([$_SESSION['user_id']]);
+        $groups = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Pflanzen je Gruppe laden
+        $stmtPlants = $db->prepare("
+            SELECT
+                p.id, p.group_id, p.pos_x, p.pos_y,
+                p.bloom_start, p.bloom_end,
+                p.marker_icon, p.marker_color, p.marker_size,
+                p.height, p.location, p.spacing,
+                p.care, p.water, p.hardy, p.scented,
+                p.cutflower, p.lifespan, p.features, p.evergreen,
+                p.created_at
+            FROM gd_user_plants p
+            WHERE p.user_id = ? AND p.group_id = ?
+        ");
+
+        foreach ($groups as &$group) {
+            $stmtPlants->execute([$_SESSION['user_id'], $group['group_id'] ?? 0]);
+            $group['plants'] = $stmtPlants->fetchAll(PDO::FETCH_ASSOC);
+        }
+
+        echo json_encode(['success' => true, 'groups' => $groups]);
+    } catch (PDOException $e) {
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+    exit;
+}
+
+// =========================
 // GET DEFAULT GROUPS (Pflanzenwahl-Modal)
 // =========================
 if ($action === 'getGroups') {
@@ -172,6 +222,14 @@ if ($action === 'addPlant') {
         exit;
     }
     try {
+        // User-Gruppe anlegen falls noch nicht vorhanden
+        $check = $db->prepare("SELECT id FROM gd_user_groups WHERE user_id = ? AND group_id = ?");
+        $check->execute([$_SESSION['user_id'], $groupId]);
+        if (!$check->fetch()) {
+            $ins = $db->prepare("INSERT INTO gd_user_groups (user_id, group_id) VALUES (?, ?)");
+            $ins->execute([$_SESSION['user_id'], $groupId]);
+        }
+
         $stmt = $db->prepare("INSERT INTO gd_user_plants (user_id, group_id, pos_x, pos_y) VALUES (?, ?, ?, ?)");
         $stmt->execute([$_SESSION['user_id'], $groupId, $posX, $posY]);
         echo json_encode(['success' => true, 'id' => $db->lastInsertId()]);

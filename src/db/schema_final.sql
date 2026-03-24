@@ -70,7 +70,8 @@ CREATE TABLE IF NOT EXISTS gd_default_groups (
 CREATE TABLE IF NOT EXISTS gd_user_groups (
     id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id       INT UNSIGNED  NOT NULL,
-    group_id      INT UNSIGNED  NOT NULL,
+    name          VARCHAR(150)  NULL COMMENT 'Eigenständiger Gruppenname (kein Default-Backing nötig)',
+    group_id      INT UNSIGNED  NULL COMMENT 'FK zu gd_default_groups, NULL = eigenständige User-Gruppe',
     -- Plant type
     type          ENUM('tree', 'shrub', 'flower', 's_flower') NULL,
     -- Bloom
@@ -92,7 +93,6 @@ CREATE TABLE IF NOT EXISTS gd_user_groups (
     lifespan      VARCHAR(50)   NULL,
     features      TEXT          NULL,
     evergreen     TINYINT(1)    NULL,
-    UNIQUE KEY uq_user_group (user_id, group_id),
     CONSTRAINT fk_ug_user  FOREIGN KEY (user_id)  REFERENCES gd_users(id),
     CONSTRAINT fk_ug_group FOREIGN KEY (group_id) REFERENCES gd_default_groups(id)
 );
