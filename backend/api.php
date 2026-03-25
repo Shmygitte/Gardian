@@ -400,6 +400,32 @@ if ($action === 'addPlant') {
 }
 
 // =========================
+// UPDATE PLANT
+// =========================
+if ($action === 'updatePlant') {
+    $id = $data['id'] ?? null;
+    if (!$id) { echo json_encode(['success' => false, 'error' => 'ID fehlt']); exit; }
+    $allowed = ['marker_color','marker_size','marker_icon','bloom_months'];
+    $sets = []; $vals = [];
+    foreach ($allowed as $f) {
+        if (array_key_exists($f, $data)) {
+            $sets[] = "$f = ?";
+            $vals[] = ($data[$f] !== '' && $data[$f] !== null) ? $data[$f] : null;
+        }
+    }
+    if (!$sets) { echo json_encode(['success' => false, 'error' => 'Keine Felder']); exit; }
+    $vals[] = $_SESSION['user_id'];
+    $vals[] = $id;
+    try {
+        $db->prepare("UPDATE gd_user_plants SET " . implode(', ', $sets) . " WHERE user_id = ? AND id = ?")->execute($vals);
+        echo json_encode(['success' => true]);
+    } catch (PDOException $e) {
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+    exit;
+}
+
+// =========================
 // MOVE PLANT
 // =========================
 if ($action === 'movePlant') {

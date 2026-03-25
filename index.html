@@ -138,6 +138,35 @@
         </div>
     </div>
 
+    <!-- Modal: Pflanze bearbeiten (Rechtsklick) -->
+    <div id="modal-pflanze-edit" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:1001; align-items:center; justify-content:center;">
+        <div class="c-card" style="width:340px;">
+            <div class="c-card__header">
+                <h2 class="c-card__title" id="modal-edit-title">Pflanze bearbeiten</h2>
+                <button class="c-btn c-btn--text" onclick="closePlantEditModal()">✕</button>
+            </div>
+            <div class="c-card__body">
+                <input type="hidden" id="edit-plant-id">
+                <div class="c-form-group">
+                    <label class="c-label">Marker-Farbe</label>
+                    <input type="color" id="edit-marker-color" class="c-input" style="height:42px; padding:4px 8px;">
+                </div>
+                <div class="c-form-group">
+                    <label class="c-label">Marker-Größe (px)</label>
+                    <input type="number" id="edit-marker-size" class="c-input" min="10" max="80" placeholder="Standard">
+                </div>
+                <div class="c-form-group">
+                    <label class="c-label">Marker-Icon (Emoji)</label>
+                    <input type="text" id="edit-marker-icon" class="c-input" placeholder="z.B. 🌸">
+                </div>
+            </div>
+            <div class="c-card__footer">
+                <button class="c-btn c-btn--primary" onclick="savePlantEdit()">Speichern</button>
+                <button class="c-btn c-btn--text" onclick="closePlantEditModal()">Abbrechen</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal: Pflanze hinzufügen -->
     <div id="modal-pflanze" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:1000; align-items:center; justify-content:center;">
         <div class="c-card" style="width:460px; max-height:85vh; overflow-y:auto;">
