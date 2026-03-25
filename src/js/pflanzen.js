@@ -109,8 +109,8 @@ function renderPflanzenListe(data) {
             ? group.plants.map((plant, pi) => {
                 const plantId = `plant-${gi}-${pi}`;
                 return `
-                <div style="margin:8px 0 0 16px; border-left:3px solid var(--primary-light); padding-left:12px;">
-                    <div onclick="toggleAccordion('${plantId}'); ensureBloomLoaded('plant', ${plant.id}, ${group.bloom_months_resolved || 0})" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; padding:6px 0;">
+                <div style="margin:4px 0 0 12px; border-left:3px solid var(--primary-light); padding-left:10px;">
+                    <div onclick="toggleAccordion('${plantId}'); ensureBloomLoaded('plant', ${plant.id}, ${group.bloom_months_resolved || 0})" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; padding:4px 0;">
                         <span style="font-size:0.9rem; font-weight:600;">Pflanze #${plant.id} <span style="color:var(--text-muted); font-weight:400;">(${plant.pos_x !== null ? parseFloat(plant.pos_x).toFixed(1) + '% / ' + parseFloat(plant.pos_y).toFixed(1) + '%' : 'keine Position'})</span></span>
                         <span id="${plantId}-icon" style="font-size:0.8rem; color:var(--text-muted);">▶</span>
                     </div>
@@ -126,8 +126,8 @@ function renderPflanzenListe(data) {
             : '<p style="margin:8px 0 0 16px; color:var(--text-muted); font-size:0.85rem;">Keine Pflanzen in dieser Gruppe.</p>';
 
         return `
-        <div style="margin-bottom:12px; border:1px solid var(--border); border-radius:var(--radius-md); overflow:hidden;">
-            <div style="padding:12px 16px; background:var(--bg-card); display:flex; justify-content:space-between; align-items:center;">
+        <div style="margin-bottom:4px; border:1px solid var(--border); border-radius:var(--radius-md); overflow:hidden;">
+            <div style="padding:6px 12px; background:var(--bg-card); display:flex; justify-content:space-between; align-items:center;">
                 <span onclick="toggleAccordion('${groupId}'); ensureBloomLoaded('group', ${group.id}, ${group.bloom_months_resolved || 0})" style="cursor:pointer; font-weight:600; flex:1;">${group.name || '(Unbenannte Gruppe)'}</span>
                 <div style="display:flex; align-items:center; gap:10px;">
                     <button class="c-btn c-btn--text" style="font-size:0.8rem;" onclick="openGruppeBearbeitenModal(${group.id})">Bearbeiten</button>

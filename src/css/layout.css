@@ -29,10 +29,12 @@
 
 .l-sidebar,
 .app__sidebar {
-    width: 280px;
+    width: 220px;
+    min-width: 220px;
     background-color: var(--bg-card);
     border-right: 1px solid rgba(0,0,0,0.05);
-    padding: 24px;
+    padding: 16px;
+    overflow-y: auto;
     transition: var(--transition);
 }
 
@@ -47,12 +49,9 @@
 @media (max-width: 900px) {
     .l-sidebar,
     .app__sidebar {
-        width: 80px;
-        padding: 16px;
-    }
-
-    .l-sidebar__text {
-        display: none;
+        width: 180px;
+        min-width: 180px;
+        padding: 12px;
     }
 }
 
