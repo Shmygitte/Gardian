@@ -1,5 +1,5 @@
 <?php
-ini_set('display_errors', 1);
+ini_set('display_errors', 0);
 error_reporting(E_ALL);
 
 session_start();
@@ -102,7 +102,7 @@ if ($action === 'getPins') {
                 COALESCE(ug_direct.type, ug.type, dg.type) as type,
                 COALESCE(p.marker_color, ug_direct.marker_color, ug.marker_color, dg.marker_color) as marker_color,
                 COALESCE(p.marker_icon, ug_direct.marker_icon, ug.marker_icon, dg.marker_icon) as marker_icon,
-                COALESCE(p.evergreen, ug_direct.evergreen, dg.evergreen) as evergreen,
+                COALESCE(p.evergreen, ug_direct.evergreen, ug.evergreen, dg.evergreen) as evergreen,
                 COALESCE(p.bloom_months, ug_direct.bloom_months, ug.bloom_months, dg.bloom_months) as bloom_months_resolved,
                 p.group_id,
                 p.user_group_id
@@ -260,7 +260,12 @@ if ($action === 'getPlantsList') {
 // =========================
 if ($action === 'getAllBloomObservations') {
     try {
-        $stmt = $db->prepare("SELECT plant_id, user_group_id, year, bloom_months FROM gd_bloom_observations WHERE user_id = ?");
+        $stmt = $db->prepare("
+            SELECT bo.plant_id, bo.user_group_id, ug.group_id, bo.year, bo.bloom_months
+            FROM gd_bloom_observations bo
+            LEFT JOIN gd_user_groups ug ON bo.user_group_id = ug.id
+            WHERE bo.user_id = ?
+        ");
         $stmt->execute([$_SESSION['user_id']]);
         echo json_encode(['success' => true, 'observations' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
     } catch (PDOException $e) {
@@ -350,7 +355,7 @@ if ($action === 'createUserGroup') {
         echo json_encode(['success' => false, 'error' => 'Name erforderlich']);
         exit;
     }
-    $fields = ['name','group_id','type','bloom_start','bloom_end','marker_icon','marker_color','marker_size','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen'];
+    $fields = ['name','group_id','type','bloom_months','marker_icon','marker_color','marker_size','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen'];
     $vals   = array_map(fn($f) => ($data[$f] ?? null) !== '' ? ($data[$f] ?? null) : null, $fields);
     $cols   = implode(',', $fields);
     $ph     = implode(',', array_fill(0, count($fields), '?'));
@@ -393,6 +398,26 @@ if ($action === 'addPlant') {
             $stmt->execute([$_SESSION['user_id'], $groupId, $posX, $posY]);
         }
         echo json_encode(['success' => true, 'id' => $db->lastInsertId()]);
+    } catch (PDOException $e) {
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+    exit;
+}
+
+// =========================
+// UPDATE USER GROUP
+// =========================
+if ($action === 'updateUserGroup') {
+    $id = $data['id'] ?? null;
+    if (!$id) { echo json_encode(['success' => false, 'error' => 'ID fehlt']); exit; }
+    $fields = ['name','type','bloom_months','marker_icon','marker_color','marker_size','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen'];
+    $set  = implode(', ', array_map(fn($f) => "$f = ?", $fields));
+    $vals = array_map(fn($f) => (($data[$f] ?? null) !== '' && ($data[$f] ?? null) !== null) ? $data[$f] : null, $fields);
+    $vals[] = $_SESSION['user_id'];
+    $vals[] = $id;
+    try {
+        $db->prepare("UPDATE gd_user_groups SET $set WHERE user_id = ? AND id = ?")->execute($vals);
+        echo json_encode(['success' => true]);
     } catch (PDOException $e) {
         echo json_encode(['success' => false, 'error' => $e->getMessage()]);
     }

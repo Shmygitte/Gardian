@@ -56,12 +56,14 @@ const GROUP_FIELDS = ['type','bloom_months','marker_icon','marker_color','marker
 const PLANT_FIELDS = ['pos_x','pos_y','bloom_months','marker_icon','marker_color','marker_size','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen','created_at'];
 
 let _pflanzenData = null;
+const _bloomLoaded = new Set();
 
 function renderPflanzenListeFiltered() {
     if (_pflanzenData) renderPflanzenListe(_pflanzenData);
 }
 
 async function loadPflanzenListe() {
+    _bloomLoaded.clear();
     const container = document.getElementById('pflanzen-liste');
     container.innerHTML = '<p style="color:var(--text-muted)">Lade...</p>';
 
@@ -90,7 +92,8 @@ function renderPflanzenListe(data) {
     if (typeof filterState !== 'undefined') {
         groups = groups.filter(g => {
             if (filterState.types.length && g.type && !filterState.types.includes(g.type)) return false;
-            if (filterState.groups !== null && !filterState.groups.has(String(g.group_id || g.id))) return false;
+            const groupKey = g.group_id ? String(g.group_id) : `u${g.id}`;
+            if (filterState.groups !== null && !filterState.groups.has(groupKey)) return false;
             return true;
         });
     }
@@ -124,9 +127,12 @@ function renderPflanzenListe(data) {
 
         return `
         <div style="margin-bottom:12px; border:1px solid var(--border); border-radius:var(--radius-md); overflow:hidden;">
-            <div onclick="toggleAccordion('${groupId}'); ensureBloomLoaded('group', ${group.id}, ${group.bloom_months_resolved || 0})" style="cursor:pointer; padding:12px 16px; background:var(--bg-card); display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-weight:600;">${group.name || '(Unbenannte Gruppe)'}</span>
-                <span style="font-size:0.8rem; color:var(--text-muted);">${group.plants.length} Pflanze(n) &nbsp;<span id="${groupId}-icon">▼</span></span>
+            <div style="padding:12px 16px; background:var(--bg-card); display:flex; justify-content:space-between; align-items:center;">
+                <span onclick="toggleAccordion('${groupId}'); ensureBloomLoaded('group', ${group.id}, ${group.bloom_months_resolved || 0})" style="cursor:pointer; font-weight:600; flex:1;">${group.name || '(Unbenannte Gruppe)'}</span>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <button class="c-btn c-btn--text" style="font-size:0.8rem;" onclick="openGruppeBearbeitenModal(${group.id})">Bearbeiten</button>
+                    <span onclick="toggleAccordion('${groupId}'); ensureBloomLoaded('group', ${group.id}, ${group.bloom_months_resolved || 0})" style="cursor:pointer; font-size:0.8rem; color:var(--text-muted);">${group.plants.length} Pflanze(n) &nbsp;<span id="${groupId}-icon">▼</span></span>
+                </div>
             </div>
             <div id="${groupId}" style="display:none; padding:12px 16px; background:var(--bg-surface);">
                 <p style="font-size:0.8rem; font-weight:600; color:var(--text-muted); margin-bottom:8px;">GRUPPENFELDER</p>
@@ -154,7 +160,6 @@ function toggleAccordion(id) {
 // ========================
 // BLÜTEZEIT & BEOBACHTUNGEN
 // ========================
-const _bloomLoaded = new Set();
 
 async function ensureBloomLoaded(type, id, inheritedBitmask) {
     const key = `${type}-${id}`;
@@ -273,6 +278,9 @@ async function bloomToggleMonth(btn, index, type, id, year) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'saveBloomObservation', ...param, year: parseInt(year), bloom_months: bitmask })
     });
+    // Karte aktualisieren
+    if (typeof loadBloomObservationsAll === 'function') await loadBloomObservationsAll();
+    if (typeof renderMarkers === 'function') renderMarkers();
 }
 
 async function addBloomYear(type, id) {
@@ -301,4 +309,37 @@ async function addBloomYear(type, id) {
         style="padding:4px 12px;border-radius:20px;border:1px solid var(--border);font-size:0.8rem;cursor:pointer;background:var(--bg-app);color:var(--text-main);"
         data-tab-key="${year}">${year}</button>`;
     switchBloomTab(`bloom-${type}-${id}`, String(year));
+}
+
+// ========================
+// GRUPPE BEARBEITEN
+// ========================
+function openGruppeBearbeitenModal(groupId) {
+    const group = (_pflanzenData?.groups || []).find(g => String(g.id) === String(groupId));
+    if (!group) return;
+
+    const body = document.getElementById('modal-neue-gruppe-body');
+    const formId = `form-edit-gruppe-${groupId}`;
+    body.innerHTML = renderGroupFormNice(group, formId, `saveGruppeBearbeiten(${groupId}, '${formId}')`);
+    document.querySelector('#modal-neue-gruppe .c-card__title').textContent = 'Pflanzengruppe bearbeiten';
+    document.getElementById('modal-neue-gruppe').style.display = 'flex';
+}
+
+async function saveGruppeBearbeiten(groupId, formId) {
+    const formData = getGroupFormNiceData(formId);
+    if (!formData.name) { alert('Bitte einen Namen eingeben.'); return; }
+
+    const res  = await fetch('backend/api.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'updateUserGroup', id: groupId, ...formData })
+    });
+    const data = await res.json();
+    if (data.success) {
+        if (typeof closeNeueGruppeModal === 'function') closeNeueGruppeModal();
+        await loadPflanzenListe();
+        if (typeof loadPins === 'function') await loadPins();
+    } else {
+        alert(data.error || 'Fehler beim Speichern');
+    }
 }

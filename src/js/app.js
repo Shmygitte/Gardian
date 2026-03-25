@@ -161,8 +161,8 @@ function getBloomBitmaskForPin(pin) {
     // Gruppen-Beobachtung als Fallback
     const groupObs = bloomObservations.find(o => {
         const matchGroup = pin.user_group_id
-            ? String(o.user_group_id) === String(pin.user_group_id)
-            : String(o.user_group_id) === String(pin.group_id);
+            ? String(o.user_group_id) === String(pin.user_group_id)   // eigene User-Gruppe
+            : String(o.group_id)      === String(pin.group_id);       // Standard-Gruppe via group_id
         return matchGroup && String(o.year) === bloomState.year;
     });
     if (groupObs) return parseInt(groupObs.bloom_months);
@@ -349,16 +349,24 @@ function renderMarkers() {
         marker.style.cursor = 'grab';
         marker.title = `${pin.name} (Alt+Drag = duplizieren)`;
 
-        // Bloom-Filter: Transparenz wenn nicht blühend
+        // Bloom-Filter: Farbe + Transparenz je nach Blühzustand
+        let markerColor = pin.marker_color || '#4CAF50';
         if (bloomState.enabled) {
             const bitmask  = getBloomBitmaskForPin(pin);
             const blooming = (bitmask >> bloomState.month) & 1;
-            marker.style.opacity    = blooming ? '1' : '0.2';
+            if (blooming) {
+                marker.style.opacity = '1';
+            } else if (pin.evergreen == 1) {
+                marker.style.opacity = '1';
+                markerColor = '#4CAF50'; // grün außerhalb der Blütezeit
+            } else {
+                marker.style.opacity = '0.2';
+            }
             marker.style.transition = 'opacity 0.3s ease';
         }
 
         marker.innerHTML = `
-            <div style="background:${pin.marker_color || '#4CAF50'}; color:white; border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center; border:2px solid white; box-shadow:0 2px 4px rgba(0,0,0,0.2);">
+            <div style="background:${markerColor}; color:white; border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center; border:2px solid white; box-shadow:0 2px 4px rgba(0,0,0,0.2);">
                 <span>${getEmoji(pin.type)}</span>
             </div>
         `;
@@ -584,9 +592,8 @@ async function openPlantModal() {
         });
     }
 
-    // Formular zurücksetzen
-    document.getElementById('modal-new-group-form').style.display = 'none';
-    document.getElementById('modal-submit-btn').textContent = 'Hinzufügen';
+    // Select zurücksetzen
+    document.getElementById('modal-group-select').value = '';
 }
 
 function onGroupSelectChange() {
