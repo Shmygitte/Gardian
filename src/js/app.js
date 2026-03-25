@@ -824,19 +824,33 @@ async function openGalleryModal(pin) {
     grid.innerHTML = '<p style="color:var(--text-muted);font-size:0.9rem;">Lade Bilder…</p>';
     modal.style.display = 'flex';
 
-    const res  = await fetch('backend/api.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'getImages', type: 'plant', plant_id: pin.id })
-    });
-    const data = await res.json();
+    const [resPlant, resGroup] = await Promise.all([
+        fetch('backend/api.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'getImages', type: 'plant', plant_id: pin.id })
+        }),
+        pin.group_id ? fetch('backend/api.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'getImages', type: 'group', group_id: pin.group_id })
+        }) : Promise.resolve(null)
+    ]);
 
-    if (!data.success || !data.images.length) {
+    const dataPlant = await resPlant.json();
+    const dataGroup = resGroup ? await resGroup.json() : { success: false, images: [] };
+
+    const images = [
+        ...(dataPlant.success ? dataPlant.images : []),
+        ...(dataGroup.success ? dataGroup.images : [])
+    ];
+
+    if (!images.length) {
         grid.innerHTML = '<p style="color:var(--text-muted);font-size:0.9rem;">Keine Bilder vorhanden.</p>';
         return;
     }
 
-    grid.innerHTML = data.images.map(img => `
+    grid.innerHTML = images.map(img => `
         <div class="gallery-image-item" onclick="showFullImage('${img.file_path}')">
             <img src="${img.file_path}" alt="">
         </div>
