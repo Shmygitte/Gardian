@@ -834,6 +834,10 @@ if ($action === 'getAllImages') {
             LEFT JOIN gd_default_groups dg_via_plant  ON p.group_id = dg_via_plant.id
             LEFT JOIN gd_default_groups dg_direct     ON i.group_id = dg_direct.id
             WHERE i.user_id = ?
+              AND (
+                  (i.plant_id IS NOT NULL AND p.id IS NOT NULL)
+                  OR (i.type IN ('group','default') AND i.group_id IS NOT NULL)
+              )
             ORDER BY group_name, i.id
         ");
         $stmt->execute([$_SESSION['user_id']]);
