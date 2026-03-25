@@ -515,6 +515,25 @@ if ($action === 'getGardenConfig') {
 }
 
 // =========================
+// SAVE GARDEN CONFIG
+// =========================
+if ($action === 'saveGardenConfig') {
+    $zoom  = $data['zoom']  ?? null;
+    $pan_x = $data['pan_x'] ?? null;
+    $pan_y = $data['pan_y'] ?? null;
+    try {
+        $db->prepare("INSERT INTO gd_user_garden_config (user_id, zoom, pan_x, pan_y)
+                      VALUES (?, ?, ?, ?)
+                      ON DUPLICATE KEY UPDATE zoom = VALUES(zoom), pan_x = VALUES(pan_x), pan_y = VALUES(pan_y)")
+           ->execute([$_SESSION['user_id'], $zoom, $pan_x, $pan_y]);
+        echo json_encode(['success' => true]);
+    } catch (PDOException $e) {
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+    exit;
+}
+
+// =========================
 // UPLOAD GARDEN PLAN
 // =========================
 if ($action === 'uploadGardenPlan') {

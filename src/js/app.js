@@ -26,6 +26,18 @@ const bloomState = {
 };
 let bloomObservations = []; // alle Beobachtungen des Users
 
+let _saveConfigTimer = null;
+function scheduleSaveConfig() {
+    clearTimeout(_saveConfigTimer);
+    _saveConfigTimer = setTimeout(() => {
+        fetch('backend/api.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'saveGardenConfig', zoom: state.zoom, pan_x: state.panX, pan_y: state.panY })
+        });
+    }, 800);
+}
+
 let elements = {};
 
 async function init() {
@@ -91,9 +103,9 @@ async function loadGardenConfig() {
             if (config.map_image_path) {
                 updateMapBackground(config.map_image_path);
             }
-            if (config.zoom_level) state.zoom = parseFloat(config.zoom_level);
-            if (config.pan_x) state.panX = parseInt(config.pan_x);
-            if (config.pan_y) state.panY = parseInt(config.pan_y);
+            if (config.zoom)  state.zoom = parseFloat(config.zoom);
+            if (config.pan_x) state.panX = parseFloat(config.pan_x);
+            if (config.pan_y) state.panY = parseFloat(config.pan_y);
             updateTransform();
         }
     } catch (err) {
@@ -430,8 +442,8 @@ function handleWheel(e) {
     state.panX = mouseX - (mouseX - state.panX) * zoomRatio;
     state.panY = mouseY - (mouseY - state.panY) * zoomRatio;
     state.zoom = newZoom;
-    
     updateTransform();
+    scheduleSaveConfig();
 }
 
 function handleMouseDown(e) {
@@ -516,6 +528,7 @@ async function handleMouseUp(e) {
         return;
     }
 
+    if (state.isPanning && state.hasMoved) scheduleSaveConfig();
     state.isPanning = false;
     elements.mapCanvas.style.cursor = 'default';
     setTimeout(() => { state.hasMoved = false; }, 50);
