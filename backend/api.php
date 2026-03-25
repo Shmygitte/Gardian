@@ -103,6 +103,7 @@ if ($action === 'getPins') {
                 COALESCE(p.marker_color, ug_direct.marker_color, ug.marker_color, dg.marker_color) as marker_color,
                 COALESCE(p.marker_icon, ug_direct.marker_icon, ug.marker_icon, dg.marker_icon) as marker_icon,
                 COALESCE(p.evergreen, ug_direct.evergreen, dg.evergreen) as evergreen,
+                COALESCE(p.bloom_months, ug_direct.bloom_months, ug.bloom_months, dg.bloom_months) as bloom_months_resolved,
                 p.group_id,
                 p.user_group_id
             FROM gd_user_plants p
@@ -248,6 +249,20 @@ if ($action === 'getPlantsList') {
         }
 
         echo json_encode(['success' => true, 'groups' => $groups]);
+    } catch (PDOException $e) {
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+    exit;
+}
+
+// =========================
+// GET ALL BLOOM OBSERVATIONS (für Karten-Slider)
+// =========================
+if ($action === 'getAllBloomObservations') {
+    try {
+        $stmt = $db->prepare("SELECT plant_id, user_group_id, year, bloom_months FROM gd_bloom_observations WHERE user_id = ?");
+        $stmt->execute([$_SESSION['user_id']]);
+        echo json_encode(['success' => true, 'observations' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
     } catch (PDOException $e) {
         echo json_encode(['success' => false, 'error' => $e->getMessage()]);
     }

@@ -178,8 +178,9 @@ async function ensureBloomLoaded(type, id, inheritedBitmask) {
 function renderBloomSection(container, type, id, inheritedBitmask, observations) {
     const months = ['J','F','M','A','M','J','J','A','S','O','N','D'];
 
-    // Tab-Daten: Standard + 2025–2030 + weitere gespeicherte Jahre
-    const defaultYears = [2025, 2026, 2027, 2028, 2029, 2030];
+    // Tab-Daten: Standard + sichtbare Jahre (1. Jan < heute) + weitere gespeicherte Jahre
+    const currentYear  = new Date().getFullYear();
+    const defaultYears = [2025, 2026, 2027, 2028, 2029, 2030].filter(y => y <= currentYear);
     const obsMap = Object.fromEntries(observations.map(o => [String(o.year), parseInt(o.bloom_months)]));
     const allYears = [...new Set([...defaultYears, ...observations.map(o => parseInt(o.year))])].sort();
 

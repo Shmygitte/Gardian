@@ -95,13 +95,43 @@
                 </div>
 
                 <!-- View: Dashboard (Karte) -->
-                <div id="view-dashboard" class="map" style="position: relative;">
-                    <div class="map__canvas" style="width: 100%; height: 100%; overflow: hidden; position: relative; cursor: default;"></div>
-                    <div id="map-controls" class="map__controls" style="position: absolute; bottom: 16px; right: 16px; display: flex; flex-direction: column; gap: 8px;">
-                        <label class="c-btn c-btn--secondary" style="cursor: pointer;">
-                            Karte hochladen
-                            <input type="file" id="map-upload-input" accept="image/*" style="display: none;">
-                        </label>
+                <div id="view-dashboard" style="flex-direction:column; height:100%; gap:0;">
+
+                    <!-- Blütezeit-Slider -->
+                    <div id="bloom-slider" style="background:var(--bg-card); border-bottom:1px solid var(--border); padding:10px 16px; display:flex; align-items:center; gap:10px; white-space:nowrap; flex-shrink:0;">
+                        <button onclick="setBloomAll()" id="bloom-btn-all" class="c-btn c-btn--primary" style="font-size:0.8rem; padding:5px 12px;">Alle</button>
+                        <div style="display:flex; gap:4px;" id="bloom-year-tabs">
+                            <button onclick="setBloomYear('std')" data-bloom-year="std" class="bloom-year-btn" style="padding:5px 10px; border-radius:20px; border:1px solid var(--border); font-size:0.8rem; cursor:pointer; background:var(--bg-app); color:var(--text-main);">Standard</button>
+                            <button onclick="setBloomYear(2025)" data-bloom-year="2025" class="bloom-year-btn" style="padding:5px 10px; border-radius:20px; border:1px solid var(--border); font-size:0.8rem; cursor:pointer; background:var(--bg-app); color:var(--text-main);">2025</button>
+                            <button onclick="setBloomYear(2026)" data-bloom-year="2026" class="bloom-year-btn" style="padding:5px 10px; border-radius:20px; border:1px solid var(--border); font-size:0.8rem; cursor:pointer; background:var(--bg-app); color:var(--text-main);">2026</button>
+                            <button onclick="setBloomYear(2027)" data-bloom-year="2027" class="bloom-year-btn" style="padding:5px 10px; border-radius:20px; border:1px solid var(--border); font-size:0.8rem; cursor:pointer; background:var(--bg-app); color:var(--text-main);">2027</button>
+                            <button onclick="setBloomYear(2028)" data-bloom-year="2028" class="bloom-year-btn" style="padding:5px 10px; border-radius:20px; border:1px solid var(--border); font-size:0.8rem; cursor:pointer; background:var(--bg-app); color:var(--text-main);">2028</button>
+                            <button onclick="setBloomYear(2029)" data-bloom-year="2029" class="bloom-year-btn" style="padding:5px 10px; border-radius:20px; border:1px solid var(--border); font-size:0.8rem; cursor:pointer; background:var(--bg-app); color:var(--text-main);">2029</button>
+                            <button onclick="setBloomYear(2030)" data-bloom-year="2030" class="bloom-year-btn" style="padding:5px 10px; border-radius:20px; border:1px solid var(--border); font-size:0.8rem; cursor:pointer; background:var(--bg-app); color:var(--text-main);">2030</button>
+                        </div>
+                        <div id="bloom-month-controls" style="display:none; align-items:center; gap:8px;">
+                            <button onclick="toggleBloomAutoplay()" id="bloom-autoplay-btn" style="width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--bg-app);cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;">▶</button>
+                            <select id="bloom-speed-select" onchange="setBloomSpeed(this.value)" style="padding:3px 6px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:0.75rem;background:var(--bg-app);color:var(--text-main);">
+                                <option value="1500">Langsam</option>
+                                <option value="800" selected>Normal</option>
+                                <option value="300">Schnell</option>
+                            </select>
+                            <span style="font-size:0.75rem; color:var(--text-muted); font-weight:600; min-width:28px;" id="bloom-month-label">Jan</span>
+                            <input type="range" min="0" max="11" value="0" id="bloom-month-input"
+                                oninput="setBloomMonth(this.value)"
+                                style="width:140px; accent-color:var(--primary);">
+                        </div>
+                    </div>
+
+                    <!-- Karte -->
+                    <div class="map" style="flex:1; position:relative; border-radius:0;">
+                        <div class="map__canvas" style="width: 100%; height: 100%; overflow: hidden; position: relative; cursor: default;"></div>
+                        <div id="map-controls" class="map__controls" style="position: absolute; bottom: 16px; right: 16px; display: flex; flex-direction: column; gap: 8px;">
+                            <label class="c-btn c-btn--secondary" style="cursor: pointer;">
+                                Karte hochladen
+                                <input type="file" id="map-upload-input" accept="image/*" style="display: none;">
+                            </label>
+                        </div>
                     </div>
                 </div>
             </main>
