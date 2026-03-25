@@ -5,8 +5,7 @@
 const GROUP_FIELDS_ADMIN = [
     { key: 'name',         label: 'Name',             type: 'text',   required: true },
     { key: 'type',         label: 'Typ',               type: 'select', options: ['tree','shrub','flower','s_flower'], labels: ['Baum','Strauch','Blume','Saisonblume'], required: true },
-    { key: 'bloom_start',  label: 'Blüte von (Monat)', type: 'number' },
-    { key: 'bloom_end',    label: 'Blüte bis (Monat)', type: 'number' },
+    { key: 'bloom_months', label: 'Blütezeit',         type: 'bloom_toggle' },
     { key: 'marker_icon',  label: 'Marker-Icon',       type: 'text' },
     { key: 'marker_color', label: 'Marker-Farbe',      type: 'color' },
     { key: 'marker_size',  label: 'Marker-Größe (px)', type: 'number' },
@@ -140,10 +139,41 @@ function renderGroupForm(data, onsubmit) {
         if (f.type === 'textarea') {
             return `<div style="margin-bottom:8px;"><label style="font-size:0.8rem;color:var(--text-muted);">${f.label}</label><br><textarea name="${f.key}" rows="2" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:var(--radius-sm);">${val}</textarea></div>`;
         }
+        if (f.type === 'bloom_toggle') {
+            return renderBloomToggle(f.label, parseInt(val) || 0, 'bloom_months');
+        }
         return `<div style="margin-bottom:8px;"><label style="font-size:0.8rem;color:var(--text-muted);">${f.label}${f.required ? ' *' : ''}</label><br><input type="${f.type}" name="${f.key}" value="${val}" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:var(--radius-sm);box-sizing:border-box;"></div>`;
     }).join('');
 
     return `<form id="${formId}" onsubmit="event.preventDefault(); ${onsubmit}" style="display:grid; grid-template-columns:1fr 1fr; gap:0 16px;">${fields}<div style="grid-column:1/-1; margin-top:8px;"><button type="submit" class="c-btn c-btn--primary">Speichern</button></div></form>`;
+}
+
+function renderBloomToggle(label, bitmask, inputName) {
+    const months = ['J','F','M','A','M','J','J','A','S','O','N','D'];
+    const btns = months.map((m, i) => {
+        const active = (bitmask >> i) & 1;
+        return `<button type="button"
+            onclick="toggleBloomMonth(this, ${i})"
+            data-active="${active}"
+            style="width:30px;height:30px;border-radius:6px;border:1px solid var(--border);font-size:0.75rem;font-weight:600;cursor:pointer;
+                   background:${active ? 'var(--primary)' : 'var(--bg-app)'};
+                   color:${active ? 'white' : 'var(--text-main)'};">${m}</button>`;
+    }).join('');
+    return `<div style="grid-column:1/-1; margin-bottom:8px;">
+        <label style="font-size:0.8rem;color:var(--text-muted);">${label}</label>
+        <div style="display:flex;gap:4px;margin-top:6px;">${btns}</div>
+        <input type="hidden" name="${inputName}" value="${bitmask}">
+    </div>`;
+}
+
+function toggleBloomMonth(btn, index) {
+    const active = btn.dataset.active === '1';
+    btn.dataset.active = active ? '0' : '1';
+    btn.style.background = active ? 'var(--bg-app)' : 'var(--primary)';
+    btn.style.color      = active ? 'var(--text-main)' : 'white';
+    const hidden = btn.closest('div').parentElement.querySelector('input[type="hidden"]');
+    let bitmask  = parseInt(hidden.value) || 0;
+    hidden.value = active ? bitmask & ~(1 << index) : bitmask | (1 << index);
 }
 
 function getFormData(formId) {

@@ -214,7 +214,8 @@ if ($action === 'getPlantsList') {
                 ug.id,
                 COALESCE(ug.name, dg.name) AS name,
                 ug.group_id,
-                ug.type, ug.bloom_start, ug.bloom_end,
+                ug.type, ug.bloom_months,
+                COALESCE(ug.bloom_months, dg.bloom_months) AS bloom_months_resolved,
                 ug.marker_icon, ug.marker_color, ug.marker_size,
                 ug.height, ug.location, ug.spacing,
                 ug.care, ug.water, ug.hardy, ug.scented,
@@ -227,26 +228,76 @@ if ($action === 'getPlantsList') {
         $stmt->execute([$_SESSION['user_id']]);
         $groups = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Pflanzen je Gruppe laden
+        // Pflanzen je Gruppe laden (Standard-Gruppen via group_id, eigene via user_group_id)
         $stmtPlants = $db->prepare("
             SELECT
-                p.id, p.group_id, p.pos_x, p.pos_y,
-                p.bloom_start, p.bloom_end,
+                p.id, p.group_id, p.user_group_id, p.pos_x, p.pos_y,
+                p.bloom_months,
                 p.marker_icon, p.marker_color, p.marker_size,
                 p.height, p.location, p.spacing,
                 p.care, p.water, p.hardy, p.scented,
                 p.cutflower, p.lifespan, p.features, p.evergreen,
                 p.created_at
             FROM gd_user_plants p
-            WHERE p.user_id = ? AND p.group_id = ?
+            WHERE p.user_id = ? AND (p.group_id = ? OR p.user_group_id = ?)
         ");
 
         foreach ($groups as &$group) {
-            $stmtPlants->execute([$_SESSION['user_id'], $group['group_id'] ?? 0]);
+            $stmtPlants->execute([$_SESSION['user_id'], $group['group_id'] ?? 0, $group['id']]);
             $group['plants'] = $stmtPlants->fetchAll(PDO::FETCH_ASSOC);
         }
 
         echo json_encode(['success' => true, 'groups' => $groups]);
+    } catch (PDOException $e) {
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+    exit;
+}
+
+// =========================
+// GET BLOOM OBSERVATIONS
+// =========================
+if ($action === 'getBloomObservations') {
+    $plantId     = $data['plant_id']      ?? null;
+    $userGroupId = $data['user_group_id'] ?? null;
+    if (!$plantId && !$userGroupId) { echo json_encode(['success' => false, 'error' => 'Fehlende ID']); exit; }
+    try {
+        if ($plantId) {
+            $stmt = $db->prepare("SELECT year, bloom_months FROM gd_bloom_observations WHERE user_id = ? AND plant_id = ? ORDER BY year DESC");
+            $stmt->execute([$_SESSION['user_id'], $plantId]);
+        } else {
+            $stmt = $db->prepare("SELECT year, bloom_months FROM gd_bloom_observations WHERE user_id = ? AND user_group_id = ? ORDER BY year DESC");
+            $stmt->execute([$_SESSION['user_id'], $userGroupId]);
+        }
+        echo json_encode(['success' => true, 'observations' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+    } catch (PDOException $e) {
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+    exit;
+}
+
+// =========================
+// SAVE BLOOM OBSERVATION
+// =========================
+if ($action === 'saveBloomObservation') {
+    $plantId     = $data['plant_id']      ?? null;
+    $userGroupId = $data['user_group_id'] ?? null;
+    $year        = (int)($data['year']        ?? 0);
+    $bloomMonths = (int)($data['bloom_months'] ?? 0);
+    if ((!$plantId && !$userGroupId) || !$year) { echo json_encode(['success' => false, 'error' => 'Fehlende Parameter']); exit; }
+    try {
+        if ($plantId) {
+            $db->prepare("INSERT INTO gd_bloom_observations (user_id, plant_id, year, bloom_months)
+                          VALUES (?, ?, ?, ?)
+                          ON DUPLICATE KEY UPDATE bloom_months = VALUES(bloom_months)")
+               ->execute([$_SESSION['user_id'], $plantId, $year, $bloomMonths]);
+        } else {
+            $db->prepare("INSERT INTO gd_bloom_observations (user_id, user_group_id, year, bloom_months)
+                          VALUES (?, ?, ?, ?)
+                          ON DUPLICATE KEY UPDATE bloom_months = VALUES(bloom_months)")
+               ->execute([$_SESSION['user_id'], $userGroupId, $year, $bloomMonths]);
+        }
+        echo json_encode(['success' => true]);
     } catch (PDOException $e) {
         echo json_encode(['success' => false, 'error' => $e->getMessage()]);
     }
@@ -496,7 +547,7 @@ if ($action === 'adminAddGroup') {
         echo json_encode(['success' => false, 'error' => 'Name und Typ erforderlich']);
         exit;
     }
-    $fields = ['name','type','bloom_start','bloom_end','marker_icon','marker_color','marker_size','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen'];
+    $fields = ['name','type','bloom_months','marker_icon','marker_color','marker_size','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen'];
     $vals = array_map(fn($f) => $data[$f] ?? null, $fields);
     $placeholders = implode(',', array_fill(0, count($fields), '?'));
     $cols = implode(',', $fields);
@@ -512,7 +563,7 @@ if ($action === 'adminUpdateGroup') {
     requireAdmin($db, $_SESSION['user_id']);
     $id = $data['id'] ?? null;
     if (!$id) { echo json_encode(['success' => false]); exit; }
-    $fields = ['name','type','bloom_start','bloom_end','marker_icon','marker_color','marker_size','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen'];
+    $fields = ['name','type','bloom_months','marker_icon','marker_color','marker_size','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen'];
     $set  = implode(',', array_map(fn($f) => "$f=?", $fields));
     $vals = array_map(fn($f) => $data[$f] ?? null, $fields);
     $vals[] = $id;

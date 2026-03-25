@@ -4,8 +4,7 @@
 
 const FIELD_LABELS = {
     type:         'Typ',
-    bloom_start:  'Blüte von (Monat)',
-    bloom_end:    'Blüte bis (Monat)',
+    bloom_months: 'Blütezeit (Standard)',
     marker_icon:  'Marker-Icon',
     marker_color: 'Marker-Farbe',
     marker_size:  'Marker-Größe',
@@ -33,6 +32,12 @@ function formatValue(key, val) {
     if (key === 'hardy' || key === 'scented' || key === 'cutflower' || key === 'evergreen') return val == 1 ? 'Ja' : 'Nein';
     if (key === 'marker_color') return `<span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${val};border:1px solid #ccc;vertical-align:middle;margin-right:4px;"></span>${val}`;
     if (key === 'pos_x' || key === 'pos_y') return parseFloat(val).toFixed(1) + '%';
+    if (key === 'bloom_months') {
+        const names = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+        const bitmask = parseInt(val) || 0;
+        const active = names.filter((_, i) => (bitmask >> i) & 1);
+        return active.length ? active.join(', ') : '—';
+    }
     return val;
 }
 
@@ -47,8 +52,8 @@ function renderFieldTable(obj, fields) {
     return `<table style="border-collapse:collapse;width:100%;">${rows}</table>`;
 }
 
-const GROUP_FIELDS = ['type','bloom_start','bloom_end','marker_icon','marker_color','marker_size','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen'];
-const PLANT_FIELDS = ['pos_x','pos_y','bloom_start','bloom_end','marker_icon','marker_color','marker_size','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen','created_at'];
+const GROUP_FIELDS = ['type','bloom_months','marker_icon','marker_color','marker_size','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen'];
+const PLANT_FIELDS = ['pos_x','pos_y','bloom_months','marker_icon','marker_color','marker_size','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen','created_at'];
 
 let _pflanzenData = null;
 
@@ -102,12 +107,16 @@ function renderPflanzenListe(data) {
                 const plantId = `plant-${gi}-${pi}`;
                 return `
                 <div style="margin:8px 0 0 16px; border-left:3px solid var(--primary-light); padding-left:12px;">
-                    <div onclick="toggleAccordion('${plantId}')" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; padding:6px 0;">
+                    <div onclick="toggleAccordion('${plantId}'); ensureBloomLoaded('plant', ${plant.id}, ${group.bloom_months_resolved || 0})" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; padding:6px 0;">
                         <span style="font-size:0.9rem; font-weight:600;">Pflanze #${plant.id} <span style="color:var(--text-muted); font-weight:400;">(${plant.pos_x !== null ? parseFloat(plant.pos_x).toFixed(1) + '% / ' + parseFloat(plant.pos_y).toFixed(1) + '%' : 'keine Position'})</span></span>
                         <span id="${plantId}-icon" style="font-size:0.8rem; color:var(--text-muted);">▶</span>
                     </div>
                     <div id="${plantId}" style="display:none; padding-bottom:8px;">
                         ${renderFieldTable(plant, PLANT_FIELDS)}
+                        <div style="margin-top:10px; border-top:1px solid var(--border); padding-top:10px;">
+                            <p style="font-size:0.8rem; font-weight:700; color:var(--text-muted); margin-bottom:6px;">BLÜTEZEIT & BEOBACHTUNGEN</p>
+                            <div id="bloom-plant-${plant.id}"><p style="font-size:0.8rem;color:var(--text-muted);">Lade...</p></div>
+                        </div>
                     </div>
                 </div>`;
             }).join('')
@@ -115,13 +124,17 @@ function renderPflanzenListe(data) {
 
         return `
         <div style="margin-bottom:12px; border:1px solid var(--border); border-radius:var(--radius-md); overflow:hidden;">
-            <div onclick="toggleAccordion('${groupId}')" style="cursor:pointer; padding:12px 16px; background:var(--bg-card); display:flex; justify-content:space-between; align-items:center;">
+            <div onclick="toggleAccordion('${groupId}'); ensureBloomLoaded('group', ${group.id}, ${group.bloom_months_resolved || 0})" style="cursor:pointer; padding:12px 16px; background:var(--bg-card); display:flex; justify-content:space-between; align-items:center;">
                 <span style="font-weight:600;">${group.name || '(Unbenannte Gruppe)'}</span>
                 <span style="font-size:0.8rem; color:var(--text-muted);">${group.plants.length} Pflanze(n) &nbsp;<span id="${groupId}-icon">▼</span></span>
             </div>
             <div id="${groupId}" style="display:none; padding:12px 16px; background:var(--bg-surface);">
                 <p style="font-size:0.8rem; font-weight:600; color:var(--text-muted); margin-bottom:8px;">GRUPPENFELDER</p>
                 ${renderFieldTable(group, GROUP_FIELDS)}
+                <div style="margin-top:12px; border-top:1px solid var(--border); padding-top:10px;">
+                    <p style="font-size:0.8rem; font-weight:700; color:var(--text-muted); margin-bottom:6px;">BLÜTEZEIT & BEOBACHTUNGEN</p>
+                    <div id="bloom-group-${group.id}"><p style="font-size:0.8rem;color:var(--text-muted);">Lade...</p></div>
+                </div>
                 <p style="font-size:0.8rem; font-weight:600; color:var(--text-muted); margin:12px 0 4px;">PFLANZEN</p>
                 ${plantsHtml}
             </div>
@@ -136,4 +149,155 @@ function toggleAccordion(id) {
     const open = el.style.display === 'block';
     el.style.display = open ? 'none' : 'block';
     if (icon) icon.textContent = open ? '▼' : '▲';
+}
+
+// ========================
+// BLÜTEZEIT & BEOBACHTUNGEN
+// ========================
+const _bloomLoaded = new Set();
+
+async function ensureBloomLoaded(type, id, inheritedBitmask) {
+    const key = `${type}-${id}`;
+    if (_bloomLoaded.has(key)) return;
+    _bloomLoaded.add(key);
+
+    const container = document.getElementById(`bloom-${type}-${id}`);
+    if (!container) return;
+
+    const param = type === 'group' ? { user_group_id: id } : { plant_id: id };
+    const res  = await fetch('backend/api.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'getBloomObservations', ...param })
+    });
+    const data = await res.json();
+    const observations = data.success ? data.observations : [];
+    renderBloomSection(container, type, id, inheritedBitmask, observations);
+}
+
+function renderBloomSection(container, type, id, inheritedBitmask, observations) {
+    const months = ['J','F','M','A','M','J','J','A','S','O','N','D'];
+
+    // Tab-Daten: Standard + 2025–2030 + weitere gespeicherte Jahre
+    const defaultYears = [2025, 2026, 2027, 2028, 2029, 2030];
+    const obsMap = Object.fromEntries(observations.map(o => [String(o.year), parseInt(o.bloom_months)]));
+    const allYears = [...new Set([...defaultYears, ...observations.map(o => parseInt(o.year))])].sort();
+
+    const tabs = [
+        { key: 'std', label: 'Standard', bitmask: inheritedBitmask, readonly: true },
+        ...allYears.map(y => ({ key: String(y), label: String(y), bitmask: obsMap[y] ?? 0, readonly: false }))
+    ];
+
+    function tabsHtml(activeKey) {
+        return tabs.map(t => `
+            <button type="button" onclick="switchBloomTab('bloom-${type}-${id}', '${t.key}')"
+                style="padding:4px 12px; border-radius:20px; border:1px solid var(--border); font-size:0.8rem; cursor:pointer;
+                       background:${t.key === activeKey ? 'var(--primary)' : 'var(--bg-app)'};
+                       color:${t.key === activeKey ? 'white' : 'var(--text-main)'};"
+                data-tab-key="${t.key}">${t.label}</button>`).join('');
+    }
+
+    function togglesHtml(bitmask, readonly, tabKey) {
+        return months.map((m, i) => {
+            const active = (bitmask >> i) & 1;
+            const onclick = readonly ? '' : `onclick="bloomToggleMonth(this, ${i}, '${type}', ${id}, '${tabKey}')"`;
+            return `<button type="button" ${onclick} data-active="${active}"
+                style="width:30px;height:30px;border-radius:6px;border:1px solid var(--border);font-size:0.75rem;font-weight:600;
+                       cursor:${readonly ? 'default' : 'pointer'};
+                       background:${active ? 'var(--primary)' : 'var(--bg-app)'};
+                       color:${active ? 'white' : 'var(--text-main)'};">${m}</button>`;
+        }).join('');
+    }
+
+    const firstTab = tabs[0];
+    container.innerHTML = `
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px;">
+            <div id="bloom-tabs-${type}-${id}" style="display:flex;gap:4px;flex-wrap:wrap;">${tabsHtml(firstTab.key)}</div>
+            <button type="button" onclick="addBloomYear('${type}', ${id})"
+                style="padding:4px 10px;border-radius:20px;border:1px dashed var(--border);font-size:0.8rem;cursor:pointer;background:transparent;color:var(--text-muted);">+ Jahr</button>
+        </div>
+        <div id="bloom-toggles-${type}-${id}" style="display:flex;gap:4px;flex-wrap:wrap;">
+            ${togglesHtml(firstTab.bitmask, firstTab.readonly, firstTab.key)}
+        </div>
+        <input type="hidden" id="bloom-activekey-${type}-${id}" value="${firstTab.key}">
+        <script type="application/json" id="bloom-tabdata-${type}-${id}">${JSON.stringify(tabs)}</script>`;
+}
+
+function switchBloomTab(containerId, key) {
+    const container   = document.getElementById(containerId);
+    if (!container) return;
+    const [,type, id] = containerId.split('-');
+    const tabs        = JSON.parse(document.getElementById(`bloom-tabdata-${type}-${id}`).textContent);
+    const tab         = tabs.find(t => t.key === key);
+    if (!tab) return;
+
+    const months = ['J','F','M','A','M','J','J','A','S','O','N','D'];
+    document.getElementById(`bloom-toggles-${type}-${id}`).innerHTML = months.map((m, i) => {
+        const active  = (tab.bitmask >> i) & 1;
+        const onclick = tab.readonly ? '' : `onclick="bloomToggleMonth(this, ${i}, '${type}', ${id}, '${key}')"`;
+        return `<button type="button" ${onclick} data-active="${active}"
+            style="width:30px;height:30px;border-radius:6px;border:1px solid var(--border);font-size:0.75rem;font-weight:600;
+                   cursor:${tab.readonly ? 'default' : 'pointer'};
+                   background:${active ? 'var(--primary)' : 'var(--bg-app)'};
+                   color:${active ? 'white' : 'var(--text-main)'};">${m}</button>`;
+    }).join('');
+
+    document.getElementById(`bloom-activekey-${type}-${id}`).value = key;
+
+    // Tab-Buttons neu rendern
+    document.getElementById(`bloom-tabs-${type}-${id}`).querySelectorAll('button').forEach(btn => {
+        const isActive = btn.dataset.tabKey === key;
+        btn.style.background = isActive ? 'var(--primary)' : 'var(--bg-app)';
+        btn.style.color      = isActive ? 'white' : 'var(--text-main)';
+    });
+}
+
+async function bloomToggleMonth(btn, index, type, id, year) {
+    const active  = btn.dataset.active === '1';
+    btn.dataset.active   = active ? '0' : '1';
+    btn.style.background = active ? 'var(--bg-app)' : 'var(--primary)';
+    btn.style.color      = active ? 'var(--text-main)' : 'white';
+
+    // Bitmask aus Tab-Daten aktualisieren
+    const tabs    = JSON.parse(document.getElementById(`bloom-tabdata-${type}-${id}`).textContent);
+    const tab     = tabs.find(t => t.key === year);
+    let bitmask   = tab ? tab.bitmask : 0;
+    bitmask       = active ? bitmask & ~(1 << index) : bitmask | (1 << index);
+    if (tab) { tab.bitmask = bitmask; document.getElementById(`bloom-tabdata-${type}-${id}`).textContent = JSON.stringify(tabs); }
+
+    // Speichern
+    const param = type === 'group' ? { user_group_id: id } : { plant_id: id };
+    await fetch('backend/api.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'saveBloomObservation', ...param, year: parseInt(year), bloom_months: bitmask })
+    });
+}
+
+async function addBloomYear(type, id) {
+    const year = parseInt(prompt('Jahr eingeben (z.B. 2025):'));
+    if (!year || year < 2000 || year > 2100) return;
+
+    const tabs = JSON.parse(document.getElementById(`bloom-tabdata-${type}-${id}`).textContent);
+    if (tabs.find(t => t.key === String(year))) {
+        switchBloomTab(`bloom-${type}-${id}`, String(year));
+        return;
+    }
+
+    // Leere Beobachtung anlegen
+    const param = type === 'group' ? { user_group_id: id } : { plant_id: id };
+    await fetch('backend/api.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'saveBloomObservation', ...param, year, bloom_months: 0 })
+    });
+
+    // Tab hinzufügen und aktivieren
+    tabs.push({ key: String(year), label: String(year), bitmask: 0, readonly: false });
+    document.getElementById(`bloom-tabdata-${type}-${id}`).textContent = JSON.stringify(tabs);
+    const tabsEl = document.getElementById(`bloom-tabs-${type}-${id}`);
+    tabsEl.innerHTML += `<button type="button" onclick="switchBloomTab('bloom-${type}-${id}', '${year}')"
+        style="padding:4px 12px;border-radius:20px;border:1px solid var(--border);font-size:0.8rem;cursor:pointer;background:var(--bg-app);color:var(--text-main);"
+        data-tab-key="${year}">${year}</button>`;
+    switchBloomTab(`bloom-${type}-${id}`, String(year));
 }
