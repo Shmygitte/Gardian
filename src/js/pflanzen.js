@@ -154,7 +154,7 @@ function renderPflanzenListe(data) {
                 <div style="margin-top:12px; border-top:1px solid var(--border); padding-top:10px;">
                     <p style="font-size:0.8rem; font-weight:700; color:var(--text-muted); margin-bottom:6px;">FOTOS</p>
                     <div id="images-group-${group.id}"></div>
-                    <input type="file" id="file-group-${group.id}" accept="image/*" style="position:absolute;opacity:0;width:0;height:0;" onchange="uploadImage(this,'group',${group.group_id || null},null,'images-group-${group.id}')">
+                    <input type="file" id="file-group-${group.id}" accept="image/*" style="position:absolute;opacity:0;width:0;height:0;" onchange="uploadImage(this,'group',${group.group_id || null},null,'images-group-${group.id}',${group.id})">
                     <button class="c-btn c-btn--text" style="font-size:0.8rem;" onclick="document.getElementById('file-group-${group.id}').click()">+ Foto hochladen</button>
                 </div>
                 <p style="font-size:0.8rem; font-weight:600; color:var(--text-muted); margin:12px 0 4px;">PFLANZEN</p>
@@ -405,14 +405,15 @@ async function saveGruppeBearbeiten(groupId, formId) {
 // =========================
 // BILD-UPLOAD & GALERIE
 // =========================
-async function uploadImage(input, type, groupId, plantId, containerId) {
+async function uploadImage(input, type, groupId, plantId, containerId, userGroupId) {
     if (!input.files[0]) return;
     const formData = new FormData();
     formData.append('action', 'uploadImage');
     formData.append('type', type);
     formData.append('image', input.files[0]);
-    if (groupId) formData.append('group_id', groupId);
-    if (plantId) formData.append('plant_id', plantId);
+    if (groupId)     formData.append('group_id',      groupId);
+    if (plantId)     formData.append('plant_id',      plantId);
+    if (userGroupId) formData.append('user_group_id', userGroupId);
 
     const res  = await fetch('backend/api.php', { method: 'POST', body: formData });
     const data = await res.json();

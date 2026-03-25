@@ -10,6 +10,9 @@ $data = json_decode(file_get_contents('php://input'), true);
 $action = $data['action'] ?? $_POST['action'] ?? $_GET['action'] ?? null;
 $db = getDB();
 
+// Schema-Migration: user_group_id in gd_images (einmalig)
+try { $db->exec("ALTER TABLE gd_images ADD COLUMN user_group_id INT NULL DEFAULT NULL"); } catch (PDOException $e) {}
+
 // =========================
 // PROTECTION
 // =========================
@@ -608,9 +611,10 @@ if ($action === 'uploadGardenPlan') {
 // UPLOAD IMAGE
 // =========================
 if ($action === 'uploadImage') {
-    $type    = $_POST['type']     ?? null; // 'default', 'group', 'plant'
-    $groupId = $_POST['group_id'] ?? null;
-    $plantId = $_POST['plant_id'] ?? null;
+    $type        = $_POST['type']          ?? null; // 'default', 'group', 'plant'
+    $groupId     = $_POST['group_id']      ?? null;
+    $plantId     = $_POST['plant_id']      ?? null;
+    $userGroupId = $_POST['user_group_id'] ?? null;
     if (!$type || !isset($_FILES['image'])) {
         echo json_encode(['success' => false, 'error' => 'Parameter fehlen']); exit;
     }
@@ -629,9 +633,9 @@ if ($action === 'uploadImage') {
         echo json_encode(['success' => false, 'error' => 'Upload fehlgeschlagen']); exit;
     }
     try {
-        $db->prepare("INSERT INTO gd_images (type, group_id, plant_id, user_id, file_path, is_primary)
-                      VALUES (?, ?, ?, ?, ?, 0)")
-           ->execute([$type, $groupId ?: null, $plantId ?: null, $_SESSION['user_id'], $dbPath]);
+        $db->prepare("INSERT INTO gd_images (type, group_id, plant_id, user_group_id, user_id, file_path, is_primary)
+                      VALUES (?, ?, ?, ?, ?, ?, 0)")
+           ->execute([$type, $groupId ?: null, $plantId ?: null, $userGroupId ?: null, $_SESSION['user_id'], $dbPath]);
         echo json_encode(['success' => true, 'path' => $dbPath, 'id' => $db->lastInsertId()]);
     } catch (PDOException $e) {
         echo json_encode(['success' => false, 'error' => $e->getMessage()]);
@@ -825,18 +829,20 @@ if ($action === 'getAllImages') {
                 i.id, i.file_path, i.type, i.plant_id, i.group_id,
                 p.user_group_id AS plant_user_group_id,
                 p.group_id      AS plant_group_id,
-                COALESCE(ug_direct.name, ug_via_plant.name, dg_via_plant.name, dg_direct.name, '(Unbenannt)') AS group_name,
-                COALESCE(ug_direct.type, ug_via_plant.type, dg_via_plant.type, dg_direct.type)                AS group_type
+                COALESCE(ug_direct.name, ug_via_plant.name, ug_img.name, dg_via_plant.name, dg_direct.name, '(Unbenannt)') AS group_name,
+                COALESCE(ug_direct.type, ug_via_plant.type, ug_img.type, dg_via_plant.type, dg_direct.type)                AS group_type
             FROM gd_images i
             LEFT JOIN gd_user_plants    p             ON i.plant_id = p.id
             LEFT JOIN gd_user_groups    ug_direct     ON p.user_group_id = ug_direct.id
             LEFT JOIN gd_user_groups    ug_via_plant  ON p.group_id = ug_via_plant.group_id AND ug_via_plant.user_id = i.user_id
+            LEFT JOIN gd_user_groups    ug_img        ON i.user_group_id = ug_img.id
             LEFT JOIN gd_default_groups dg_via_plant  ON p.group_id = dg_via_plant.id
             LEFT JOIN gd_default_groups dg_direct     ON i.group_id = dg_direct.id
             WHERE i.user_id = ?
               AND (
                   (i.plant_id IS NOT NULL AND p.id IS NOT NULL)
                   OR (i.type IN ('group','default') AND i.group_id IS NOT NULL)
+                  OR i.user_group_id IS NOT NULL
               )
             ORDER BY group_name, i.id
         ");
