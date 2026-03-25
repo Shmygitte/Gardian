@@ -364,8 +364,41 @@ function renderMarkers() {
         `;
 
         marker.addEventListener('mousedown', (e) => handleMarkerMouseDown(e, String(pin.id)));
+        marker.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); openPlantEditModal(pin); });
         overlay.appendChild(marker);
     });
+}
+
+function openPlantEditModal(pin) {
+    document.getElementById('edit-plant-id').value      = pin.id;
+    document.getElementById('modal-edit-title').textContent = `${pin.name} bearbeiten`;
+    document.getElementById('edit-marker-color').value  = pin.marker_color || '#4CAF50';
+    document.getElementById('edit-marker-size').value   = pin.marker_size  || '';
+    document.getElementById('edit-marker-icon').value   = pin.marker_icon  || '';
+    document.getElementById('modal-pflanze-edit').style.display = 'flex';
+}
+
+function closePlantEditModal() {
+    document.getElementById('modal-pflanze-edit').style.display = 'none';
+}
+
+async function savePlantEdit() {
+    const id = document.getElementById('edit-plant-id').value;
+    const payload = {
+        action:       'updatePlant',
+        id:           parseInt(id),
+        marker_color: document.getElementById('edit-marker-color').value,
+        marker_size:  document.getElementById('edit-marker-size').value  || null,
+        marker_icon:  document.getElementById('edit-marker-icon').value  || null,
+    };
+    const res  = await fetch('backend/api.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    const data = await res.json();
+    if (data.success) {
+        closePlantEditModal();
+        await loadPins();
+    } else {
+        alert(data.error || 'Fehler beim Speichern');
+    }
 }
 
 function getEmoji(type) {
