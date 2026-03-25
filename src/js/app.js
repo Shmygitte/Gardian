@@ -360,7 +360,7 @@ function renderMarkers() {
         marker.style.pointerEvents = 'auto';
         marker.style.transform = 'translate(-50%, -50%)';
         marker.style.cursor = 'grab';
-        marker.title = `${pin.name} (Alt+Drag = duplizieren)`;
+        marker.title = '';
 
         // Bloom-Filter: Farbe + Transparenz je nach Blühzustand
         let markerColor = pin.marker_color || '#4CAF50';
