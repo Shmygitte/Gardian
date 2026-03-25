@@ -820,6 +820,43 @@ if ($action === 'adminDeleteGroup') {
 }
 
 // =========================
+// CLEANUP ORPHANED IMAGES
+// =========================
+if ($action === 'cleanupImages') {
+    $deleted = 0;
+
+    // 1. Verwaiste Pflanzenbilder (plant_id existiert nicht mehr)
+    $stmt = $db->prepare("
+        SELECT i.id, i.file_path FROM gd_images i
+        LEFT JOIN gd_user_plants p ON i.plant_id = p.id
+        WHERE i.user_id = ? AND i.plant_id IS NOT NULL AND p.id IS NULL
+    ");
+    $stmt->execute([$_SESSION['user_id']]);
+    foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $img) {
+        $path = __DIR__ . '/../' . $img['file_path'];
+        if (file_exists($path)) unlink($path);
+        $db->prepare("DELETE FROM gd_images WHERE id = ?")->execute([$img['id']]);
+        $deleted++;
+    }
+
+    // 2. Gruppenbilder ohne Zuordnung (type='group', group_id NULL, user_group_id NULL)
+    $stmt = $db->prepare("
+        SELECT id, file_path FROM gd_images
+        WHERE user_id = ? AND type = 'group' AND group_id IS NULL AND user_group_id IS NULL AND plant_id IS NULL
+    ");
+    $stmt->execute([$_SESSION['user_id']]);
+    foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $img) {
+        $path = __DIR__ . '/../' . $img['file_path'];
+        if (file_exists($path)) unlink($path);
+        $db->prepare("DELETE FROM gd_images WHERE id = ?")->execute([$img['id']]);
+        $deleted++;
+    }
+
+    echo json_encode(['success' => true, 'deleted' => $deleted]);
+    exit;
+}
+
+// =========================
 // GET ALL IMAGES (Galerie)
 // =========================
 if ($action === 'getAllImages') {
