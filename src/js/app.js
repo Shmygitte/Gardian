@@ -530,6 +530,9 @@ function handleMapClick(e) {
     const img = elements.mapWrapper.querySelector('.map__img');
     if (!img || img.style.display === 'none') return;
 
+    const rect = img.getBoundingClientRect();
+    if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) return;
+
     const { x, y } = getOverlayCoords(e.clientX, e.clientY);
     state.pendingCoords = { x, y };
     openPlantModal();
