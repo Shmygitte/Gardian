@@ -18,6 +18,14 @@ const state = {
     pendingCoords: null
 };
 
+// Blütezeit-Slider
+const bloomState = {
+    enabled: false,
+    year:  'std', // 'std' oder Jahreszahl als String
+    month: 0,     // 0–11 (Bit-Index)
+};
+let bloomObservations = []; // alle Beobachtungen des Users
+
 let elements = {};
 
 async function init() {
@@ -36,8 +44,10 @@ async function init() {
     
     // 2. Data
     await loadGardenConfig();
+    await loadBloomObservationsAll();
     await loadPins();
     loadFilterGroups();
+    initBloomSlider();
 
     // 3. Events
     setupEventListeners();
@@ -127,6 +137,176 @@ async function handleMapUpload(e) {
     }
 }
 
+async function loadBloomObservationsAll() {
+    try {
+        const res  = await fetch('backend/api.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'getAllBloomObservations' })
+        });
+        const data = await res.json();
+        if (data.success) bloomObservations = data.observations;
+    } catch (err) {
+        console.error('Failed to load bloom observations', err);
+    }
+}
+
+function getBloomBitmaskForPin(pin) {
+    if (bloomState.year === 'std') {
+        return parseInt(pin.bloom_months_resolved) || 0;
+    }
+    // Pflanze-spezifische Beobachtung
+    const plantObs = bloomObservations.find(o => String(o.plant_id) === String(pin.id) && String(o.year) === bloomState.year);
+    if (plantObs) return parseInt(plantObs.bloom_months);
+    // Gruppen-Beobachtung als Fallback
+    const groupObs = bloomObservations.find(o => {
+        const matchGroup = pin.user_group_id
+            ? String(o.user_group_id) === String(pin.user_group_id)
+            : String(o.user_group_id) === String(pin.group_id);
+        return matchGroup && String(o.year) === bloomState.year;
+    });
+    if (groupObs) return parseInt(groupObs.bloom_months);
+    // Standard-Blühzeit als letzter Fallback
+    return parseInt(pin.bloom_months_resolved) || 0;
+}
+
+// ========================
+// BLOOM SLIDER STEUERUNG
+// ========================
+const MONTH_NAMES = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+let bloomAutoplayTimer = null;
+let bloomAutoplaySpeed = 800;
+
+function setBloomAll() {
+    bloomState.enabled = false;
+    document.getElementById('bloom-month-controls').style.display = 'none';
+    document.querySelectorAll('.bloom-year-btn').forEach(b => {
+        b.style.background = 'var(--bg-app)';
+        b.style.color      = 'var(--text-main)';
+    });
+    document.getElementById('bloom-btn-all').className = 'c-btn c-btn--primary';
+    renderMarkers();
+}
+
+function setBloomYear(year) {
+    bloomState.enabled = true;
+    bloomState.year    = String(year);
+    document.getElementById('bloom-btn-all').className = 'c-btn c-btn--text';
+    document.querySelectorAll('.bloom-year-btn').forEach(b => {
+        const active = b.dataset.bloomYear === String(year);
+        b.style.background = active ? 'var(--primary)' : 'var(--bg-app)';
+        b.style.color      = active ? 'white'          : 'var(--text-main)';
+    });
+    document.getElementById('bloom-month-controls').style.display = 'flex';
+    renderMarkers();
+}
+
+function setBloomMonth(value) {
+    bloomState.month = parseInt(value);
+    document.getElementById('bloom-month-label').textContent = MONTH_NAMES[bloomState.month];
+    document.getElementById('bloom-month-input').value = bloomState.month;
+    renderMarkers();
+}
+
+function setBloomSpeed(ms) {
+    bloomAutoplaySpeed = parseInt(ms);
+    if (bloomAutoplayTimer) {
+        stopBloomAutoplay();
+        startBloomAutoplay();
+    }
+}
+
+function toggleBloomAutoplay() {
+    if (bloomAutoplayTimer) {
+        stopBloomAutoplay();
+    } else {
+        startBloomAutoplay();
+    }
+}
+
+const BLOOM_YEARS = [2025, 2026, 2027, 2028, 2029, 2030];
+
+function initBloomSlider() {
+    const currentYear = new Date().getFullYear();
+    document.querySelectorAll('.bloom-year-btn[data-bloom-year]').forEach(btn => {
+        const year = parseInt(btn.dataset.bloomYear);
+        if (!isNaN(year) && year > currentYear) {
+            btn.style.display = 'none';
+        }
+    });
+}
+
+function isValidTimePoint(year, month) {
+    const now = new Date();
+    const y   = parseInt(year);
+    if (y < now.getFullYear()) return true;
+    if (y === now.getFullYear()) return month <= now.getMonth();
+    return false;
+}
+
+function validMonthsForYear(year) {
+    return Array.from({length: 12}, (_, i) => i).filter(m => isValidTimePoint(year, m));
+}
+
+function bloomAutoplayStep() {
+    if (bloomState.year === 'std') {
+        // Standard: einfach durch die Monate loopen
+        setBloomMonth((bloomState.month + 1) % 12);
+        return;
+    }
+
+    // Jahr-Modus: nächsten gültigen Monat im Jahr finden
+    const validMonths   = validMonthsForYear(bloomState.year);
+    const currentIdx    = validMonths.indexOf(bloomState.month);
+    const hasNextMonth  = currentIdx >= 0 && currentIdx < validMonths.length - 1;
+
+    if (hasNextMonth) {
+        setBloomMonth(validMonths[currentIdx + 1]);
+        return;
+    }
+
+    // Nächstes Jahr mit gültigen Monaten suchen
+    const currentYearIdx = BLOOM_YEARS.indexOf(parseInt(bloomState.year));
+    let nextIdx = currentYearIdx + 1;
+    while (nextIdx < BLOOM_YEARS.length && validMonthsForYear(BLOOM_YEARS[nextIdx]).length === 0) nextIdx++;
+
+    if (nextIdx >= BLOOM_YEARS.length) {
+        // Von vorne: erstes Jahr mit gültigen Monaten
+        nextIdx = 0;
+        while (nextIdx < BLOOM_YEARS.length && validMonthsForYear(BLOOM_YEARS[nextIdx]).length === 0) nextIdx++;
+    }
+
+    if (nextIdx < BLOOM_YEARS.length) {
+        const nextYear   = BLOOM_YEARS[nextIdx];
+        const nextMonths = validMonthsForYear(nextYear);
+        setBloomYear(nextYear);
+        setBloomMonth(nextMonths[0]);
+    }
+}
+
+function startBloomAutoplay() {
+    document.getElementById('bloom-autoplay-btn').textContent = '⏸';
+    bloomAutoplayTimer = setInterval(bloomAutoplayStep, bloomAutoplaySpeed);
+}
+
+function stopBloomAutoplay() {
+    clearInterval(bloomAutoplayTimer);
+    bloomAutoplayTimer = null;
+    document.getElementById('bloom-autoplay-btn').textContent = '▶';
+}
+
+function setBloomAll() {
+    stopBloomAutoplay();
+    bloomState.enabled = false;
+    document.getElementById('bloom-month-controls').style.display = 'none';
+    document.querySelectorAll('.bloom-year-btn').forEach(b => {
+        b.style.background = 'var(--bg-app)';
+        b.style.color      = 'var(--text-main)';
+    });
+    document.getElementById('bloom-btn-all').className = 'c-btn c-btn--primary';
+    renderMarkers();
+}
+
 async function loadPins() {
     try {
         const res = await fetch('backend/api.php', {
@@ -168,6 +348,14 @@ function renderMarkers() {
         marker.style.transform = 'translate(-50%, -50%)';
         marker.style.cursor = 'grab';
         marker.title = `${pin.name} (Alt+Drag = duplizieren)`;
+
+        // Bloom-Filter: Transparenz wenn nicht blühend
+        if (bloomState.enabled) {
+            const bitmask  = getBloomBitmaskForPin(pin);
+            const blooming = (bitmask >> bloomState.month) & 1;
+            marker.style.opacity    = blooming ? '1' : '0.2';
+            marker.style.transition = 'opacity 0.3s ease';
+        }
 
         marker.innerHTML = `
             <div style="background:${pin.marker_color || '#4CAF50'}; color:white; border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center; border:2px solid white; box-shadow:0 2px 4px rgba(0,0,0,0.2);">
