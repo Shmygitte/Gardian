@@ -110,9 +110,12 @@ function renderPflanzenListe(data) {
                 const plantId = `plant-${gi}-${pi}`;
                 return `
                 <div style="margin:4px 0 0 12px; border-left:3px solid var(--primary-light); padding-left:10px;">
-                    <div onclick="toggleAccordion('${plantId}'); ensureBloomLoaded('plant', ${plant.id}, ${group.bloom_months_resolved || 0}); loadImages('plant', null, ${plant.id}, 'images-plant-${plant.id}')" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; padding:4px 0;">
-                        <span style="font-size:0.9rem; font-weight:600;">Pflanze #${plant.id} <span style="color:var(--text-muted); font-weight:400;">(${plant.pos_x !== null ? parseFloat(plant.pos_x).toFixed(1) + '% / ' + parseFloat(plant.pos_y).toFixed(1) + '%' : 'keine Position'})</span></span>
-                        <span id="${plantId}-icon" style="font-size:0.8rem; color:var(--text-muted);">▶</span>
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 0;">
+                        <span onclick="toggleAccordion('${plantId}'); ensureBloomLoaded('plant', ${plant.id}, ${group.bloom_months_resolved || 0}); loadImages('plant', null, ${plant.id}, 'images-plant-${plant.id}')" style="cursor:pointer; font-size:0.9rem; font-weight:600; flex:1;">Pflanze #${plant.id} <span style="color:var(--text-muted); font-weight:400;">(${plant.pos_x !== null ? parseFloat(plant.pos_x).toFixed(1) + '% / ' + parseFloat(plant.pos_y).toFixed(1) + '%' : 'keine Position'})</span></span>
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <button class="c-btn c-btn--text" style="font-size:0.75rem; color:var(--danger); padding:2px 6px;" onclick="deletePlant(${plant.id})">Löschen</button>
+                            <span onclick="toggleAccordion('${plantId}'); ensureBloomLoaded('plant', ${plant.id}, ${group.bloom_months_resolved || 0})" id="${plantId}-icon" style="font-size:0.8rem; color:var(--text-muted); cursor:pointer;">▶</span>
+                        </div>
                     </div>
                     <div id="${plantId}" style="display:none; padding-bottom:8px;">
                         ${renderFieldTable(plant, PLANT_FIELDS)}
@@ -137,6 +140,7 @@ function renderPflanzenListe(data) {
                 <span onclick="toggleAccordion('${groupId}'); ensureBloomLoaded('group', ${group.id}, ${group.bloom_months_resolved || 0}); loadImages('group', ${group.group_id || null}, null, 'images-group-${group.id}')" style="cursor:pointer; font-weight:600; flex:1;">${group.name || '(Unbenannte Gruppe)'}</span>
                 <div style="display:flex; align-items:center; gap:10px;">
                     <button class="c-btn c-btn--text" style="font-size:0.8rem;" onclick="openGruppeBearbeitenModal(${group.id})">Bearbeiten</button>
+                    <button class="c-btn c-btn--text" style="font-size:0.8rem; color:var(--danger);" onclick="deleteUserGroup(${group.id}, ${group.plants.length})">Löschen</button>
                     <span onclick="toggleAccordion('${groupId}'); ensureBloomLoaded('group', ${group.id}, ${group.bloom_months_resolved || 0})" style="cursor:pointer; font-size:0.8rem; color:var(--text-muted);">${group.plants.length} Pflanze(n) &nbsp;<span id="${groupId}-icon">▼</span></span>
                 </div>
             </div>
@@ -321,6 +325,48 @@ async function addBloomYear(type, id) {
         style="padding:4px 12px;border-radius:20px;border:1px solid var(--border);font-size:0.8rem;cursor:pointer;background:var(--bg-app);color:var(--text-main);"
         data-tab-key="${year}">${year}</button>`;
     switchBloomTab(`bloom-${type}-${id}`, String(year));
+}
+
+// ========================
+// PFLANZE LÖSCHEN
+// ========================
+async function deletePlant(plantId) {
+    if (!confirm('Pflanze wirklich löschen? Alle Fotos und Beobachtungen werden entfernt.')) return;
+    const res  = await fetch('backend/api.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'deletePlant', plant_id: plantId })
+    });
+    const data = await res.json();
+    if (data.success) {
+        await loadPflanzenListe();
+        if (typeof loadPins === 'function') await loadPins();
+    } else {
+        alert(data.error || 'Fehler beim Löschen');
+    }
+}
+
+// ========================
+// GRUPPE LÖSCHEN
+// ========================
+async function deleteUserGroup(groupId, plantCount) {
+    const warnung = plantCount > 0
+        ? `Gruppe und alle ${plantCount} Pflanze(n) inkl. Fotos und Beobachtungen löschen?`
+        : 'Gruppe wirklich löschen?';
+    if (!confirm(warnung)) return;
+    const res  = await fetch('backend/api.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'deleteUserGroup', group_id: groupId })
+    });
+    const data = await res.json();
+    if (data.success) {
+        await loadPflanzenListe();
+        if (typeof loadPins === 'function') await loadPins();
+        if (typeof loadFilterGroups === 'function') await loadFilterGroups();
+    } else {
+        alert(data.error || 'Fehler beim Löschen');
+    }
 }
 
 // ========================

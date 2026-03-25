@@ -814,3 +814,87 @@ if ($action === 'adminDeleteGroup') {
     echo json_encode(['success' => true]);
     exit;
 }
+
+// =========================
+// DELETE PLANT
+// =========================
+if ($action === 'deletePlant') {
+    $plantId = $data['plant_id'] ?? null;
+    if (!$plantId) { echo json_encode(['success' => false, 'error' => 'Keine plant_id']); exit; }
+
+    // Sicherheit: nur eigene Pflanzen
+    $stmt = $db->prepare("SELECT id FROM gd_plants WHERE id = ? AND user_id = ?");
+    $stmt->execute([$plantId, $_SESSION['user_id']]);
+    if (!$stmt->fetch()) { echo json_encode(['success' => false, 'error' => 'Keine Berechtigung']); exit; }
+
+    // Bilder löschen (Dateien + DB)
+    $imgs = $db->prepare("SELECT file_path FROM gd_images WHERE plant_id = ? AND user_id = ?");
+    $imgs->execute([$plantId, $_SESSION['user_id']]);
+    foreach ($imgs->fetchAll(PDO::FETCH_ASSOC) as $img) {
+        $path = __DIR__ . '/../' . $img['file_path'];
+        if (file_exists($path)) unlink($path);
+    }
+    $db->prepare("DELETE FROM gd_images WHERE plant_id = ? AND user_id = ?")->execute([$plantId, $_SESSION['user_id']]);
+
+    // Bloom-Observations löschen
+    $db->prepare("DELETE FROM gd_bloom_observations WHERE plant_id = ? AND user_id = ?")->execute([$plantId, $_SESSION['user_id']]);
+
+    // Pflanze löschen
+    $db->prepare("DELETE FROM gd_plants WHERE id = ? AND user_id = ?")->execute([$plantId, $_SESSION['user_id']]);
+
+    echo json_encode(['success' => true]);
+    exit;
+}
+
+// =========================
+// DELETE USER GROUP
+// =========================
+if ($action === 'deleteUserGroup') {
+    $groupId = $data['group_id'] ?? null;
+    if (!$groupId) { echo json_encode(['success' => false, 'error' => 'Keine group_id']); exit; }
+
+    // Sicherheit: nur eigene Gruppen
+    $stmt = $db->prepare("SELECT id FROM gd_user_groups WHERE id = ? AND user_id = ?");
+    $stmt->execute([$groupId, $_SESSION['user_id']]);
+    if (!$stmt->fetch()) { echo json_encode(['success' => false, 'error' => 'Keine Berechtigung']); exit; }
+
+    // Alle Pflanzen der Gruppe ermitteln
+    $plantStmt = $db->prepare("SELECT id FROM gd_plants WHERE user_group_id = ? AND user_id = ?");
+    $plantStmt->execute([$groupId, $_SESSION['user_id']]);
+    $plantIds = array_column($plantStmt->fetchAll(PDO::FETCH_ASSOC), 'id');
+
+    // Bilder der Pflanzen löschen
+    foreach ($plantIds as $pid) {
+        $imgs = $db->prepare("SELECT file_path FROM gd_images WHERE plant_id = ? AND user_id = ?");
+        $imgs->execute([$pid, $_SESSION['user_id']]);
+        foreach ($imgs->fetchAll(PDO::FETCH_ASSOC) as $img) {
+            $path = __DIR__ . '/../' . $img['file_path'];
+            if (file_exists($path)) unlink($path);
+        }
+        $db->prepare("DELETE FROM gd_images WHERE plant_id = ? AND user_id = ?")->execute([$pid, $_SESSION['user_id']]);
+        $db->prepare("DELETE FROM gd_bloom_observations WHERE plant_id = ? AND user_id = ?")->execute([$pid, $_SESSION['user_id']]);
+    }
+
+    // Gruppenbilder löschen
+    $grpImgs = $db->prepare("SELECT file_path FROM gd_images WHERE type='group' AND group_id = (SELECT group_id FROM gd_user_groups WHERE id = ?) AND user_id = ?");
+    $grpImgs->execute([$groupId, $_SESSION['user_id']]);
+    foreach ($grpImgs->fetchAll(PDO::FETCH_ASSOC) as $img) {
+        $path = __DIR__ . '/../' . $img['file_path'];
+        if (file_exists($path)) unlink($path);
+    }
+    $db->prepare("DELETE FROM gd_images WHERE type='group' AND group_id = (SELECT group_id FROM gd_user_groups WHERE id = ?) AND user_id = ?")->execute([$groupId, $_SESSION['user_id']]);
+
+    // Bloom-Observations der Gruppe löschen
+    $db->prepare("DELETE FROM gd_bloom_observations WHERE user_group_id = ? AND user_id = ?")->execute([$groupId, $_SESSION['user_id']]);
+
+    // Pflanzen löschen
+    if ($plantIds) {
+        $db->prepare("DELETE FROM gd_plants WHERE user_group_id = ? AND user_id = ?")->execute([$groupId, $_SESSION['user_id']]);
+    }
+
+    // Gruppe löschen
+    $db->prepare("DELETE FROM gd_user_groups WHERE id = ? AND user_id = ?")->execute([$groupId, $_SESSION['user_id']]);
+
+    echo json_encode(['success' => true]);
+    exit;
+}
