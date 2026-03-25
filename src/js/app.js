@@ -783,7 +783,15 @@ async function showHoverGallery(e, pin) {
         popup.innerHTML = `
             <p style="font-size:0.75rem;font-weight:600;margin:0 0 6px;color:var(--text-muted);">${pin.name}</p>
             <div style="display:flex;flex-wrap:wrap;gap:4px;">
-                ${data.images.map(img => `<img src="${img.file_path}" style="width:96px;height:72px;object-fit:cover;border-radius:6px;">`).join('')}
+                ${data.images.map(img => {
+                    const isPlant = img.src === 'plant';
+                    const badgeColor = isPlant ? 'rgba(34,197,94,0.9)' : 'rgba(99,102,241,0.9)';
+                    const badgeText  = isPlant ? 'Pflanze' : 'Gruppe';
+                    return `<div style="position:relative;display:inline-block;">
+                        <img src="${img.file_path}" style="width:96px;height:72px;object-fit:cover;border-radius:6px;display:block;">
+                        <span style="position:absolute;bottom:3px;left:3px;background:${badgeColor};color:white;font-size:0.5rem;font-weight:700;padding:1px 5px;border-radius:10px;text-transform:uppercase;letter-spacing:0.03em;">${badgeText}</span>
+                    </div>`;
+                }).join('')}
             </div>
             <p style="font-size:0.65rem;color:var(--primary);font-weight:700;text-align:center;margin:6px 0 0;text-transform:uppercase;letter-spacing:0.03em;">🖼 Klick für Galerie</p>
         `;
