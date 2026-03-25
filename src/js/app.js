@@ -354,6 +354,7 @@ function renderMarkers() {
         const marker = document.createElement('div');
         marker.className = 'marker';
         marker.dataset.id = pin.id;
+        marker.dataset.type = pin.type || 'flower';
         marker.style.left = `${pin.pos_x}%`;
         marker.style.top = `${pin.pos_y}%`;
         marker.style.position = 'absolute';
@@ -379,7 +380,7 @@ function renderMarkers() {
         }
 
         marker.innerHTML = `
-            <div style="background:${markerColor}; color:white; border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center; border:2px solid white; box-shadow:0 2px 4px rgba(0,0,0,0.2);">
+            <div class="marker__pin" style="background:${markerColor}; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid white; box-shadow:0 2px 4px rgba(0,0,0,0.2);">
                 <span>${getEmoji(pin.type)}</span>
             </div>
         `;
