@@ -755,9 +755,12 @@ function handleMarkerMouseDown(e, id) {
 // HOVER GALERIE
 // =========================
 let _hoverTimeout = null;
+let _mousePos = { x: 0, y: 0 };
+document.addEventListener('mousemove', e => { _mousePos.x = e.clientX; _mousePos.y = e.clientY; });
 
 async function showHoverGallery(e, pin) {
     hideHoverGallery();
+    const markerRect = e.currentTarget.getBoundingClientRect();
     _hoverTimeout = setTimeout(async () => {
         const res  = await fetch('backend/api.php', {
             method: 'POST',
@@ -782,13 +785,15 @@ async function showHoverGallery(e, pin) {
             </div>
         `;
         document.body.appendChild(popup);
-        positionHoverPopup(popup, e);
-    }, 300);
+        positionHoverPopup(popup, markerRect);
+    }, 0);
 }
 
-function positionHoverPopup(popup, e) {
-    popup.style.left = Math.min(e.clientX, window.innerWidth  - 240) + 'px';
-    popup.style.top  = Math.min(e.clientY, window.innerHeight - 200) + 'px';
+function positionHoverPopup(popup, rect) {
+    const x = Math.min(rect.right - 20,  window.innerWidth  - 240);
+    const y = Math.min(rect.top   + 20,  window.innerHeight - 200);
+    popup.style.left = x + 'px';
+    popup.style.top  = y + 'px';
 }
 
 function hideHoverGallery() {
