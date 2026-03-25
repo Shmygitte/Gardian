@@ -173,6 +173,35 @@ if ($action === 'getAvatar') {
 }
 
 // =========================
+// GET USER PROFILE
+// =========================
+if ($action === 'getUser') {
+    $stmt = $db->prepare("SELECT username, email, avatar_path FROM gd_users WHERE id = ?");
+    $stmt->execute([$_SESSION['user_id']]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    echo json_encode(['success' => true, 'user' => $row]);
+    exit;
+}
+
+// =========================
+// UPDATE USER PROFILE
+// =========================
+if ($action === 'updateUser') {
+    $email    = trim($data['email']    ?? '');
+    $password = trim($data['password'] ?? '');
+    if ($email) {
+        $db->prepare("UPDATE gd_users SET email = ? WHERE id = ?")
+           ->execute([$email, $_SESSION['user_id']]);
+    }
+    if ($password) {
+        $db->prepare("UPDATE gd_users SET password_hash = ? WHERE id = ?")
+           ->execute([password_hash($password, PASSWORD_DEFAULT), $_SESSION['user_id']]);
+    }
+    echo json_encode(['success' => true]);
+    exit;
+}
+
+// =========================
 // UPLOAD AVATAR
 // =========================
 if ($action === 'uploadAvatar') {
