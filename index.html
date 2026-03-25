@@ -147,20 +147,6 @@
                             </div>
                         </div>
 
-                        <!-- Datenpflege -->
-                        <div class="c-card">
-                            <div class="c-card__header">
-                                <h2 class="c-card__title">Datenpflege</h2>
-                            </div>
-                            <div class="c-card__body" style="display:flex; flex-direction:column; gap:12px;">
-                                <p style="font-size:0.85rem; color:var(--text-muted);">Verwaiste oder nicht zuordenbare Fotos aus der Datenbank und dem Dateisystem entfernen.</p>
-                                <div style="display:flex; align-items:center; gap:12px;">
-                                    <button class="c-btn c-btn--secondary" onclick="cleanupImages()">Fotos aufräumen</button>
-                                    <span id="cleanup-result" style="font-size:0.85rem; color:var(--text-muted);"></span>
-                                </div>
-                            </div>
-                        </div>
-
                         <!-- Erscheinungsbild -->
                         <div class="c-card">
                             <div class="c-card__header">
@@ -352,6 +338,9 @@
         // Avatar Upload
         document.addEventListener('DOMContentLoaded', () => {
             loadAvatar();
+            // Verwaiste Bilder still im Hintergrund bereinigen
+            fetch('backend/api.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'cleanupImages' }) });
+
             document.getElementById('avatar-upload').addEventListener('change', async (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
@@ -382,25 +371,6 @@
             if (name === 'galerie') loadGalerie();
             if (name === 'admin') loadAdminView();
             if (name === 'einstellungen') loadEinstellungen();
-        }
-
-        async function cleanupImages() {
-            const result = document.getElementById('cleanup-result');
-            result.textContent = 'Läuft...';
-            const res  = await fetch('backend/api.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'cleanupImages' })
-            });
-            const data = await res.json();
-            if (data.success) {
-                result.textContent = data.deleted > 0
-                    ? `${data.deleted} Foto(s) entfernt.`
-                    : 'Nichts zu bereinigen.';
-                if (typeof loadGalerie === 'function') loadGalerie();
-            } else {
-                result.textContent = 'Fehler beim Aufräumen.';
-            }
         }
 
         async function logout() {
