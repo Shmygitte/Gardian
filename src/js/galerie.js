@@ -56,9 +56,9 @@ function renderGalerie() {
     }
 
     if (sortBy === 'name') {
-        images.sort((a, b) => (a.group_name || '').localeCompare(b.group_name || ''));
+        images.sort((a, b) => (a.group_name || '').localeCompare(b.group_name || '') || (a.type === 'plant' ? -1 : 1) - (b.type === 'plant' ? -1 : 1));
     } else if (sortBy === 'type') {
-        images.sort((a, b) => (a.group_type || '').localeCompare(b.group_type || ''));
+        images.sort((a, b) => (a.group_type || '').localeCompare(b.group_type || '') || (a.type === 'plant' ? -1 : 1) - (b.type === 'plant' ? -1 : 1));
     }
 
     if (!images.length) {
@@ -67,10 +67,15 @@ function renderGalerie() {
     }
 
     grid.innerHTML = images.map(img => {
-        const icon  = TYPE_ICONS[img.group_type]  || '🌿';
-        const label = TYPE_LABELS_GAL[img.group_type] || img.group_type || '';
+        const icon    = TYPE_ICONS[img.group_type]  || '🌿';
+        const label   = TYPE_LABELS_GAL[img.group_type] || img.group_type || '';
+        const isPlant = img.type === 'plant';
+        const badge   = isPlant
+            ? '<span class="galerie-badge galerie-badge--plant">Pflanze</span>'
+            : '<span class="galerie-badge galerie-badge--group">Gruppe</span>';
         return `
         <div class="galerie-card" onclick="showFullImage('${img.file_path}')">
+            ${badge}
             <img src="${img.file_path}" alt="${img.group_name}" loading="lazy">
             <div class="galerie-card__info">
                 <div class="galerie-card__name">${icon} ${img.group_name}</div>

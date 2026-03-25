@@ -437,13 +437,19 @@ async function loadImages(type, groupId, plantId, containerId) {
         container.innerHTML = '<p style="font-size:0.8rem;color:var(--text-muted);">Noch keine Fotos.</p>';
         return;
     }
+    const sorted = [...data.images].sort((a, b) => (a.type === 'plant' ? 0 : 1) - (b.type === 'plant' ? 0 : 1));
     container.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px;">
-        ${data.images.map(img => `
+        ${sorted.map(img => {
+            const badgeColor = img.type === 'plant' ? 'rgba(34,197,94,0.9)' : 'rgba(99,102,241,0.9)';
+            const badgeText  = img.type === 'plant' ? 'Pflanze' : 'Gruppe';
+            return `
             <div style="position:relative;">
                 <img src="${img.file_path}" style="width:80px;height:60px;object-fit:cover;border-radius:6px;border:1px solid var(--border);">
+                <span style="position:absolute;bottom:3px;left:3px;background:${badgeColor};color:white;font-size:0.5rem;font-weight:700;padding:1px 5px;border-radius:10px;text-transform:uppercase;letter-spacing:0.03em;">${badgeText}</span>
                 <button onclick="deleteImage(${img.id}, '${type}', ${groupId||'null'}, ${plantId||'null'}, '${containerId}')"
                     style="position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:var(--danger);color:white;border:none;font-size:0.65rem;cursor:pointer;line-height:1;">✕</button>
-            </div>`).join('')}
+            </div>`;
+        }).join('')}
     </div>`;
 }
 
