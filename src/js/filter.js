@@ -9,26 +9,36 @@ const filterState = {
 };
 
 function applyFilter() {
-    // Typen auslesen
+    // Typen aus Pill-Buttons
     filterState.types = Array.from(
-        document.querySelectorAll('#filter-types input:checked')
-    ).map(el => el.value);
+        document.querySelectorAll('#filter-types .filter-item.active')
+    ).map(el => el.dataset.value);
 
-    // Gruppen auslesen
-    const groupCheckboxes = document.querySelectorAll('#filter-groups input');
-    if (groupCheckboxes.length > 0) {
+    // Gruppen aus filter-item Buttons
+    const groupPills = document.querySelectorAll('#filter-groups .filter-item');
+    if (groupPills.length > 0) {
         filterState.groups = new Set(
-            Array.from(groupCheckboxes)
-                .filter(el => el.checked)
-                .map(el => el.value)
+            Array.from(groupPills)
+                .filter(el => el.classList.contains('active'))
+                .map(el => el.dataset.value)
         );
     }
 
-    // Karte neu rendern falls aktiv
     if (typeof renderMarkers === 'function') renderMarkers();
-
-    // Pflanzenliste neu rendern falls aktiv
     if (typeof renderPflanzenListeFiltered === 'function') renderPflanzenListeFiltered();
+}
+
+function toggleFilterAccordion(btn) {
+    const body = btn.nextElementSibling;
+    const arrow = btn.querySelector('.filter-accordion__arrow');
+    const isOpen = body.style.display !== 'none';
+    body.style.display = isOpen ? 'none' : 'flex';
+    arrow.textContent = isOpen ? '▸' : '▾';
+}
+
+function toggleFilterPill(el) {
+    el.classList.toggle('active');
+    applyFilter();
 }
 
 async function loadFilterGroups() {
@@ -46,13 +56,10 @@ async function loadFilterGroups() {
 
     container.innerHTML = data.groups.map(g => {
         const key = g.group_id ? String(g.group_id) : 'u' + g.id;
-        return `
-        <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;">
-            <input type="checkbox" value="${key}" checked onchange="applyFilter()">
-            ${g.name || '(Unbenannt)'}
-        </label>`;
+        return `<button class="filter-item active" data-value="${key}" onclick="toggleFilterPill(this)">${g.name || '(Unbenannt)'}</button>`;
     }).join('');
+    container.style.flexDirection = 'column';
+    container.style.gap = '2px';
 
-    // Initialen filterState setzen
     filterState.groups = new Set(data.groups.map(g => g.group_id ? String(g.group_id) : 'u' + g.id));
 }

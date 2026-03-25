@@ -63,6 +63,33 @@
     background-color: rgba(255, 255, 255, 0.05);
 }
 
+/* Filter Item (Listeneinträge im Sidebar-Filter) */
+.filter-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 6px 12px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: var(--transition-fast);
+    opacity: 0.4;
+    user-select: none;
+}
+
+.filter-item.active {
+    opacity: 1;
+    color: var(--text-main);
+}
+
+.filter-item:hover {
+    background: rgba(0,0,0,0.04);
+    opacity: 1;
+}
+
 .c-btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;

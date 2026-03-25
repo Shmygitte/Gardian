@@ -39,15 +39,27 @@
                 <hr style="border:none; border-top:1px solid var(--border); margin:16px 0;">
                 <div class="c-form-group">
                     <label class="c-label">Filter</label>
-                    <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Typ</p>
-                    <div id="filter-types" style="display:flex; flex-direction:column; gap:4px;">
-                        <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="tree"     checked onchange="applyFilter()"> Baum</label>
-                        <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="shrub"    checked onchange="applyFilter()"> Strauch</label>
-                        <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="flower"   checked onchange="applyFilter()"> Blume</label>
-                        <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="s_flower" checked onchange="applyFilter()"> Saisonblume</label>
-                    </div>
-                    <p style="font-size:0.75rem; color:var(--text-muted); margin:12px 0 6px;">Pflanzengruppen</p>
-                    <div id="filter-groups" style="display:flex; flex-direction:column; gap:4px;"></div>
+                    <nav style="display:flex; flex-direction:column; gap:8px;">
+                        <!-- Typ Dropdown -->
+                        <div class="filter-accordion">
+                            <button class="c-btn c-btn--text" style="justify-content:space-between; width:100%;" onclick="toggleFilterAccordion(this)">
+                                Typ <span class="filter-accordion__arrow">▾</span>
+                            </button>
+                            <div class="filter-accordion__body" id="filter-types" style="display:flex; flex-direction:column; gap:2px; padding:2px 0 4px 12px;">
+                                <button class="filter-item active" data-value="tree"     onclick="toggleFilterPill(this)">🌳 Baum</button>
+                                <button class="filter-item active" data-value="shrub"    onclick="toggleFilterPill(this)">🌿 Strauch</button>
+                                <button class="filter-item active" data-value="flower"   onclick="toggleFilterPill(this)">🌸 Blume</button>
+                                <button class="filter-item active" data-value="s_flower" onclick="toggleFilterPill(this)">🌼 Saisonblume</button>
+                            </div>
+                        </div>
+                        <!-- Gruppen Dropdown -->
+                        <div class="filter-accordion">
+                            <button class="c-btn c-btn--text" style="justify-content:space-between; width:100%;" onclick="toggleFilterAccordion(this)">
+                                Pflanzengruppen <span class="filter-accordion__arrow">▾</span>
+                            </button>
+                            <div class="filter-accordion__body" id="filter-groups" style="display:flex; flex-wrap:wrap; gap:6px; padding:6px 0 4px 12px;"></div>
+                        </div>
+                    </nav>
                 </div>
             </aside>
 
