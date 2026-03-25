@@ -387,7 +387,9 @@ function renderMarkers() {
         marker.addEventListener('mousedown', (e) => handleMarkerMouseDown(e, String(pin.id)));
         marker.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); openPlantEditModal(pin); });
         marker.addEventListener('mouseenter', (e) => showHoverGallery(e, pin));
-        marker.addEventListener('mouseleave', () => hideHoverGallery());
+        marker.addEventListener('mouseleave', () => {
+            _hoverHideTimeout = setTimeout(() => hideHoverGallery(), 200);
+        });
         overlay.appendChild(marker);
     });
 }
@@ -776,14 +778,18 @@ async function showHoverGallery(e, pin) {
             position:fixed; z-index:9999; background:var(--bg-card);
             border:1px solid var(--border); border-radius:var(--radius-md);
             box-shadow:var(--shadow-medium); padding:8px; max-width:220px;
-            pointer-events:none;
+            cursor:pointer;
         `;
         popup.innerHTML = `
             <p style="font-size:0.75rem;font-weight:600;margin:0 0 6px;color:var(--text-muted);">${pin.name}</p>
             <div style="display:flex;flex-wrap:wrap;gap:4px;">
                 ${data.images.map(img => `<img src="${img.file_path}" style="width:96px;height:72px;object-fit:cover;border-radius:6px;">`).join('')}
             </div>
+            <p style="font-size:0.65rem;color:var(--primary);font-weight:700;text-align:center;margin:6px 0 0;text-transform:uppercase;letter-spacing:0.03em;">🖼 Klick für Galerie</p>
         `;
+        popup.addEventListener('mouseenter', () => clearTimeout(_hoverHideTimeout));
+        popup.addEventListener('mouseleave', () => hideHoverGallery());
+        popup.addEventListener('click', () => { hideHoverGallery(); openGalleryModal(pin); });
         document.body.appendChild(popup);
         positionHoverPopup(popup, markerRect);
     }, 0);
@@ -796,10 +802,63 @@ function positionHoverPopup(popup, rect) {
     popup.style.top  = y + 'px';
 }
 
+let _hoverHideTimeout = null;
+
 function hideHoverGallery() {
     clearTimeout(_hoverTimeout);
+    clearTimeout(_hoverHideTimeout);
     const existing = document.getElementById('hover-gallery-popup');
     if (existing) existing.remove();
+}
+
+// =========================
+// GALERIE MODAL + LIGHTBOX
+// =========================
+async function openGalleryModal(pin) {
+    const modal = document.getElementById('gallery-modal');
+    const grid  = document.getElementById('gallery-images-container');
+    const title = document.getElementById('gallery-title');
+    if (!modal || !grid || !title) return;
+
+    title.textContent = pin.name;
+    grid.innerHTML = '<p style="color:var(--text-muted);font-size:0.9rem;">Lade Bilder…</p>';
+    modal.style.display = 'flex';
+
+    const res  = await fetch('backend/api.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'getImages', type: 'plant', plant_id: pin.id })
+    });
+    const data = await res.json();
+
+    if (!data.success || !data.images.length) {
+        grid.innerHTML = '<p style="color:var(--text-muted);font-size:0.9rem;">Keine Bilder vorhanden.</p>';
+        return;
+    }
+
+    grid.innerHTML = data.images.map(img => `
+        <div class="gallery-image-item" onclick="showFullImage('${img.file_path}')">
+            <img src="${img.file_path}" alt="">
+        </div>
+    `).join('');
+}
+
+function closeGalleryModal() {
+    const modal = document.getElementById('gallery-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+function showFullImage(src) {
+    const modal = document.getElementById('full-image-modal');
+    const img   = document.getElementById('full-image-display');
+    if (!modal || !img) return;
+    img.src = src;
+    modal.style.display = 'flex';
+}
+
+function closeFullImage() {
+    const modal = document.getElementById('full-image-modal');
+    if (modal) modal.style.display = 'none';
 }
 
 document.addEventListener('DOMContentLoaded', init);

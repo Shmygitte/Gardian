@@ -214,6 +214,23 @@
         </div>
     </div>
 
+    <!-- Modal: Galerie -->
+    <div id="gallery-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:1100; align-items:center; justify-content:center; padding:20px;">
+        <div style="background:var(--bg-card); border-radius:var(--radius-lg); width:min(95vw,900px); max-height:90vh; display:flex; flex-direction:column; overflow:hidden;">
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border); flex-shrink:0;">
+                <h2 id="gallery-title" style="font-size:1.1rem; font-weight:700; margin:0;"></h2>
+                <button class="c-btn c-btn--text" onclick="closeGalleryModal()">✕</button>
+            </div>
+            <div id="gallery-images-container" style="display:flex; flex-wrap:wrap; gap:16px; padding:24px; overflow-y:auto; justify-content:center;"></div>
+        </div>
+    </div>
+
+    <!-- Modal: Lightbox (Vollbild) -->
+    <div id="full-image-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.93); z-index:1200; align-items:center; justify-content:center; cursor:zoom-out;" onclick="closeFullImage()">
+        <button style="position:absolute; top:20px; right:28px; background:none; border:none; color:white; font-size:2.5rem; cursor:pointer; opacity:0.7; line-height:1;" onclick="closeFullImage()">✕</button>
+        <img id="full-image-display" src="" alt="" style="max-width:95vw; max-height:95vh; object-fit:contain; border-radius:8px; box-shadow:0 0 60px rgba(0,0,0,0.5);">
+    </div>
+
     <!-- Modal: Pflanze bearbeiten (Rechtsklick) -->
     <div id="modal-pflanze-edit" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:1001; align-items:center; justify-content:center;">
         <div class="c-card" style="width:340px;">
