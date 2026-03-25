@@ -44,7 +44,12 @@ function renderGalerie() {
         }
         if (filterState.groups !== null) {
             images = images.filter(img => {
-                const key = img.group_id ? String(img.group_id) : null;
+                // Schlüssel gleich wie in filter.js: group_id → String, user_group_id → 'u' + id
+                let key;
+                if (img.plant_user_group_id) key = 'u' + img.plant_user_group_id;
+                else if (img.plant_group_id)  key = String(img.plant_group_id);
+                else if (img.group_id)        key = String(img.group_id);
+                else                          key = null;
                 return key === null || filterState.groups.has(key);
             });
         }

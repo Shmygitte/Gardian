@@ -823,6 +823,8 @@ if ($action === 'getAllImages') {
         $stmt = $db->prepare("
             SELECT
                 i.id, i.file_path, i.type, i.plant_id, i.group_id,
+                p.user_group_id AS plant_user_group_id,
+                p.group_id      AS plant_group_id,
                 COALESCE(ug_direct.name, ug_via_plant.name, dg_via_plant.name, dg_direct.name, '(Unbenannt)') AS group_name,
                 COALESCE(ug_direct.type, ug_via_plant.type, dg_via_plant.type, dg_direct.type)                AS group_type
             FROM gd_images i
