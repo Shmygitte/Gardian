@@ -816,6 +816,28 @@ if ($action === 'adminDeleteGroup') {
 }
 
 // =========================
+// GET ALL IMAGES (Galerie)
+// =========================
+if ($action === 'getAllImages') {
+    $stmt = $db->prepare("
+        SELECT
+            i.id, i.file_path, i.type, i.plant_id, i.group_id,
+            COALESCE(ug.name, dg.name, '(Unbenannt)') AS group_name,
+            COALESCE(ug.type, dg.type, NULL)           AS group_type
+        FROM gd_images i
+        LEFT JOIN gd_plants         p   ON i.plant_id = p.id
+        LEFT JOIN gd_user_groups    ug  ON p.user_group_id = ug.id
+        LEFT JOIN gd_default_groups dg  ON i.group_id = dg.id
+        WHERE i.user_id = ?
+        ORDER BY group_name, i.id
+    ");
+    $stmt->execute([$_SESSION['user_id']]);
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    echo json_encode(['success' => true, 'images' => $rows]);
+    exit;
+}
+
+// =========================
 // DELETE PLANT
 // =========================
 if ($action === 'deletePlant') {

@@ -1,5 +1,64 @@
 /* map.css */
 
+/* Gartengalerie: Photo-Cards (Masonry) */
+.galerie-card {
+    break-inside: avoid;
+    margin-bottom: 16px;
+    position: relative;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #1e293b;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    cursor: zoom-in;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.galerie-card:hover {
+    transform: scale(1.02) translateY(-4px);
+}
+
+.galerie-card img {
+    width: 100%;
+    display: block;
+    height: auto;
+    transition: transform 0.5s ease;
+}
+
+.galerie-card:hover img {
+    transform: scale(1.05);
+}
+
+.galerie-card__info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 14px 12px 10px;
+    background: linear-gradient(transparent, rgba(0,0,0,0.78));
+    color: white;
+    opacity: 0;
+    transition: opacity 0.25s;
+}
+
+.galerie-card:hover .galerie-card__info {
+    opacity: 1;
+}
+
+.galerie-card__name {
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.galerie-card__type {
+    font-size: 0.7rem;
+    color: rgba(255,255,255,0.65);
+    margin-top: 2px;
+}
+
+@media (max-width: 1200px) { #galerie-grid { columns: 3 !important; } }
+@media (max-width: 860px)  { #galerie-grid { columns: 2 !important; } }
+@media (max-width: 560px)  { #galerie-grid { columns: 1 !important; } }
+
 /* Galerie-Modal: Einzelnes Bild */
 .gallery-image-item {
     width: 260px;
