@@ -819,21 +819,27 @@ if ($action === 'adminDeleteGroup') {
 // GET ALL IMAGES (Galerie)
 // =========================
 if ($action === 'getAllImages') {
-    $stmt = $db->prepare("
-        SELECT
-            i.id, i.file_path, i.type, i.plant_id, i.group_id,
-            COALESCE(ug.name, dg.name, '(Unbenannt)') AS group_name,
-            COALESCE(ug.type, dg.type, NULL)           AS group_type
-        FROM gd_images i
-        LEFT JOIN gd_plants         p   ON i.plant_id = p.id
-        LEFT JOIN gd_user_groups    ug  ON p.user_group_id = ug.id
-        LEFT JOIN gd_default_groups dg  ON i.group_id = dg.id
-        WHERE i.user_id = ?
-        ORDER BY group_name, i.id
-    ");
-    $stmt->execute([$_SESSION['user_id']]);
-    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    echo json_encode(['success' => true, 'images' => $rows]);
+    try {
+        $stmt = $db->prepare("
+            SELECT
+                i.id, i.file_path, i.type, i.plant_id, i.group_id,
+                COALESCE(ug_direct.name, ug_via_plant.name, dg_via_plant.name, dg_direct.name, '(Unbenannt)') AS group_name,
+                COALESCE(ug_direct.type, ug_via_plant.type, dg_via_plant.type, dg_direct.type)                AS group_type
+            FROM gd_images i
+            LEFT JOIN gd_user_plants    p             ON i.plant_id = p.id
+            LEFT JOIN gd_user_groups    ug_direct     ON p.user_group_id = ug_direct.id
+            LEFT JOIN gd_user_groups    ug_via_plant  ON p.group_id = ug_via_plant.group_id AND ug_via_plant.user_id = i.user_id
+            LEFT JOIN gd_default_groups dg_via_plant  ON p.group_id = dg_via_plant.id
+            LEFT JOIN gd_default_groups dg_direct     ON i.group_id = dg_direct.id
+            WHERE i.user_id = ?
+            ORDER BY group_name, i.id
+        ");
+        $stmt->execute([$_SESSION['user_id']]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        echo json_encode(['success' => true, 'images' => $rows]);
+    } catch (PDOException $e) {
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
     exit;
 }
 
@@ -845,7 +851,7 @@ if ($action === 'deletePlant') {
     if (!$plantId) { echo json_encode(['success' => false, 'error' => 'Keine plant_id']); exit; }
 
     // Sicherheit: nur eigene Pflanzen
-    $stmt = $db->prepare("SELECT id FROM gd_plants WHERE id = ? AND user_id = ?");
+    $stmt = $db->prepare("SELECT id FROM gd_user_plants WHERE id = ? AND user_id = ?");
     $stmt->execute([$plantId, $_SESSION['user_id']]);
     if (!$stmt->fetch()) { echo json_encode(['success' => false, 'error' => 'Keine Berechtigung']); exit; }
 
@@ -862,7 +868,7 @@ if ($action === 'deletePlant') {
     $db->prepare("DELETE FROM gd_bloom_observations WHERE plant_id = ? AND user_id = ?")->execute([$plantId, $_SESSION['user_id']]);
 
     // Pflanze löschen
-    $db->prepare("DELETE FROM gd_plants WHERE id = ? AND user_id = ?")->execute([$plantId, $_SESSION['user_id']]);
+    $db->prepare("DELETE FROM gd_user_plants WHERE id = ? AND user_id = ?")->execute([$plantId, $_SESSION['user_id']]);
 
     echo json_encode(['success' => true]);
     exit;
@@ -881,7 +887,7 @@ if ($action === 'deleteUserGroup') {
     if (!$stmt->fetch()) { echo json_encode(['success' => false, 'error' => 'Keine Berechtigung']); exit; }
 
     // Alle Pflanzen der Gruppe ermitteln
-    $plantStmt = $db->prepare("SELECT id FROM gd_plants WHERE user_group_id = ? AND user_id = ?");
+    $plantStmt = $db->prepare("SELECT id FROM gd_user_plants WHERE user_group_id = ? AND user_id = ?");
     $plantStmt->execute([$groupId, $_SESSION['user_id']]);
     $plantIds = array_column($plantStmt->fetchAll(PDO::FETCH_ASSOC), 'id');
 
@@ -911,7 +917,7 @@ if ($action === 'deleteUserGroup') {
 
     // Pflanzen löschen
     if ($plantIds) {
-        $db->prepare("DELETE FROM gd_plants WHERE user_group_id = ? AND user_id = ?")->execute([$groupId, $_SESSION['user_id']]);
+        $db->prepare("DELETE FROM gd_user_plants WHERE user_group_id = ? AND user_id = ?")->execute([$groupId, $_SESSION['user_id']]);
     }
 
     // Gruppe löschen
