@@ -849,8 +849,8 @@ async function openGalleryModal(pin) {
     const dataGroup = resGroup ? await resGroup.json() : { success: false, images: [] };
 
     const images = [
-        ...(dataPlant.success ? dataPlant.images : []),
-        ...(dataGroup.success ? dataGroup.images : [])
+        ...(dataPlant.success ? dataPlant.images.map(i => ({ ...i, _src: 'plant' })) : []),
+        ...(dataGroup.success ? dataGroup.images.map(i => ({ ...i, _src: 'group' })) : [])
     ];
 
     if (!images.length) {
@@ -858,11 +858,16 @@ async function openGalleryModal(pin) {
         return;
     }
 
-    grid.innerHTML = images.map(img => `
+    grid.innerHTML = images.map(img => {
+        const isPlant    = img._src === 'plant';
+        const badgeColor = isPlant ? 'rgba(34,197,94,0.9)' : 'rgba(99,102,241,0.9)';
+        const badgeText  = isPlant ? 'Pflanze' : 'Gruppe';
+        return `
         <div class="gallery-image-item" onclick="showFullImage('${img.file_path}')">
             <img src="${img.file_path}" alt="">
-        </div>
-    `).join('');
+            <span style="position:absolute;top:10px;left:10px;background:${badgeColor};color:white;font-size:0.65rem;font-weight:700;padding:3px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:0.03em;backdrop-filter:blur(4px);">${badgeText}</span>
+        </div>`;
+    }).join('');
 }
 
 function closeGalleryModal() {
