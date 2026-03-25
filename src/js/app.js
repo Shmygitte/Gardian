@@ -787,10 +787,8 @@ async function showHoverGallery(e, pin) {
 }
 
 function positionHoverPopup(popup, e) {
-    const x = e.clientX + 12;
-    const y = e.clientY + 12;
-    popup.style.left = Math.min(x, window.innerWidth  - 240) + 'px';
-    popup.style.top  = Math.min(y, window.innerHeight - 200) + 'px';
+    popup.style.left = Math.min(e.clientX, window.innerWidth  - 240) + 'px';
+    popup.style.top  = Math.min(e.clientY, window.innerHeight - 200) + 'px';
 }
 
 function hideHoverGallery() {
