@@ -51,6 +51,58 @@
     --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
 }
 
+/* Unicorn Theme */
+[data-theme="unicorn"] {
+    --primary: #d946ef;
+    --primary-dark: #7c3aed;
+    --primary-light: #fce7f3;
+    --accent: #ec4899;
+    --danger: #ef4444;
+
+    --bg-app: #fce7f3;
+    --bg-card: rgba(255, 255, 255, 0.65);
+    --bg-surface: rgba(255, 255, 255, 0.45);
+    --text-main: #2e1065;
+    --text-muted: #701a75;
+
+    --color-bg: #fce7f3;
+    --color-surface: rgba(255, 255, 255, 0.65);
+    --color-text: #2e1065;
+    --color-text-muted: #701a75;
+    --color-primary: #d946ef;
+    --color-primary-dark: #7c3aed;
+    --color-primary-light: #fce7f3;
+    --color-accent: #ec4899;
+    --color-border: rgba(255, 255, 255, 0.8);
+    --border: rgba(209, 90, 235, 0.25);
+    --color-shadow: rgba(219, 39, 119, 0.15);
+
+    --shadow-soft: 0 8px 32px rgba(219, 39, 119, 0.15);
+    --shadow-medium: 0 8px 32px rgba(219, 39, 119, 0.2);
+    --shadow-xl: 0 20px 40px rgba(124, 58, 237, 0.2);
+}
+
+@keyframes unicornGradient {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+[data-theme="unicorn"] body {
+    background: linear-gradient(120deg, #fce7f3, #cffafe, #fef9c3, #e9d5ff);
+    background-size: 400% 400%;
+    animation: unicornGradient 40s ease infinite;
+}
+
+[data-theme="unicorn"] .c-card,
+[data-theme="unicorn"] .l-sidebar,
+[data-theme="unicorn"] .l-header {
+    background: rgba(255, 255, 255, 0.65) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-color: rgba(255, 255, 255, 0.8) !important;
+}
+
 /* Dark Theme */
 [data-theme="dark"] {
     --primary: #81C784;
