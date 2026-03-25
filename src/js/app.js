@@ -590,45 +590,53 @@ async function openPlantModal() {
 }
 
 function onGroupSelectChange() {
-    const val  = document.getElementById('modal-group-select').value;
-    const form = document.getElementById('modal-new-group-form');
-    const btn  = document.getElementById('modal-submit-btn');
-
+    const val = document.getElementById('modal-group-select').value;
     if (val === '__new__') {
-        form.style.display = 'block';
-        btn.textContent = 'Gruppe anlegen & Pflanze platzieren';
-        renderNewGroupForm();
-    } else {
-        form.style.display = 'none';
-        btn.textContent = 'Hinzufügen';
+        document.getElementById('modal-group-select').value = '';
+        openNeueGruppeModal();
     }
 }
 
-function renderNewGroupForm() {
-    const container = document.getElementById('modal-new-group-fields');
-    container.innerHTML = NEW_GROUP_FIELDS.map(f => {
-        if (f.type === 'select') {
-            const opts = f.options.map(o => `<option value="${o.v}">${o.l}</option>`).join('');
-            return `<div style="margin-bottom:10px;"><label style="font-size:0.8rem;color:var(--text-muted);">${f.label}</label><br><select id="ngf-${f.key}" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:var(--radius-sm);margin-top:2px;"><option value="">—</option>${opts}</select></div>`;
-        }
-        if (f.type === 'checkbox') {
-            return `<div style="margin-bottom:10px;display:flex;align-items:center;gap:8px;"><input type="checkbox" id="ngf-${f.key}"><label for="ngf-${f.key}" style="font-size:0.85rem;">${f.label}</label></div>`;
-        }
-        if (f.type === 'textarea') {
-            return `<div style="margin-bottom:10px;"><label style="font-size:0.8rem;color:var(--text-muted);">${f.label}</label><br><textarea id="ngf-${f.key}" rows="2" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:var(--radius-sm);margin-top:2px;box-sizing:border-box;"></textarea></div>`;
-        }
-        return `<div style="margin-bottom:10px;"><label style="font-size:0.8rem;color:var(--text-muted);">${f.label}</label><br><input type="${f.type}" id="ngf-${f.key}" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:var(--radius-sm);margin-top:2px;box-sizing:border-box;"></div>`;
-    }).join('');
+function openNeueGruppeModal() {
+    const body = document.getElementById('modal-neue-gruppe-body');
+    body.innerHTML = renderGroupFormNice({}, 'form-neue-gruppe', 'saveNeueGruppe()');
+    document.getElementById('modal-neue-gruppe').style.display = 'flex';
 }
 
-function getNewGroupFormData() {
-    const obj = {};
-    NEW_GROUP_FIELDS.forEach(f => {
-        const el = document.getElementById('ngf-' + f.key);
-        if (!el) return;
-        obj[f.key] = f.type === 'checkbox' ? (el.checked ? 1 : 0) : (el.value || null);
+function closeNeueGruppeModal() {
+    document.getElementById('modal-neue-gruppe').style.display = 'none';
+}
+
+async function saveNeueGruppe() {
+    const groupData = getGroupFormNiceData('form-neue-gruppe');
+    if (!groupData.name) { alert('Bitte einen Gruppennamen eingeben.'); return; }
+
+    const res  = await fetch('backend/api.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'createUserGroup', ...groupData })
     });
-    return obj;
+    const data = await res.json();
+    if (!data.success) { alert(data.error || 'Fehler beim Anlegen der Gruppe'); return; }
+
+    closeNeueGruppeModal();
+
+    if (state.pendingCoords) {
+        const plantRes  = await fetch('backend/api.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'addPlant', user_group_id: data.id, pos_x: state.pendingCoords.x, pos_y: state.pendingCoords.y })
+        });
+        const plantData = await plantRes.json();
+        if (plantData.success) {
+            closeModal();
+            await loadFilterGroups();
+            await loadPins();
+        }
+    } else {
+        await loadFilterGroups();
+        await openPlantModal();
+    }
 }
 
 function closeModal() {

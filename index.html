@@ -182,11 +182,8 @@
                         <option value="__new__">+ Neue Gruppe anlegen...</option>
                     </select>
                 </div>
-                <!-- Formular neue Gruppe -->
-                <div id="modal-new-group-form" style="display:none; margin-top:16px; border-top:1px solid var(--border); padding-top:16px;">
-                    <p style="font-weight:600; margin-bottom:12px; font-size:0.9rem;">Neue Pflanzengruppe</p>
-                    <div id="modal-new-group-fields"></div>
-                </div>
+                <!-- Neue Gruppe → öffnet eigenes Modal -->
+
             </div>
             <div class="c-card__footer">
                 <button id="modal-submit-btn" class="c-btn c-btn--primary" onclick="confirmAddPlant()">Hinzufügen</button>
@@ -195,10 +192,22 @@
         </div>
     </div>
 
+    <!-- Modal: Neue Pflanzengruppe anlegen -->
+    <div id="modal-neue-gruppe" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1002; align-items:center; justify-content:center; padding:20px;">
+        <div class="c-card" style="width:min(900px,95vw); max-height:90vh; overflow-y:auto;">
+            <div class="c-card__header">
+                <h2 class="c-card__title">Neue Pflanzengruppe anlegen</h2>
+                <button class="c-btn c-btn--text" onclick="closeNeueGruppeModal()">✕</button>
+            </div>
+            <div class="c-card__body" id="modal-neue-gruppe-body"></div>
+        </div>
+    </div>
+
+    <script src="src/js/admin.js"></script>
+    <script src="src/js/group-form.js"></script>
     <script src="src/js/app.js"></script>
     <script src="src/js/filter.js"></script>
     <script src="src/js/pflanzen.js"></script>
-    <script src="src/js/admin.js"></script>
     <script>
         // Avatar + Rolle laden
         async function loadAvatar() {
