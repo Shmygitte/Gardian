@@ -429,6 +429,8 @@ function handleWheel(e) {
 function handleMouseDown(e) {
     if (e.target.closest('.marker')) return;
     state.isPanning = true;
+    state.hasMoved = false;
+    state.dragStartPos = { x: e.clientX, y: e.clientY };
     state.panStartPos = { x: e.clientX - state.panX, y: e.clientY - state.panY };
     elements.mapCanvas.style.cursor = 'grabbing';
 }
@@ -456,6 +458,10 @@ function handleMouseMove(e) {
     }
 
     if (state.isPanning) {
+        if (!state.hasMoved && state.dragStartPos) {
+            const dist = Math.sqrt(Math.pow(e.clientX - state.dragStartPos.x, 2) + Math.pow(e.clientY - state.dragStartPos.y, 2));
+            if (dist > 5) state.hasMoved = true;
+        }
         state.panX = e.clientX - state.panStartPos.x;
         state.panY = e.clientY - state.panStartPos.y;
         updateTransform();
@@ -504,6 +510,7 @@ async function handleMouseUp(e) {
 
     state.isPanning = false;
     elements.mapCanvas.style.cursor = 'default';
+    setTimeout(() => { state.hasMoved = false; }, 50);
 }
 
 function updateTransform() {
