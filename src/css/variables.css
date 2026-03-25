@@ -94,13 +94,25 @@
     animation: unicornGradient 40s ease infinite;
 }
 
-[data-theme="unicorn"] .c-card,
-[data-theme="unicorn"] .l-sidebar,
-[data-theme="unicorn"] .l-header {
+[data-theme="unicorn"] .c-card {
     background: rgba(255, 255, 255, 0.65) !important;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-color: rgba(255, 255, 255, 0.8) !important;
+}
+
+[data-theme="unicorn"] .l-sidebar,
+[data-theme="unicorn"] .app__body,
+[data-theme="unicorn"] .l-header,
+[data-theme="unicorn"] .l-app-header {
+    background: rgba(255, 255, 255, 0.92) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+[data-theme="unicorn"] .l-main-content,
+[data-theme="unicorn"] .app__content {
+    background: transparent !important;
 }
 
 /* Dark Theme */
