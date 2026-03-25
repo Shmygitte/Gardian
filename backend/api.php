@@ -605,6 +605,118 @@ if ($action === 'uploadGardenPlan') {
 }
 
 // =========================
+// UPLOAD IMAGE
+// =========================
+if ($action === 'uploadImage') {
+    $type    = $_POST['type']     ?? null; // 'default', 'group', 'plant'
+    $groupId = $_POST['group_id'] ?? null;
+    $plantId = $_POST['plant_id'] ?? null;
+    if (!$type || !isset($_FILES['image'])) {
+        echo json_encode(['success' => false, 'error' => 'Parameter fehlen']); exit;
+    }
+    if ($type === 'default') requireAdmin($db, $_SESSION['user_id']);
+    $file = $_FILES['image'];
+    $ext  = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    if (!in_array($ext, ['jpg','jpeg','png','webp','gif'])) {
+        echo json_encode(['success' => false, 'error' => 'Ungültiges Dateiformat']); exit;
+    }
+    $dir = __DIR__ . '/../assets/images/';
+    if (!is_dir($dir)) mkdir($dir, 0777, true);
+    $filename = 'img_' . $_SESSION['user_id'] . '_' . time() . '.' . $ext;
+    $path     = $dir . $filename;
+    $dbPath   = 'assets/images/' . $filename;
+    if (!move_uploaded_file($file['tmp_name'], $path)) {
+        echo json_encode(['success' => false, 'error' => 'Upload fehlgeschlagen']); exit;
+    }
+    try {
+        $db->prepare("INSERT INTO gd_images (type, group_id, plant_id, user_id, file_path, is_primary)
+                      VALUES (?, ?, ?, ?, ?, 0)")
+           ->execute([$type, $groupId ?: null, $plantId ?: null, $_SESSION['user_id'], $dbPath]);
+        echo json_encode(['success' => true, 'path' => $dbPath, 'id' => $db->lastInsertId()]);
+    } catch (PDOException $e) {
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+    exit;
+}
+
+// =========================
+// GET IMAGES
+// =========================
+if ($action === 'getImages') {
+    $type    = $data['type']     ?? null;
+    $groupId = $data['group_id'] ?? null;
+    $plantId = $data['plant_id'] ?? null;
+    try {
+        if ($type === 'plant' && $plantId) {
+            $stmt = $db->prepare("SELECT * FROM gd_images WHERE type='plant' AND plant_id=? ORDER BY is_primary DESC, uploaded_at DESC");
+            $stmt->execute([$plantId]);
+        } elseif ($type === 'group' && $groupId) {
+            // User-Gruppe zuerst, dann Default
+            $stmt = $db->prepare("SELECT * FROM gd_images WHERE (type='group' AND group_id=? AND user_id=?) OR (type='default' AND group_id=?) ORDER BY type ASC, is_primary DESC, uploaded_at DESC");
+            $stmt->execute([$groupId, $_SESSION['user_id'], $groupId]);
+        } elseif ($type === 'default' && $groupId) {
+            $stmt = $db->prepare("SELECT * FROM gd_images WHERE type='default' AND group_id=? ORDER BY is_primary DESC, uploaded_at DESC");
+            $stmt->execute([$groupId]);
+        } else {
+            echo json_encode(['success' => false, 'error' => 'Parameter fehlen']); exit;
+        }
+        echo json_encode(['success' => true, 'images' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+    } catch (PDOException $e) {
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+    exit;
+}
+
+// =========================
+// DELETE IMAGE
+// =========================
+if ($action === 'deleteImage') {
+    $id = $data['id'] ?? null;
+    if (!$id) { echo json_encode(['success' => false, 'error' => 'ID fehlt']); exit; }
+    try {
+        $stmt = $db->prepare("SELECT * FROM gd_images WHERE id=?");
+        $stmt->execute([$id]);
+        $img = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$img) { echo json_encode(['success' => false, 'error' => 'Nicht gefunden']); exit; }
+        // Nur eigene Bilder oder Admin
+        if ($img['user_id'] != $_SESSION['user_id']) requireAdmin($db, $_SESSION['user_id']);
+        $db->prepare("DELETE FROM gd_images WHERE id=?")->execute([$id]);
+        $filePath = __DIR__ . '/../' . $img['file_path'];
+        if (file_exists($filePath)) unlink($filePath);
+        echo json_encode(['success' => true]);
+    } catch (PDOException $e) {
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+    exit;
+}
+
+// =========================
+// GET IMAGES FOR PIN (Hover)
+// =========================
+if ($action === 'getImagesForPin') {
+    $plantId = $data['plant_id'] ?? null;
+    $groupId = $data['group_id'] ?? null;   // default_group_id
+    if (!$plantId) { echo json_encode(['success' => false, 'error' => 'Parameter fehlen']); exit; }
+    try {
+        // Pflanze zuerst, dann User-Gruppe, dann Default
+        $stmt = $db->prepare("
+            (SELECT file_path, is_primary, 'plant' as src FROM gd_images WHERE type='plant' AND plant_id=? AND user_id=?)
+            UNION ALL
+            (SELECT file_path, is_primary, 'group' as src FROM gd_images WHERE type='group' AND group_id=? AND user_id=?)
+            UNION ALL
+            (SELECT file_path, is_primary, 'default' as src FROM gd_images WHERE type='default' AND group_id=?)
+            ORDER BY FIELD(src,'plant','group','default'), is_primary DESC
+            LIMIT 5
+        ");
+        $stmt->execute([$plantId, $_SESSION['user_id'], $groupId, $_SESSION['user_id'], $groupId]);
+        echo json_encode(['success' => true, 'images' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+    } catch (PDOException $e) {
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+    exit;
+}
+
+// =========================
 // ADMIN: GET USERS
 // =========================
 if ($action === 'adminGetUsers') {

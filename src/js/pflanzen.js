@@ -110,7 +110,7 @@ function renderPflanzenListe(data) {
                 const plantId = `plant-${gi}-${pi}`;
                 return `
                 <div style="margin:4px 0 0 12px; border-left:3px solid var(--primary-light); padding-left:10px;">
-                    <div onclick="toggleAccordion('${plantId}'); ensureBloomLoaded('plant', ${plant.id}, ${group.bloom_months_resolved || 0})" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; padding:4px 0;">
+                    <div onclick="toggleAccordion('${plantId}'); ensureBloomLoaded('plant', ${plant.id}, ${group.bloom_months_resolved || 0}); loadImages('plant', null, ${plant.id}, 'images-plant-${plant.id}')" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; padding:4px 0;">
                         <span style="font-size:0.9rem; font-weight:600;">Pflanze #${plant.id} <span style="color:var(--text-muted); font-weight:400;">(${plant.pos_x !== null ? parseFloat(plant.pos_x).toFixed(1) + '% / ' + parseFloat(plant.pos_y).toFixed(1) + '%' : 'keine Position'})</span></span>
                         <span id="${plantId}-icon" style="font-size:0.8rem; color:var(--text-muted);">▶</span>
                     </div>
@@ -120,6 +120,12 @@ function renderPflanzenListe(data) {
                             <p style="font-size:0.8rem; font-weight:700; color:var(--text-muted); margin-bottom:6px;">BLÜTEZEIT & BEOBACHTUNGEN</p>
                             <div id="bloom-plant-${plant.id}"><p style="font-size:0.8rem;color:var(--text-muted);">Lade...</p></div>
                         </div>
+                        <div style="margin-top:10px; border-top:1px solid var(--border); padding-top:10px;">
+                            <p style="font-size:0.8rem; font-weight:700; color:var(--text-muted); margin-bottom:6px;">FOTOS</p>
+                            <div id="images-plant-${plant.id}"></div>
+                            <input type="file" id="file-plant-${plant.id}" accept="image/*" style="position:absolute;opacity:0;width:0;height:0;" onchange="uploadImage(this,'plant',null,${plant.id},'images-plant-${plant.id}')">
+                            <button class="c-btn c-btn--text" style="font-size:0.8rem;" onclick="document.getElementById('file-plant-${plant.id}').click()">+ Foto hochladen</button>
+                        </div>
                     </div>
                 </div>`;
             }).join('')
@@ -128,7 +134,7 @@ function renderPflanzenListe(data) {
         return `
         <div style="margin-bottom:4px; border:1px solid var(--border); border-radius:var(--radius-md); overflow:hidden;">
             <div style="padding:6px 12px; background:var(--bg-card); display:flex; justify-content:space-between; align-items:center;">
-                <span onclick="toggleAccordion('${groupId}'); ensureBloomLoaded('group', ${group.id}, ${group.bloom_months_resolved || 0})" style="cursor:pointer; font-weight:600; flex:1;">${group.name || '(Unbenannte Gruppe)'}</span>
+                <span onclick="toggleAccordion('${groupId}'); ensureBloomLoaded('group', ${group.id}, ${group.bloom_months_resolved || 0}); loadImages('group', ${group.group_id || null}, null, 'images-group-${group.id}')" style="cursor:pointer; font-weight:600; flex:1;">${group.name || '(Unbenannte Gruppe)'}</span>
                 <div style="display:flex; align-items:center; gap:10px;">
                     <button class="c-btn c-btn--text" style="font-size:0.8rem;" onclick="openGruppeBearbeitenModal(${group.id})">Bearbeiten</button>
                     <span onclick="toggleAccordion('${groupId}'); ensureBloomLoaded('group', ${group.id}, ${group.bloom_months_resolved || 0})" style="cursor:pointer; font-size:0.8rem; color:var(--text-muted);">${group.plants.length} Pflanze(n) &nbsp;<span id="${groupId}-icon">▼</span></span>
@@ -140,6 +146,12 @@ function renderPflanzenListe(data) {
                 <div style="margin-top:12px; border-top:1px solid var(--border); padding-top:10px;">
                     <p style="font-size:0.8rem; font-weight:700; color:var(--text-muted); margin-bottom:6px;">BLÜTEZEIT & BEOBACHTUNGEN</p>
                     <div id="bloom-group-${group.id}"><p style="font-size:0.8rem;color:var(--text-muted);">Lade...</p></div>
+                </div>
+                <div style="margin-top:12px; border-top:1px solid var(--border); padding-top:10px;">
+                    <p style="font-size:0.8rem; font-weight:700; color:var(--text-muted); margin-bottom:6px;">FOTOS</p>
+                    <div id="images-group-${group.id}"></div>
+                    <input type="file" id="file-group-${group.id}" accept="image/*" style="position:absolute;opacity:0;width:0;height:0;" onchange="uploadImage(this,'group',${group.group_id || null},null,'images-group-${group.id}')">
+                    <button class="c-btn c-btn--text" style="font-size:0.8rem;" onclick="document.getElementById('file-group-${group.id}').click()">+ Foto hochladen</button>
                 </div>
                 <p style="font-size:0.8rem; font-weight:600; color:var(--text-muted); margin:12px 0 4px;">PFLANZEN</p>
                 ${plantsHtml}
@@ -342,4 +354,59 @@ async function saveGruppeBearbeiten(groupId, formId) {
     } else {
         alert(data.error || 'Fehler beim Speichern');
     }
+}
+
+// =========================
+// BILD-UPLOAD & GALERIE
+// =========================
+async function uploadImage(input, type, groupId, plantId, containerId) {
+    if (!input.files[0]) return;
+    const formData = new FormData();
+    formData.append('action', 'uploadImage');
+    formData.append('type', type);
+    formData.append('image', input.files[0]);
+    if (groupId) formData.append('group_id', groupId);
+    if (plantId) formData.append('plant_id', plantId);
+
+    const res  = await fetch('backend/api.php', { method: 'POST', body: formData });
+    const data = await res.json();
+    if (data.success) {
+        loadImages(type, groupId, plantId, containerId);
+    } else {
+        alert(data.error || 'Upload fehlgeschlagen');
+    }
+}
+
+async function loadImages(type, groupId, plantId, containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const res  = await fetch('backend/api.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'getImages', type, group_id: groupId, plant_id: plantId })
+    });
+    const data = await res.json();
+    if (!data.success || !data.images.length) {
+        container.innerHTML = '<p style="font-size:0.8rem;color:var(--text-muted);">Noch keine Fotos.</p>';
+        return;
+    }
+    container.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px;">
+        ${data.images.map(img => `
+            <div style="position:relative;">
+                <img src="${img.file_path}" style="width:80px;height:60px;object-fit:cover;border-radius:6px;border:1px solid var(--border);">
+                <button onclick="deleteImage(${img.id}, '${type}', ${groupId||'null'}, ${plantId||'null'}, '${containerId}')"
+                    style="position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:var(--danger);color:white;border:none;font-size:0.65rem;cursor:pointer;line-height:1;">✕</button>
+            </div>`).join('')}
+    </div>`;
+}
+
+async function deleteImage(id, type, groupId, plantId, containerId) {
+    if (!confirm('Foto löschen?')) return;
+    const res  = await fetch('backend/api.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'deleteImage', id })
+    });
+    const data = await res.json();
+    if (data.success) loadImages(type, groupId, plantId, containerId);
 }

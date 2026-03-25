@@ -386,6 +386,8 @@ function renderMarkers() {
 
         marker.addEventListener('mousedown', (e) => handleMarkerMouseDown(e, String(pin.id)));
         marker.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); openPlantEditModal(pin); });
+        marker.addEventListener('mouseenter', (e) => showHoverGallery(e, pin));
+        marker.addEventListener('mouseleave', () => hideHoverGallery());
         overlay.appendChild(marker);
     });
 }
@@ -747,6 +749,54 @@ function handleMarkerMouseDown(e, id) {
 
     const el = document.querySelector(`.marker[data-id="${id}"]`);
     if (el) el.classList.add('dragging');
+}
+
+// =========================
+// HOVER GALERIE
+// =========================
+let _hoverTimeout = null;
+
+async function showHoverGallery(e, pin) {
+    hideHoverGallery();
+    _hoverTimeout = setTimeout(async () => {
+        const res  = await fetch('backend/api.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'getImagesForPin', plant_id: pin.id, group_id: pin.group_id })
+        });
+        const data = await res.json();
+        if (!data.success || !data.images.length) return;
+
+        const popup = document.createElement('div');
+        popup.id = 'hover-gallery-popup';
+        popup.style.cssText = `
+            position:fixed; z-index:9999; background:var(--bg-card);
+            border:1px solid var(--border); border-radius:var(--radius-md);
+            box-shadow:var(--shadow-medium); padding:8px; max-width:220px;
+            pointer-events:none;
+        `;
+        popup.innerHTML = `
+            <p style="font-size:0.75rem;font-weight:600;margin:0 0 6px;color:var(--text-muted);">${pin.name}</p>
+            <div style="display:flex;flex-wrap:wrap;gap:4px;">
+                ${data.images.map(img => `<img src="${img.file_path}" style="width:96px;height:72px;object-fit:cover;border-radius:6px;">`).join('')}
+            </div>
+        `;
+        document.body.appendChild(popup);
+        positionHoverPopup(popup, e);
+    }, 300);
+}
+
+function positionHoverPopup(popup, e) {
+    const x = e.clientX + 12;
+    const y = e.clientY + 12;
+    popup.style.left = Math.min(x, window.innerWidth  - 240) + 'px';
+    popup.style.top  = Math.min(y, window.innerHeight - 200) + 'px';
+}
+
+function hideHoverGallery() {
+    clearTimeout(_hoverTimeout);
+    const existing = document.getElementById('hover-gallery-popup');
+    if (existing) existing.remove();
 }
 
 document.addEventListener('DOMContentLoaded', init);
