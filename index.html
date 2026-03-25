@@ -45,11 +45,12 @@
                             <button class="c-btn c-btn--text" style="justify-content:space-between; width:100%;" onclick="toggleFilterAccordion(this)">
                                 Typ <span class="filter-accordion__arrow">▾</span>
                             </button>
-                            <div class="filter-accordion__body" id="filter-types" style="display:flex; flex-direction:column; gap:2px; padding:2px 0 4px 12px;">
-                                <button class="filter-item active" data-value="tree"     onclick="toggleFilterPill(this)">🌳 Baum</button>
-                                <button class="filter-item active" data-value="shrub"    onclick="toggleFilterPill(this)">🌿 Strauch</button>
-                                <button class="filter-item active" data-value="flower"   onclick="toggleFilterPill(this)">🌸 Blume</button>
-                                <button class="filter-item active" data-value="s_flower" onclick="toggleFilterPill(this)">🌼 Saisonblume</button>
+                            <div class="filter-accordion__body" id="filter-types" style="display:flex; flex-direction:column; gap:0; padding:2px 0 4px 12px;">
+                                <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;cursor:pointer;padding:3px 0;border-bottom:1px solid var(--border);margin-bottom:2px;font-weight:600;"><input type="checkbox" id="filter-types-all" checked onchange="toggleAllTypes(this)"> Alle</label>
+                                <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;cursor:pointer;padding:3px 0;"><input type="checkbox" checked onchange="syncAllTypes();applyFilter()" data-type="tree">     🌳 Baum</label>
+                                <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;cursor:pointer;padding:3px 0;"><input type="checkbox" checked onchange="syncAllTypes();applyFilter()" data-type="shrub">    🌿 Strauch</label>
+                                <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;cursor:pointer;padding:3px 0;"><input type="checkbox" checked onchange="syncAllTypes();applyFilter()" data-type="flower">   🌸 Blume</label>
+                                <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;cursor:pointer;padding:3px 0;"><input type="checkbox" checked onchange="syncAllTypes();applyFilter()" data-type="s_flower"> 🌼 Saisonblume</label>
                             </div>
                         </div>
                         <!-- Gruppen Dropdown -->
@@ -57,7 +58,7 @@
                             <button class="c-btn c-btn--text" style="justify-content:space-between; width:100%;" onclick="toggleFilterAccordion(this)">
                                 Pflanzengruppen <span class="filter-accordion__arrow">▾</span>
                             </button>
-                            <div class="filter-accordion__body" id="filter-groups" style="display:flex; flex-wrap:wrap; gap:6px; padding:6px 0 4px 12px;"></div>
+                            <div class="filter-accordion__body" id="filter-groups" style="display:flex; flex-direction:column; gap:0; padding:2px 0 4px 12px;"></div>
                         </div>
                     </nav>
                 </div>
