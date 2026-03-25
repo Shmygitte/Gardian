@@ -113,7 +113,7 @@ async function loadAdminGroups() {
                 </div>
             </div>
             <div id="edit-${g.id}" style="display:none; padding:16px; background:var(--bg-surface);">
-                ${renderGroupForm(g, `adminSaveGroup(${g.id})`)}
+                ${renderGroupFormNice(g, `gform-${g.id}`, `adminSaveGroup(${g.id})`)}
             </div>
         </div>`).join('');
 
@@ -121,7 +121,7 @@ async function loadAdminGroups() {
         ${groupsHtml}
         <div style="margin-top:16px; border:2px dashed var(--border); border-radius:var(--radius-md); padding:16px;">
             <p style="font-weight:600; margin-bottom:12px;">Neue Gruppe anlegen</p>
-            ${renderGroupForm({}, 'adminAddGroup()')}
+            ${renderGroupFormNice({}, 'gform-new', 'adminAddGroup()')}
         </div>`;
 }
 
@@ -193,13 +193,13 @@ function toggleAdminGroupEdit(id) {
 }
 
 async function adminSaveGroup(id) {
-    const formData = { ...getFormData('gform-' + id), action: 'adminUpdateGroup', id };
+    const formData = { ...getGroupFormNiceData('gform-' + id), action: 'adminUpdateGroup', id };
     await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(formData) });
     loadAdminGroups();
 }
 
 async function adminAddGroup() {
-    const formData = { ...getFormData('gform-new'), action: 'adminAddGroup' };
+    const formData = { ...getGroupFormNiceData('gform-new'), action: 'adminAddGroup' };
     const res  = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(formData) });
     const data = await res.json();
     if (data.success) loadAdminGroups();
