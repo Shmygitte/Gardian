@@ -33,7 +33,22 @@ function renderGalerie() {
     const sortBy = document.getElementById('galerie-sort')?.value || 'name';
     if (!grid) return;
 
-    const images = [..._galerieImages];
+    let images = [..._galerieImages];
+
+    // Sidebar-Filter anwenden
+    if (typeof filterState !== 'undefined') {
+        if (filterState.types && filterState.types.length > 0) {
+            images = images.filter(img => !img.group_type || filterState.types.includes(img.group_type));
+        } else if (filterState.types && filterState.types.length === 0) {
+            images = [];
+        }
+        if (filterState.groups !== null) {
+            images = images.filter(img => {
+                const key = img.group_id ? String(img.group_id) : null;
+                return key === null || filterState.groups.has(key);
+            });
+        }
+    }
 
     if (sortBy === 'name') {
         images.sort((a, b) => (a.group_name || '').localeCompare(b.group_name || ''));

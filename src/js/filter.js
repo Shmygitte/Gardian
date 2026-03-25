@@ -24,6 +24,7 @@ function applyFilter() {
 
     if (typeof renderMarkers === 'function') renderMarkers();
     if (typeof renderPflanzenListeFiltered === 'function') renderPflanzenListeFiltered();
+    if (typeof renderGalerie === 'function') renderGalerie();
 }
 
 function toggleAllTypes(cb) {
