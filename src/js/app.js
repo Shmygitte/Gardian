@@ -106,6 +106,7 @@ async function loadGardenConfig() {
             if (config.zoom)  state.zoom = parseFloat(config.zoom);
             if (config.pan_x) state.panX = parseFloat(config.pan_x);
             if (config.pan_y) state.panY = parseFloat(config.pan_y);
+            if (config.theme) document.documentElement.setAttribute('data-theme', config.theme);
             updateTransform();
         }
     } catch (err) {

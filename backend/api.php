@@ -518,14 +518,19 @@ if ($action === 'getGardenConfig') {
 // SAVE GARDEN CONFIG
 // =========================
 if ($action === 'saveGardenConfig') {
-    $zoom  = $data['zoom']  ?? null;
-    $pan_x = $data['pan_x'] ?? null;
-    $pan_y = $data['pan_y'] ?? null;
+    $fields = ['zoom', 'pan_x', 'pan_y', 'theme'];
+    $sets   = []; $vals = [];
+    foreach ($fields as $f) {
+        if (array_key_exists($f, $data)) { $sets[] = $f; $vals[] = $data[$f]; }
+    }
+    if (!$sets) { echo json_encode(['success' => true]); exit; }
+    $cols    = implode(', ', $sets);
+    $placeholders = implode(', ', array_fill(0, count($sets), '?'));
+    $updates = implode(', ', array_map(fn($f) => "$f = VALUES($f)", $sets));
     try {
-        $db->prepare("INSERT INTO gd_user_garden_config (user_id, zoom, pan_x, pan_y)
-                      VALUES (?, ?, ?, ?)
-                      ON DUPLICATE KEY UPDATE zoom = VALUES(zoom), pan_x = VALUES(pan_x), pan_y = VALUES(pan_y)")
-           ->execute([$_SESSION['user_id'], $zoom, $pan_x, $pan_y]);
+        $db->prepare("INSERT INTO gd_user_garden_config (user_id, $cols) VALUES (?, $placeholders)
+                      ON DUPLICATE KEY UPDATE $updates")
+           ->execute(array_merge([$_SESSION['user_id']], $vals));
         echo json_encode(['success' => true]);
     } catch (PDOException $e) {
         echo json_encode(['success' => false, 'error' => $e->getMessage()]);
