@@ -20,7 +20,8 @@
                 <h1 style="font-size: 1.5rem; color: var(--primary-dark);">Gardian</h1>
             </div>
             <nav class="c-nav">
-                <a href="tabelle.html" class="c-btn c-btn--text" style="text-decoration:none;">Tabelle</a>
+                <a href="tabelle.html"  class="c-btn c-btn--text" style="text-decoration:none;">Tabelle</a>
+                <a href="kalender.html" class="c-btn c-btn--text" style="text-decoration:none;">Pflegekalender</a>
                 <button class="c-btn c-btn--text" onclick="logout()">Abmelden</button>
             </nav>
         </header>
@@ -54,6 +55,35 @@
                                 <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;cursor:pointer;padding:3px 0;"><input type="checkbox" checked onchange="syncAllTypes();applyFilter()" data-type="s_flower"> 🌼 Blümchen</label>
                             </div>
                         </div>
+                        <!-- Aufgaben Filter -->
+                        <div class="filter-accordion">
+                            <button class="c-btn c-btn--text" style="justify-content:space-between; width:100%;" onclick="toggleFilterAccordion(this)">
+                                Aufgaben <span class="filter-accordion__arrow">▾</span>
+                            </button>
+                            <div class="filter-accordion__body" style="display:flex; flex-direction:column; gap:6px; padding:4px 0 6px 12px;">
+                                <!-- Monatsauswahl (Multi-Toggle) -->
+                                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:3px;" id="sidebar-care-months">
+                                    <button id="sidebar-care-all-btn" onclick="setAllCareMonths()" style="grid-column:1/-1;padding:4px 2px;border-radius:6px;border:1px solid var(--primary);font-size:0.72rem;font-weight:700;cursor:pointer;background:var(--primary);color:white;font-family:inherit;text-align:center;">Alle</button>
+                                    <button class="sidebar-care-month-btn" data-month="0"  onclick="toggleCareMonth(0)"  style="padding:4px 2px;border-radius:6px;border:1px solid var(--border);font-size:0.72rem;cursor:pointer;background:var(--bg-app);color:var(--text-main);font-family:inherit;text-align:center;">Jan</button>
+                                    <button class="sidebar-care-month-btn" data-month="1"  onclick="toggleCareMonth(1)"  style="padding:4px 2px;border-radius:6px;border:1px solid var(--border);font-size:0.72rem;cursor:pointer;background:var(--bg-app);color:var(--text-main);font-family:inherit;text-align:center;">Feb</button>
+                                    <button class="sidebar-care-month-btn" data-month="2"  onclick="toggleCareMonth(2)"  style="padding:4px 2px;border-radius:6px;border:1px solid var(--border);font-size:0.72rem;cursor:pointer;background:var(--bg-app);color:var(--text-main);font-family:inherit;text-align:center;">Mär</button>
+                                    <button class="sidebar-care-month-btn" data-month="3"  onclick="toggleCareMonth(3)"  style="padding:4px 2px;border-radius:6px;border:1px solid var(--border);font-size:0.72rem;cursor:pointer;background:var(--bg-app);color:var(--text-main);font-family:inherit;text-align:center;">Apr</button>
+                                    <button class="sidebar-care-month-btn" data-month="4"  onclick="toggleCareMonth(4)"  style="padding:4px 2px;border-radius:6px;border:1px solid var(--border);font-size:0.72rem;cursor:pointer;background:var(--bg-app);color:var(--text-main);font-family:inherit;text-align:center;">Mai</button>
+                                    <button class="sidebar-care-month-btn" data-month="5"  onclick="toggleCareMonth(5)"  style="padding:4px 2px;border-radius:6px;border:1px solid var(--border);font-size:0.72rem;cursor:pointer;background:var(--bg-app);color:var(--text-main);font-family:inherit;text-align:center;">Jun</button>
+                                    <button class="sidebar-care-month-btn" data-month="6"  onclick="toggleCareMonth(6)"  style="padding:4px 2px;border-radius:6px;border:1px solid var(--border);font-size:0.72rem;cursor:pointer;background:var(--bg-app);color:var(--text-main);font-family:inherit;text-align:center;">Jul</button>
+                                    <button class="sidebar-care-month-btn" data-month="7"  onclick="toggleCareMonth(7)"  style="padding:4px 2px;border-radius:6px;border:1px solid var(--border);font-size:0.72rem;cursor:pointer;background:var(--bg-app);color:var(--text-main);font-family:inherit;text-align:center;">Aug</button>
+                                    <button class="sidebar-care-month-btn" data-month="8"  onclick="toggleCareMonth(8)"  style="padding:4px 2px;border-radius:6px;border:1px solid var(--border);font-size:0.72rem;cursor:pointer;background:var(--bg-app);color:var(--text-main);font-family:inherit;text-align:center;">Sep</button>
+                                    <button class="sidebar-care-month-btn" data-month="9"  onclick="toggleCareMonth(9)"  style="padding:4px 2px;border-radius:6px;border:1px solid var(--border);font-size:0.72rem;cursor:pointer;background:var(--bg-app);color:var(--text-main);font-family:inherit;text-align:center;">Okt</button>
+                                    <button class="sidebar-care-month-btn" data-month="10" onclick="toggleCareMonth(10)" style="padding:4px 2px;border-radius:6px;border:1px solid var(--border);font-size:0.72rem;cursor:pointer;background:var(--bg-app);color:var(--text-main);font-family:inherit;text-align:center;">Nov</button>
+                                    <button class="sidebar-care-month-btn" data-month="11" onclick="toggleCareMonth(11)" style="padding:4px 2px;border-radius:6px;border:1px solid var(--border);font-size:0.72rem;cursor:pointer;background:var(--bg-app);color:var(--text-main);font-family:inherit;text-align:center;">Dez</button>
+                                </div>
+                                <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;cursor:pointer;padding:3px 0;">
+                                    <input type="checkbox" id="filter-care-active" onchange="setCareFilterActive(this.checked)" style="accent-color:var(--primary);">
+                                    Pflanzen ohne Aufgaben ausblenden
+                                </label>
+                            </div>
+                        </div>
+
                         <!-- Gruppen Dropdown -->
                         <div class="filter-accordion">
                             <button class="c-btn c-btn--text" style="justify-content:space-between; width:100%;" onclick="toggleFilterAccordion(this)">
@@ -102,11 +132,13 @@
                         </div>
                         <div class="c-card__body">
                             <div style="display:flex; gap:8px; margin-bottom:20px;">
-                                <button id="admin-tab-users" class="c-btn c-btn--secondary" onclick="switchAdminTab('users')">Benutzer</button>
-                                <button id="admin-tab-groups" class="c-btn c-btn--text" onclick="switchAdminTab('groups')">Pflanzengruppen</button>
+                                <button id="admin-tab-users"      class="c-btn c-btn--secondary" onclick="switchAdminTab('users')">Benutzer</button>
+                                <button id="admin-tab-groups"     class="c-btn c-btn--text"      onclick="switchAdminTab('groups')">Pflanzengruppen</button>
+                                <button id="admin-tab-care-types" class="c-btn c-btn--text"      onclick="switchAdminTab('care-types')">Aufgaben-Typen</button>
                             </div>
                             <div id="admin-panel-users"></div>
-                            <div id="admin-panel-groups" style="display:none;"></div>
+                            <div id="admin-panel-groups"     style="display:none;"></div>
+                            <div id="admin-panel-care-types" style="display:none;"></div>
                         </div>
                     </div>
                 </div>
@@ -211,6 +243,13 @@
                             <input type="checkbox" id="hover-lock-toggle" onchange="setHoverLock(this.checked)" style="accent-color:var(--primary); cursor:pointer;">
                             🔒 Hover-Sperre
                         </label>
+                        <!-- Pflege-Layer Toggle -->
+                        <div style="width:1px; height:22px; background:var(--border); margin:0 4px; flex-shrink:0;"></div>
+                        <label style="display:flex; align-items:center; gap:5px; cursor:pointer; font-size:0.8rem; user-select:none; flex-shrink:0;">
+                            <input type="checkbox" id="care-overlay-toggle" onchange="toggleCareOverlay(this.checked)" style="accent-color:var(--primary); cursor:pointer;">
+                            🌿 Pflege-Badges
+                        </label>
+
                         <div id="hover-size-controls" style="display:flex; gap:3px; flex-shrink:0;">
                             <button onclick="setHoverSize('S')" data-size="S" class="hover-size-btn" style="padding:3px 8px; border-radius:20px; border:1px solid var(--border); font-size:0.75rem; font-weight:600; cursor:pointer; background:var(--bg-app); color:var(--text-main);">S</button>
                             <button onclick="setHoverSize('M')" data-size="M" class="hover-size-btn active" style="padding:3px 8px; border-radius:20px; border:1px solid var(--border); font-size:0.75rem; font-weight:600; cursor:pointer; background:var(--primary); color:white;">M</button>
@@ -338,6 +377,14 @@
     <script src="src/js/app.js"></script>
     <script src="src/js/filter.js"></script>
     <script src="src/js/pflanzen.js"></script>
+    <script src="src/js/pflege.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const m = new Date().getMonth();
+            setCareOverlayMonth(m);  // Overlay-Leiste
+            setCareFilterMonth(m);   // Sidebar
+        });
+    </script>
     <script>
         // Avatar + Rolle laden
         async function loadAvatar() {

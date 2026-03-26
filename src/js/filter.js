@@ -4,8 +4,10 @@
  */
 
 const filterState = {
-    types:  ['tree', 'shrub', 'flower', 's_flower'],
-    groups: null // null = alle; sonst Set mit aktiven group_ids
+    types:      ['tree', 'shrub', 'flower', 's_flower'],
+    groups:     null, // null = alle; sonst Set mit aktiven group_ids
+    careFilter: false,
+    careMonths: new Set() // leer = alle Monate
 };
 
 function applyFilter() {
@@ -67,6 +69,55 @@ function toggleFilterAccordion(btn) {
 function toggleFilterPill(el) {
     el.classList.toggle('active');
     applyFilter();
+}
+
+function setCareFilterActive(active) {
+    filterState.careFilter = active;
+    if (active && typeof ensureCareTasksLoaded === 'function') {
+        ensureCareTasksLoaded().then(() => {
+            if (typeof renderMarkers === 'function') renderMarkers();
+            if (typeof renderCareBadges === 'function' && _careOverlayActive) renderCareBadges();
+        });
+    } else {
+        if (typeof renderMarkers === 'function') renderMarkers();
+    }
+}
+
+function toggleCareMonth(month) {
+    if (filterState.careMonths.has(month)) {
+        filterState.careMonths.delete(month);
+    } else {
+        filterState.careMonths.add(month);
+    }
+    _updateCareMonthButtons();
+    _onCareMonthsChanged();
+}
+
+function setAllCareMonths() {
+    filterState.careMonths.clear();
+    _updateCareMonthButtons();
+    _onCareMonthsChanged();
+}
+
+function _updateCareMonthButtons() {
+    const allActive = filterState.careMonths.size === 0;
+    const allBtn = document.getElementById('sidebar-care-all-btn');
+    if (allBtn) {
+        allBtn.style.background  = allActive ? 'var(--primary)' : 'var(--bg-app)';
+        allBtn.style.color       = allActive ? 'white'          : 'var(--text-main)';
+        allBtn.style.borderColor = allActive ? 'var(--primary)' : 'var(--border)';
+    }
+    document.querySelectorAll('.sidebar-care-month-btn').forEach(btn => {
+        const active = !allActive && filterState.careMonths.has(parseInt(btn.dataset.month));
+        btn.style.background  = active ? 'var(--primary)' : 'var(--bg-app)';
+        btn.style.color       = active ? 'white'          : 'var(--text-main)';
+        btn.style.borderColor = active ? 'var(--primary)' : 'var(--border)';
+    });
+}
+
+function _onCareMonthsChanged() {
+    if (filterState.careFilter && typeof renderMarkers === 'function') renderMarkers();
+    if (typeof _careOverlayActive !== 'undefined' && _careOverlayActive && typeof renderCareBadges === 'function') renderCareBadges();
 }
 
 async function loadFilterGroups() {

@@ -347,6 +347,9 @@ function renderMarkers() {
         if (!filterState.types.includes(pin.type)) return false;
         const pinGroupKey = pin.user_group_id ? `u${pin.user_group_id}` : String(pin.group_id);
         if (filterState.groups !== null && !filterState.groups.has(pinGroupKey)) return false;
+        if (filterState.careFilter && typeof getPinsWithCareTasks === 'function') {
+            if (!getPinsWithCareTasks(filterState.careMonths).has(pin.id)) return false;
+        }
         return true;
     });
 
@@ -393,6 +396,12 @@ function renderMarkers() {
         });
         overlay.appendChild(marker);
     });
+
+    // Pflege-Badges neu zeichnen falls Overlay aktiv
+    if (typeof _careOverlayActive !== 'undefined' && _careOverlayActive &&
+        typeof renderCareBadges === 'function') {
+        renderCareBadges();
+    }
 }
 
 function openPlantEditModal(pin) {
