@@ -12,6 +12,7 @@ $db = getDB();
 
 // Schema-Migration: user_group_id in gd_images (einmalig)
 try { $db->exec("ALTER TABLE gd_images ADD COLUMN user_group_id INT NULL DEFAULT NULL"); } catch (PDOException $e) {}
+try { $db->exec("ALTER TABLE gd_images ADD COLUMN file_path_gallery VARCHAR(500) NULL DEFAULT NULL"); } catch (PDOException $e) {}
 // Schema-Migration: Aufgaben-Typen (einmalig)
 try { $db->exec("CREATE TABLE IF NOT EXISTS gd_care_task_types (
     id   INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -47,20 +48,15 @@ try { $db->exec("ALTER TABLE gd_user_plants ADD COLUMN planted_month_year CHAR(7
 try { $db->exec("ALTER TABLE gd_user_plants ADD COLUMN removed_month_year CHAR(7) NULL DEFAULT NULL COMMENT 'Format YYYY-MM'"); } catch (PDOException $e) {}
 try { $db->exec("ALTER TABLE gd_user_plants ADD COLUMN removed_reason ENUM('manuell','selbst') NULL DEFAULT NULL"); } catch (PDOException $e) {}
 // Schema-Migration: Icon-Bibliothek + User-Icons (einmalig)
-try { $db->exec("CREATE TABLE IF NOT EXISTS gd_icon_library (
-    id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    name       VARCHAR(150) NOT NULL,
-    file_path  VARCHAR(500) NOT NULL,
-    category   VARCHAR(100) NULL,
-    created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+try { $db->exec("CREATE TABLE IF NOT EXISTS gd_user_garden_config (
+    user_id         INT UNSIGNED PRIMARY KEY,
+    zoom            DECIMAL(10,2) NULL,
+    pan_x           DECIMAL(10,2) NULL,
+    pan_y           DECIMAL(10,2) NULL,
+    theme           VARCHAR(50)   NULL,
+    effects_enabled TINYINT(1)    NOT NULL DEFAULT 0
 )"); } catch (PDOException $e) {}
-try { $db->exec("CREATE TABLE IF NOT EXISTS gd_user_icons (
-    id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    user_id    INT UNSIGNED NOT NULL,
-    name       VARCHAR(150) NOT NULL,
-    file_path  VARCHAR(500) NOT NULL,
-    created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
-)"); } catch (PDOException $e) {}
+try { $db->exec("ALTER TABLE gd_user_garden_config ADD COLUMN effects_enabled TINYINT(1) NOT NULL DEFAULT 0"); } catch (PDOException $e) {}
 
 // =========================
 // PROTECTION
@@ -609,7 +605,7 @@ if ($action === 'getGardenConfig') {
 // SAVE GARDEN CONFIG
 // =========================
 if ($action === 'saveGardenConfig') {
-    $fields = ['zoom', 'pan_x', 'pan_y', 'theme'];
+    $fields = ['zoom', 'pan_x', 'pan_y', 'theme', 'effects_enabled'];
     $sets   = []; $vals = [];
     foreach ($fields as $f) {
         if (array_key_exists($f, $data)) { $sets[] = $f; $vals[] = $data[$f]; }
@@ -678,24 +674,40 @@ if ($action === 'uploadImage') {
         echo json_encode(['success' => false, 'error' => 'Parameter fehlen']); exit;
     }
     if ($type === 'default') requireAdmin($db, $_SESSION['user_id']);
+
+    $dir = __DIR__ . '/../assets/images/';
+    if (!is_dir($dir)) mkdir($dir, 0777, true);
+    $ts = time();
+
+    // Vorschau-Bild (thumb)
     $file = $_FILES['image'];
     $ext  = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
     if (!in_array($ext, ['jpg','jpeg','png','webp','gif'])) {
         echo json_encode(['success' => false, 'error' => 'Ungültiges Dateiformat']); exit;
     }
-    $dir = __DIR__ . '/../assets/images/';
-    if (!is_dir($dir)) mkdir($dir, 0777, true);
-    $filename = 'img_' . $_SESSION['user_id'] . '_' . time() . '.' . $ext;
-    $path     = $dir . $filename;
-    $dbPath   = 'assets/images/' . $filename;
-    if (!move_uploaded_file($file['tmp_name'], $path)) {
+    $filenameThumb = 'img_' . $_SESSION['user_id'] . '_' . $ts . '_thumb.' . $ext;
+    $dbPathThumb   = 'assets/images/' . $filenameThumb;
+    if (!move_uploaded_file($file['tmp_name'], $dir . $filenameThumb)) {
         echo json_encode(['success' => false, 'error' => 'Upload fehlgeschlagen']); exit;
     }
+
+    // Galerie-Bild (optional)
+    $dbPathGallery = null;
+    if (isset($_FILES['image_gallery'])) {
+        $fileGal = $_FILES['image_gallery'];
+        $extGal  = strtolower(pathinfo($fileGal['name'], PATHINFO_EXTENSION));
+        if (in_array($extGal, ['jpg','jpeg','png','webp','gif'])) {
+            $filenameGal = 'img_' . $_SESSION['user_id'] . '_' . $ts . '_gallery.' . $extGal;
+            $dbPathGallery = 'assets/images/' . $filenameGal;
+            move_uploaded_file($fileGal['tmp_name'], $dir . $filenameGal);
+        }
+    }
+
     try {
-        $db->prepare("INSERT INTO gd_images (type, group_id, plant_id, user_group_id, user_id, file_path, is_primary)
-                      VALUES (?, ?, ?, ?, ?, ?, 0)")
-           ->execute([$type, $groupId ?: null, $plantId ?: null, $userGroupId ?: null, $_SESSION['user_id'], $dbPath]);
-        echo json_encode(['success' => true, 'path' => $dbPath, 'id' => $db->lastInsertId()]);
+        $db->prepare("INSERT INTO gd_images (type, group_id, plant_id, user_group_id, user_id, file_path, file_path_gallery, is_primary)
+                      VALUES (?, ?, ?, ?, ?, ?, ?, 0)")
+           ->execute([$type, $groupId ?: null, $plantId ?: null, $userGroupId ?: null, $_SESSION['user_id'], $dbPathThumb, $dbPathGallery]);
+        echo json_encode(['success' => true, 'path' => $dbPathThumb, 'id' => $db->lastInsertId()]);
     } catch (PDOException $e) {
         echo json_encode(['success' => false, 'error' => $e->getMessage()]);
     }
@@ -747,6 +759,10 @@ if ($action === 'deleteImage') {
         $db->prepare("DELETE FROM gd_images WHERE id=?")->execute([$id]);
         $filePath = __DIR__ . '/../' . $img['file_path'];
         if (file_exists($filePath)) unlink($filePath);
+        if (!empty($img['file_path_gallery'])) {
+            $galleryPath = __DIR__ . '/../' . $img['file_path_gallery'];
+            if (file_exists($galleryPath)) unlink($galleryPath);
+        }
         echo json_encode(['success' => true]);
     } catch (PDOException $e) {
         echo json_encode(['success' => false, 'error' => $e->getMessage()]);
@@ -888,7 +904,7 @@ if ($action === 'cleanupImages') {
 
     // 1. Verwaiste Pflanzenbilder (plant_id existiert nicht mehr)
     $stmt = $db->prepare("
-        SELECT i.id, i.file_path FROM gd_images i
+        SELECT i.id, i.file_path, i.file_path_gallery FROM gd_images i
         LEFT JOIN gd_user_plants p ON i.plant_id = p.id
         WHERE i.user_id = ? AND i.plant_id IS NOT NULL AND p.id IS NULL
     ");
@@ -896,19 +912,27 @@ if ($action === 'cleanupImages') {
     foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $img) {
         $path = __DIR__ . '/../' . $img['file_path'];
         if (file_exists($path)) unlink($path);
+        if (!empty($img['file_path_gallery'])) {
+            $gp = __DIR__ . '/../' . $img['file_path_gallery'];
+            if (file_exists($gp)) unlink($gp);
+        }
         $db->prepare("DELETE FROM gd_images WHERE id = ?")->execute([$img['id']]);
         $deleted++;
     }
 
     // 2. Gruppenbilder ohne Zuordnung (type='group', group_id NULL, user_group_id NULL)
     $stmt = $db->prepare("
-        SELECT id, file_path FROM gd_images
+        SELECT id, file_path, file_path_gallery FROM gd_images
         WHERE user_id = ? AND type = 'group' AND group_id IS NULL AND user_group_id IS NULL AND plant_id IS NULL
     ");
     $stmt->execute([$_SESSION['user_id']]);
     foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $img) {
         $path = __DIR__ . '/../' . $img['file_path'];
         if (file_exists($path)) unlink($path);
+        if (!empty($img['file_path_gallery'])) {
+            $gp = __DIR__ . '/../' . $img['file_path_gallery'];
+            if (file_exists($gp)) unlink($gp);
+        }
         $db->prepare("DELETE FROM gd_images WHERE id = ?")->execute([$img['id']]);
         $deleted++;
     }
@@ -924,7 +948,7 @@ if ($action === 'getAllImages') {
     try {
         $stmt = $db->prepare("
             SELECT
-                i.id, i.file_path, i.type, i.plant_id, i.group_id,
+                i.id, i.file_path, i.file_path_gallery, i.type, i.plant_id, i.group_id,
                 p.user_group_id AS plant_user_group_id,
                 p.group_id      AS plant_group_id,
                 COALESCE(ug_direct.name, ug_via_plant.name, ug_img.name, dg_via_plant.name, dg_direct.name, '(Unbenannt)') AS group_name,
@@ -966,11 +990,15 @@ if ($action === 'deletePlant') {
     if (!$stmt->fetch()) { echo json_encode(['success' => false, 'error' => 'Keine Berechtigung']); exit; }
 
     // Bilder löschen (Dateien + DB)
-    $imgs = $db->prepare("SELECT file_path FROM gd_images WHERE plant_id = ? AND user_id = ?");
+    $imgs = $db->prepare("SELECT file_path, file_path_gallery FROM gd_images WHERE plant_id = ? AND user_id = ?");
     $imgs->execute([$plantId, $_SESSION['user_id']]);
     foreach ($imgs->fetchAll(PDO::FETCH_ASSOC) as $img) {
         $path = __DIR__ . '/../' . $img['file_path'];
         if (file_exists($path)) unlink($path);
+        if (!empty($img['file_path_gallery'])) {
+            $gp = __DIR__ . '/../' . $img['file_path_gallery'];
+            if (file_exists($gp)) unlink($gp);
+        }
     }
     $db->prepare("DELETE FROM gd_images WHERE plant_id = ? AND user_id = ?")->execute([$plantId, $_SESSION['user_id']]);
 
@@ -1003,22 +1031,30 @@ if ($action === 'deleteUserGroup') {
 
     // Bilder der Pflanzen löschen
     foreach ($plantIds as $pid) {
-        $imgs = $db->prepare("SELECT file_path FROM gd_images WHERE plant_id = ? AND user_id = ?");
+        $imgs = $db->prepare("SELECT file_path, file_path_gallery FROM gd_images WHERE plant_id = ? AND user_id = ?");
         $imgs->execute([$pid, $_SESSION['user_id']]);
         foreach ($imgs->fetchAll(PDO::FETCH_ASSOC) as $img) {
             $path = __DIR__ . '/../' . $img['file_path'];
             if (file_exists($path)) unlink($path);
+            if (!empty($img['file_path_gallery'])) {
+                $gp = __DIR__ . '/../' . $img['file_path_gallery'];
+                if (file_exists($gp)) unlink($gp);
+            }
         }
         $db->prepare("DELETE FROM gd_images WHERE plant_id = ? AND user_id = ?")->execute([$pid, $_SESSION['user_id']]);
         $db->prepare("DELETE FROM gd_bloom_observations WHERE plant_id = ? AND user_id = ?")->execute([$pid, $_SESSION['user_id']]);
     }
 
     // Gruppenbilder löschen
-    $grpImgs = $db->prepare("SELECT file_path FROM gd_images WHERE type='group' AND group_id = (SELECT group_id FROM gd_user_groups WHERE id = ?) AND user_id = ?");
+    $grpImgs = $db->prepare("SELECT file_path, file_path_gallery FROM gd_images WHERE type='group' AND group_id = (SELECT group_id FROM gd_user_groups WHERE id = ?) AND user_id = ?");
     $grpImgs->execute([$groupId, $_SESSION['user_id']]);
     foreach ($grpImgs->fetchAll(PDO::FETCH_ASSOC) as $img) {
         $path = __DIR__ . '/../' . $img['file_path'];
         if (file_exists($path)) unlink($path);
+        if (!empty($img['file_path_gallery'])) {
+            $gp = __DIR__ . '/../' . $img['file_path_gallery'];
+            if (file_exists($gp)) unlink($gp);
+        }
     }
     $db->prepare("DELETE FROM gd_images WHERE type='group' AND group_id = (SELECT group_id FROM gd_user_groups WHERE id = ?) AND user_id = ?")->execute([$groupId, $_SESSION['user_id']]);
 
