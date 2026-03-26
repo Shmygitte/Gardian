@@ -494,9 +494,11 @@ async function saveGruppeBearbeiten(groupId, formId) {
 // =========================
 // BILD-UPLOAD & GALERIE
 // =========================
-// Pflanzen-Foto Cropper
-let plantCropper = null;
+// Pflanzen-Foto Dual Cropper
+let plantCropperThumb = null;
+let plantCropperGallery = null;
 let _plantCropUploadMeta = null;
+let _plantCropObjectUrl = null;
 
 function uploadImage(input, type, groupId, plantId, containerId, userGroupId) {
     const file = input.files[0];
@@ -504,63 +506,76 @@ function uploadImage(input, type, groupId, plantId, containerId, userGroupId) {
     input.value = '';
     _plantCropUploadMeta = { type, groupId, plantId, containerId, userGroupId };
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        const modal = document.getElementById('modal-plant-crop');
-        const img = document.getElementById('plant-crop-image');
-        img.src = e.target.result;
-        modal.style.display = 'flex';
-        if (plantCropper) plantCropper.destroy();
-        plantCropper = new Cropper(img, {
-            aspectRatio: NaN,
-            viewMode: 1,
-            dragMode: 'move',
-            autoCropArea: 1,
-            restore: false,
-            guides: false,
-            center: false,
-            highlight: false,
-            cropBoxMovable: true,
-            cropBoxResizable: true,
-            toggleDragModeOnDblclick: false,
-            minContainerHeight: 300
-        });
+    if (_plantCropObjectUrl) URL.revokeObjectURL(_plantCropObjectUrl);
+    const objectUrl = URL.createObjectURL(file);
+    _plantCropObjectUrl = objectUrl;
+    const modal = document.getElementById('modal-plant-crop');
+    const imgThumb = document.getElementById('plant-crop-thumb');
+    const imgGallery = document.getElementById('plant-crop-gallery');
+    imgThumb.src = objectUrl;
+    imgGallery.src = objectUrl;
+    modal.style.display = 'flex';
+
+    if (plantCropperThumb) plantCropperThumb.destroy();
+    if (plantCropperGallery) plantCropperGallery.destroy();
+
+    const baseOpts = {
+        viewMode: 1,
+        dragMode: 'move',
+        autoCropArea: 0.8,
+        restore: false,
+        guides: false,
+        center: false,
+        highlight: false,
+        cropBoxMovable: false,
+        cropBoxResizable: true,
+        toggleDragModeOnDblclick: false,
+        minContainerHeight: 280
     };
-    reader.readAsDataURL(file);
+
+    plantCropperThumb = new Cropper(imgThumb, { ...baseOpts, aspectRatio: NaN });
+    plantCropperGallery = new Cropper(imgGallery, { ...baseOpts, aspectRatio: NaN });
 }
 
 function closePlantCropModal() {
     const modal = document.getElementById('modal-plant-crop');
     modal.style.display = 'none';
-    if (plantCropper) {
-        plantCropper.destroy();
-        plantCropper = null;
-    }
+    if (plantCropperThumb) { plantCropperThumb.destroy(); plantCropperThumb = null; }
+    if (plantCropperGallery) { plantCropperGallery.destroy(); plantCropperGallery = null; }
+    if (_plantCropObjectUrl) { URL.revokeObjectURL(_plantCropObjectUrl); _plantCropObjectUrl = null; }
     _plantCropUploadMeta = null;
 }
 
 async function saveCroppedPlantImage() {
-    if (!plantCropper || !_plantCropUploadMeta) return;
+    if (!plantCropperThumb || !plantCropperGallery || !_plantCropUploadMeta) return;
     const { type, groupId, plantId, containerId, userGroupId } = _plantCropUploadMeta;
-    const canvas = plantCropper.getCroppedCanvas({ maxWidth: 1200, maxHeight: 1200 });
-    canvas.toBlob(async (blob) => {
-        const formData = new FormData();
-        formData.append('action', 'uploadImage');
-        formData.append('type', type);
-        formData.append('image', blob, 'photo.jpg');
-        if (groupId)     formData.append('group_id',      groupId);
-        if (plantId)     formData.append('plant_id',      plantId);
-        if (userGroupId) formData.append('user_group_id', userGroupId);
 
-        const res  = await fetch('backend/api.php', { method: 'POST', body: formData });
-        const data = await res.json();
-        if (data.success) {
-            loadImages(type, groupId, plantId, containerId, userGroupId);
-        } else {
-            alert(data.error || 'Upload fehlgeschlagen');
-        }
-        closePlantCropModal();
-    }, 'image/jpeg', 0.9);
+    const canvasThumb = plantCropperThumb.getCroppedCanvas();
+    const canvasGallery = plantCropperGallery.getCroppedCanvas();
+
+    // Beide Blobs parallel erzeugen
+    const [blobThumb, blobGallery] = await Promise.all([
+        new Promise(resolve => canvasThumb.toBlob(resolve, 'image/jpeg', 0.92)),
+        new Promise(resolve => canvasGallery.toBlob(resolve, 'image/jpeg', 0.92))
+    ]);
+
+    const formData = new FormData();
+    formData.append('action', 'uploadImage');
+    formData.append('type', type);
+    formData.append('image', blobThumb, 'thumb.jpg');
+    formData.append('image_gallery', blobGallery, 'gallery.jpg');
+    if (groupId)     formData.append('group_id',      groupId);
+    if (plantId)     formData.append('plant_id',      plantId);
+    if (userGroupId) formData.append('user_group_id', userGroupId);
+
+    const res  = await fetch('backend/api.php', { method: 'POST', body: formData });
+    const data = await res.json();
+    if (data.success) {
+        loadImages(type, groupId, plantId, containerId, userGroupId);
+    } else {
+        alert(data.error || 'Upload fehlgeschlagen');
+    }
+    closePlantCropModal();
 }
 
 async function loadImages(type, groupId, plantId, containerId, userGroupId) {
@@ -587,14 +602,14 @@ async function loadImages(type, groupId, plantId, containerId, userGroupId) {
             <div style="position:relative;">
                 <img src="${img.file_path}" style="width:80px;height:60px;object-fit:cover;border-radius:6px;border:1px solid var(--border);">
                 <span style="position:absolute;bottom:3px;left:3px;background:${badgeColor};color:white;font-size:0.5rem;font-weight:700;padding:1px 5px;border-radius:10px;text-transform:uppercase;letter-spacing:0.03em;">${badgeText}</span>
-                <button onclick="deleteImage(${img.id}, '${type}', ${groupId||'null'}, ${plantId||'null'}, '${containerId}')"
+                <button onclick="deleteImage(${img.id}, '${type}', ${groupId||'null'}, ${plantId||'null'}, '${containerId}', ${userGroupId||'null'})"
                     style="position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:var(--danger);color:white;border:none;font-size:0.65rem;cursor:pointer;line-height:1;">✕</button>
             </div>`;
         }).join('')}
     </div>`;
 }
 
-async function deleteImage(id, type, groupId, plantId, containerId) {
+async function deleteImage(id, type, groupId, plantId, containerId, userGroupId) {
     if (!confirm('Foto löschen?')) return;
     const res  = await fetch('backend/api.php', {
         method: 'POST',
@@ -602,5 +617,5 @@ async function deleteImage(id, type, groupId, plantId, containerId) {
         body: JSON.stringify({ action: 'deleteImage', id })
     });
     const data = await res.json();
-    if (data.success) loadImages(type, groupId, plantId, containerId);
+    if (data.success) loadImages(type, groupId, plantId, containerId, userGroupId);
 }

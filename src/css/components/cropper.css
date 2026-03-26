@@ -9,7 +9,7 @@
     box-shadow: 0 0 0 1px #fff;
 }
 
-/* Pflanzen-Foto Crop Modal */
+/* Pflanzen-Foto Crop Modal (Dual) */
 #modal-plant-crop .cropper-view-box {
     outline: 2px solid rgba(255,255,255,0.8);
     border-radius: 4px;
@@ -43,9 +43,9 @@
     background: #000 !important;
 }
 
-#modal-plant-crop .c-card__body {
-    background: #000 !important;
-    max-height: 500px;
+#plant-crop-thumb-wrap,
+#plant-crop-gallery-wrap {
+    border: 1px solid var(--border);
 }
 
 #modal-plant-crop .c-card__footer {

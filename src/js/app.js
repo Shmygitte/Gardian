@@ -1143,10 +1143,10 @@ async function openGalleryModal(pin) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'getImages', type: 'plant', plant_id: pin.id })
         }),
-        pin.group_id ? fetch('backend/api.php', {
+        (pin.group_id || pin.user_group_id) ? fetch('backend/api.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'getImages', type: 'group', group_id: pin.group_id })
+            body: JSON.stringify({ action: 'getImages', type: 'group', group_id: pin.group_id || null, user_group_id: pin.user_group_id || null })
         }) : Promise.resolve(null)
     ]);
 

@@ -74,9 +74,9 @@ function renderGalerie() {
             ? '<span class="galerie-badge galerie-badge--plant">Pflanze</span>'
             : '<span class="galerie-badge galerie-badge--group">Gruppe</span>';
         return `
-        <div class="galerie-card" onclick="showFullImage('${img.file_path}')">
+        <div class="galerie-card" onclick="showFullImage('${img.file_path_gallery || img.file_path}')">
             ${badge}
-            <img src="${img.file_path}" alt="${img.group_name}" loading="lazy">
+            <img src="${img.file_path_gallery || img.file_path}" alt="${img.group_name}" loading="lazy">
             <div class="galerie-card__info">
                 <div class="galerie-card__name">${icon} ${img.group_name}</div>
                 ${label ? `<div class="galerie-card__type">${label}</div>` : ''}
