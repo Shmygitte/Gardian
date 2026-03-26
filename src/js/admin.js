@@ -26,16 +26,17 @@ let adminCurrentTab = 'users';
 
 function switchAdminTab(tab) {
     adminCurrentTab = tab;
-    document.getElementById('admin-panel-users').style.display  = tab === 'users'  ? 'block' : 'none';
-    document.getElementById('admin-panel-groups').style.display = tab === 'groups' ? 'block' : 'none';
-    document.getElementById('admin-tab-users').className  = 'c-btn ' + (tab === 'users'  ? 'c-btn--secondary' : 'c-btn--text');
-    document.getElementById('admin-tab-groups').className = 'c-btn ' + (tab === 'groups' ? 'c-btn--secondary' : 'c-btn--text');
+    ['users','groups','care-types'].forEach(t => {
+        document.getElementById(`admin-panel-${t}`).style.display = tab === t ? 'block' : 'none';
+        document.getElementById(`admin-tab-${t}`).className = 'c-btn ' + (tab === t ? 'c-btn--secondary' : 'c-btn--text');
+    });
 }
 
 async function loadAdminView() {
     switchAdminTab('users');
     await loadAdminUsers();
     loadAdminGroups();
+    loadAdminCareTypes();
 }
 
 // ========================
@@ -211,5 +212,80 @@ async function adminDeleteGroup(id, name) {
     const res  = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'adminDeleteGroup', id }) });
     const data = await res.json();
     if (data.success) loadAdminGroups();
+    else alert(data.error || 'Fehler');
+}
+
+// ========================
+// AUFGABEN-TYPEN
+// ========================
+async function loadAdminCareTypes() {
+    const panel = document.getElementById('admin-panel-care-types');
+    panel.innerHTML = '<p style="color:var(--text-muted)">Lade...</p>';
+    const res  = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'adminGetCareTaskTypes' }) });
+    const data = await res.json();
+    if (!data.success) { panel.innerHTML = '<p style="color:red">Fehler.</p>'; return; }
+
+    const rows = data.types.map(t => `
+        <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:8px;">${t.icon || '—'}</td>
+            <td style="padding:8px; font-weight:600;">${t.name}</td>
+            <td style="padding:8px;">
+                <button class="c-btn c-btn--text" style="font-size:0.8rem;" onclick="adminEditCareType(${t.id},'${t.name}','${t.icon||''}')">Bearbeiten</button>
+                <button class="c-btn c-btn--text" style="font-size:0.8rem;color:var(--danger);" onclick="adminDeleteCareType(${t.id},'${t.name}')">Löschen</button>
+            </td>
+        </tr>`).join('');
+
+    panel.innerHTML = `
+        <table style="width:100%;border-collapse:collapse;font-size:0.9rem;margin-bottom:20px;">
+            <thead>
+                <tr style="border-bottom:2px solid var(--border);">
+                    <th style="text-align:left;padding:8px;width:48px;">Icon</th>
+                    <th style="text-align:left;padding:8px;">Name</th>
+                    <th style="padding:8px;width:160px;"></th>
+                </tr>
+            </thead>
+            <tbody>${rows || '<tr><td colspan="3" style="padding:12px;color:var(--text-muted);">Noch keine Typen angelegt.</td></tr>'}</tbody>
+        </table>
+        <div style="border:2px dashed var(--border);border-radius:var(--radius-md);padding:16px;">
+            <p style="font-weight:600;margin-bottom:12px;">Neuen Typ anlegen</p>
+            <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">
+                <div>
+                    <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:4px;">Icon (Emoji, optional)</label>
+                    <input type="text" id="ct-new-icon" class="c-input" placeholder="🌿" style="width:80px;">
+                </div>
+                <div style="flex:1;min-width:160px;">
+                    <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:4px;">Name *</label>
+                    <input type="text" id="ct-new-name" class="c-input" placeholder="z.B. Düngen, Schneiden…">
+                </div>
+                <button class="c-btn c-btn--primary" onclick="adminAddCareType()">Hinzufügen</button>
+            </div>
+        </div>`;
+}
+
+function adminEditCareType(id, name, icon) {
+    const newName = prompt('Name:', name);
+    if (newName === null) return;
+    const newIcon = prompt('Icon (Emoji):', icon);
+    if (newIcon === null) return;
+    fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ action:'adminSaveCareTaskType', id, name: newName.trim(), icon: newIcon.trim() }) })
+    .then(() => loadAdminCareTypes());
+}
+
+async function adminAddCareType() {
+    const name = document.getElementById('ct-new-name').value.trim();
+    const icon = document.getElementById('ct-new-icon').value.trim();
+    if (!name) { alert('Bitte einen Namen eingeben.'); return; }
+    const res  = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'adminSaveCareTaskType', name, icon }) });
+    const data = await res.json();
+    if (data.success) loadAdminCareTypes();
+    else alert(data.error || 'Fehler');
+}
+
+async function adminDeleteCareType(id, name) {
+    if (!confirm(`Typ "${name}" löschen? Bestehende Aufgaben dieses Typs behalten ihren Namen.`)) return;
+    const res  = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'adminDeleteCareTaskType', id }) });
+    const data = await res.json();
+    if (data.success) loadAdminCareTypes();
     else alert(data.error || 'Fehler');
 }
