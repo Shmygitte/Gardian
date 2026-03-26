@@ -125,6 +125,11 @@ function updateMapBackground(url) {
         img.src = url;
         img.style.display = 'block';
         placeholder.style.display = 'none';
+        // Wrapper und Overlay an Bildgröße anpassen
+        img.onload = () => {
+            elements.mapWrapper.style.width = img.naturalWidth + 'px';
+            elements.mapWrapper.style.height = img.naturalHeight + 'px';
+        };
     }
     if (uploadLabel) uploadLabel.style.display = 'none';
     if (btnZoomWidth) btnZoomWidth.style.display = '';
@@ -797,10 +802,13 @@ async function handleMouseUp(e) {
             if (clone) {
                 const finalX = state.hasMoved ? x : clone.pos_x;
                 const finalY = state.hasMoved ? y : clone.pos_y;
+                const addPayload = { action: 'addPlant', pos_x: finalX, pos_y: finalY };
+                if (clone.user_group_id) addPayload.user_group_id = clone.user_group_id;
+                else addPayload.group_id = clone.group_id;
                 const res = await fetch('backend/api.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'addPlant', group_id: clone.group_id, pos_x: finalX, pos_y: finalY })
+                    body: JSON.stringify(addPayload)
                 });
                 const data = await res.json();
                 if (data.success) {
