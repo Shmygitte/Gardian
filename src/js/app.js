@@ -745,6 +745,21 @@ function getOverlayCoords(clientX, clientY) {
 }
 
 function handleMouseMove(e) {
+    // Kein Panning/Dragging wenn keine Maustaste gedrückt oder Dashboard nicht sichtbar
+    if (!(e.buttons & 1)) {
+        if (state.isPanning || state.isDragging) {
+            state.isPanning = false;
+            state.isDragging = false;
+            elements.mapCanvas.style.cursor = 'default';
+        }
+        return;
+    }
+    const dashboard = document.getElementById('view-dashboard');
+    if (dashboard && dashboard.style.display === 'none') {
+        state.isPanning = false;
+        state.isDragging = false;
+        return;
+    }
     if (state.isDragging) {
         const dist = Math.sqrt(Math.pow(e.clientX - state.dragStartPos.x, 2) + Math.pow(e.clientY - state.dragStartPos.y, 2));
         if (dist > 5) { state.hasMoved = true; hideHoverGallery(); }

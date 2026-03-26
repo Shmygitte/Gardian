@@ -655,6 +655,29 @@
                 EffectManager.trigger('sidebar-click', navBtn);
             }
 
+            // Panning/Dragging sofort stoppen und Pan-Position sichern/wiederherstellen
+            if (typeof state !== 'undefined') {
+                if (name !== 'dashboard') {
+                    // Beim Verlassen: Position merken
+                    state._savedPanX = state.panX;
+                    state._savedPanY = state.panY;
+                    state._savedZoom = state.zoom;
+                }
+                state.isPanning = false;
+                state.isDragging = false;
+                state.hasMoved = false;
+            }
+            if (name === 'dashboard' && typeof state !== 'undefined') {
+                // Beim Zurückkehren: Position wiederherstellen falls abgedriftet
+                if (state._savedPanX !== undefined) {
+                    state.panX = state._savedPanX;
+                    state.panY = state._savedPanY;
+                    state.zoom = state._savedZoom;
+                }
+                requestAnimationFrame(() => {
+                    if (typeof updateTransform === 'function') updateTransform();
+                });
+            }
             if (name === 'pflanzen') loadPflanzenListe();
             if (name === 'galerie') loadGalerie();
             if (name === 'admin') loadAdminView();
