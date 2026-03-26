@@ -39,6 +39,8 @@ try { $db->exec("CREATE TABLE IF NOT EXISTS gd_care_done (
     month    TINYINT UNSIGNED NOT NULL,
     UNIQUE KEY uk_done (user_id, task_id, year, month)
 )"); } catch (PDOException $e) {}
+// Schema-Migration: planned_month_year in gd_user_plants (einmalig)
+try { $db->exec("ALTER TABLE gd_user_plants ADD COLUMN planned_month_year CHAR(7) NULL DEFAULT NULL COMMENT 'Format YYYY-MM'"); } catch (PDOException $e) {}
 // Schema-Migration: planted_month_year in gd_user_plants (einmalig)
 try { $db->exec("ALTER TABLE gd_user_plants ADD COLUMN planted_month_year CHAR(7) NULL DEFAULT NULL COMMENT 'Format YYYY-MM'"); } catch (PDOException $e) {}
 // Schema-Migration: removed_month_year + removed_reason in gd_user_plants (einmalig)
@@ -303,6 +305,7 @@ if ($action === 'getPlantsList') {
                 p.height, p.location, p.spacing,
                 p.care, p.water, p.hardy, p.scented,
                 p.cutflower, p.lifespan, p.features, p.evergreen,
+                p.planned_month_year,
                 p.planted_month_year,
                 p.removed_month_year, p.removed_reason,
                 p.created_at
@@ -503,7 +506,7 @@ if ($action === 'updateUserGroup') {
 if ($action === 'updatePlant') {
     $id = $data['id'] ?? null;
     if (!$id) { echo json_encode(['success' => false, 'error' => 'ID fehlt']); exit; }
-    $allowed = ['name','marker_color','marker_size','marker_icon','bloom_months','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen','pos_x','pos_y','planted_month_year','removed_month_year','removed_reason'];
+    $allowed = ['name','marker_color','marker_size','marker_icon','bloom_months','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen','pos_x','pos_y','planned_month_year','planted_month_year','removed_month_year','removed_reason'];
     $sets = []; $vals = [];
     foreach ($allowed as $f) {
         if (array_key_exists($f, $data)) {

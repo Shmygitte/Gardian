@@ -19,6 +19,7 @@ const FIELD_LABELS = {
     lifespan:           'Lebenszeit',
     features:           'Besonderheiten',
     evergreen:          'Immergrün',
+    planned_month_year: 'Geplant',
     planted_month_year: 'Gepflanzt',
     removed_month_year: 'Verschwunden',
     removed_reason:     'Grund',
@@ -35,7 +36,7 @@ function formatValue(key, val) {
     if (key === 'hardy' || key === 'scented' || key === 'cutflower' || key === 'evergreen') return val == 1 ? 'Ja' : 'Nein';
     if (key === 'marker_color') return `<span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${val};border:1px solid #ccc;vertical-align:middle;margin-right:4px;"></span>${val}`;
     if (key === 'pos_x' || key === 'pos_y') return parseFloat(val).toFixed(1) + '%';
-    if (key === 'planted_month_year' || key === 'removed_month_year') {
+    if (key === 'planned_month_year' || key === 'planted_month_year' || key === 'removed_month_year') {
         const [y, m] = val.split('-');
         const names = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
         return (names[parseInt(m, 10) - 1] || m) + ' ' + y;
@@ -62,7 +63,7 @@ function renderFieldTable(obj, fields) {
 }
 
 const GROUP_FIELDS = ['type','bloom_months','marker_icon','marker_color','marker_size','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen'];
-const PLANT_FIELDS = ['planted_month_year','removed_month_year','removed_reason','bloom_months','marker_icon','marker_color','marker_size','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen'];
+const PLANT_FIELDS = ['planned_month_year','planted_month_year','removed_month_year','removed_reason','bloom_months','marker_icon','marker_color','marker_size','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen'];
 
 let _pflanzenData = null;
 const _bloomLoaded = new Set();
@@ -131,6 +132,12 @@ function renderPflanzenListe(data) {
                             <div>
                                 ${renderFieldTable(plant, PLANT_FIELDS)}
                                 <div style="margin-top:8px; display:flex; flex-direction:column; gap:6px;">
+                                    <div style="display:flex; align-items:center; gap:6px;">
+                                        <label style="font-size:0.78rem; color:var(--text-muted); white-space:nowrap; width:90px;">Geplant:</label>
+                                        <input type="month" value="${plant.planned_month_year || ''}"
+                                            style="font-size:0.8rem; padding:3px 6px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--bg-app); color:var(--text-main);"
+                                            onchange="savePlantField(${plant.id}, 'planned_month_year', this.value || null)">
+                                    </div>
                                     <div style="display:flex; align-items:center; gap:6px;">
                                         <label style="font-size:0.78rem; color:var(--text-muted); white-space:nowrap; width:90px;">Gepflanzt:</label>
                                         <input type="month" value="${plant.planted_month_year || ''}"

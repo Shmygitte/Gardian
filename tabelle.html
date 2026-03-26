@@ -105,6 +105,7 @@
                         <th style="width:90px;">Marker-Icon</th>
                         <th style="width:70px;">Pos X</th>
                         <th style="width:70px;">Pos Y</th>
+                        <th style="width:110px;">Geplant</th>
                         <th style="width:110px;">Gepflanzt</th>
                         <th style="width:110px;">Verschwunden</th>
                         <th style="width:130px;">Grund</th>
@@ -244,7 +245,7 @@ function fieldDisp(field, v) {
     if (field === 'marker_color')                                  return colorDisp(v);
     if (SELECT_FIELDS.has(field))                                  return optLabel(field, v);
     if (field === 'pos_x' || field === 'pos_y')                    return posDisp(v);
-    if (field === 'planted_month_year' || field === 'removed_month_year') return plantedDisp(v);
+    if (field === 'planned_month_year' || field === 'planted_month_year' || field === 'removed_month_year') return plantedDisp(v);
     if (field === 'removed_reason')                                return removedReasonDisp(v);
     return dash(v);
 }
@@ -321,6 +322,7 @@ function plantRow(p, g) {
         ${td('marker_icon','p',p.id,  plantCellDisp(p, g, 'marker_icon'))}
         ${td('pos_x','p',p.id,              posDisp(p.pos_x))}
         ${td('pos_y','p',p.id,              posDisp(p.pos_y))}
+        ${td('planned_month_year','p',p.id,  plantedDisp(p.planned_month_year))}
         ${td('planted_month_year','p',p.id,  plantedDisp(p.planted_month_year))}
         ${td('removed_month_year','p',p.id,  plantedDisp(p.removed_month_year))}
         ${td('removed_reason','p',p.id, removedReasonDisp(p.removed_reason))}
@@ -387,6 +389,7 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (field === 'bloom_months')           doBloomPopup(cell, parseInt(effective) || 0);
         else if (field === 'marker_color')           doColor(cell, rt, id, field, effective);
         else if (SELECT_FIELDS.has(field))           doSelect(cell, rt, id, field, effective);
+        else if (field === 'planned_month_year')     doMonth(cell, rt, id, field, effective);
         else if (field === 'planted_month_year')     doMonth(cell, rt, id, field, effective);
         else if (field === 'removed_month_year')     doMonth(cell, rt, id, field, effective);
         else if (field === 'removed_reason')         doRemovedReason(cell, rt, id, effective);
