@@ -201,6 +201,22 @@
                             <button onclick="setBloomYear(2029)" data-bloom-year="2029" class="bloom-year-btn" style="padding:5px 10px; border-radius:20px; border:1px solid var(--border); font-size:0.8rem; cursor:pointer; background:var(--bg-app); color:var(--text-main);">2029</button>
                             <button onclick="setBloomYear(2030)" data-bloom-year="2030" class="bloom-year-btn" style="padding:5px 10px; border-radius:20px; border:1px solid var(--border); font-size:0.8rem; cursor:pointer; background:var(--bg-app); color:var(--text-main);">2030</button>
                         </div>
+                        <!-- Hover-Controls -->
+                        <div style="width:1px; height:22px; background:var(--border); margin:0 4px; flex-shrink:0;"></div>
+                        <label style="display:flex; align-items:center; gap:5px; cursor:pointer; font-size:0.8rem; user-select:none; flex-shrink:0;">
+                            <input type="checkbox" id="hover-gallery-toggle" checked onchange="setHoverGallery(this.checked)" style="accent-color:var(--primary); cursor:pointer;">
+                            🖼 Hover-Galerie
+                        </label>
+                        <label style="display:flex; align-items:center; gap:5px; cursor:pointer; font-size:0.8rem; user-select:none; flex-shrink:0;">
+                            <input type="checkbox" id="hover-lock-toggle" onchange="setHoverLock(this.checked)" style="accent-color:var(--primary); cursor:pointer;">
+                            🔒 Hover-Sperre
+                        </label>
+                        <div id="hover-size-controls" style="display:flex; gap:3px; flex-shrink:0;">
+                            <button onclick="setHoverSize('S')" data-size="S" class="hover-size-btn" style="padding:3px 8px; border-radius:20px; border:1px solid var(--border); font-size:0.75rem; font-weight:600; cursor:pointer; background:var(--bg-app); color:var(--text-main);">S</button>
+                            <button onclick="setHoverSize('M')" data-size="M" class="hover-size-btn active" style="padding:3px 8px; border-radius:20px; border:1px solid var(--border); font-size:0.75rem; font-weight:600; cursor:pointer; background:var(--primary); color:white;">M</button>
+                            <button onclick="setHoverSize('L')" data-size="L" class="hover-size-btn" style="padding:3px 8px; border-radius:20px; border:1px solid var(--border); font-size:0.75rem; font-weight:600; cursor:pointer; background:var(--bg-app); color:var(--text-main);">L</button>
+                        </div>
+
                         <div id="bloom-month-controls" style="display:none; align-items:center; gap:8px;">
                             <button onclick="toggleBloomAutoplay()" id="bloom-autoplay-btn" style="width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--bg-app);cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;">▶</button>
                             <select id="bloom-speed-select" onchange="setBloomSpeed(this.value)" style="padding:3px 6px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:0.75rem;background:var(--bg-app);color:var(--text-main);">

@@ -475,7 +475,7 @@ function getOverlayCoords(clientX, clientY) {
 function handleMouseMove(e) {
     if (state.isDragging) {
         const dist = Math.sqrt(Math.pow(e.clientX - state.dragStartPos.x, 2) + Math.pow(e.clientY - state.dragStartPos.y, 2));
-        if (dist > 5) state.hasMoved = true;
+        if (dist > 5) { state.hasMoved = true; hideHoverGallery(); }
 
         if (state.hasMoved) {
             const { x, y } = getOverlayCoords(e.clientX, e.clientY);
@@ -757,6 +757,45 @@ function handleMarkerMouseDown(e, id) {
 }
 
 // =========================
+// HOVER SETTINGS
+// =========================
+const hoverSettings = {
+    galleryEnabled: true,
+    locked: false,
+    size: 'M'
+};
+
+const HOVER_SIZE_MAP = {
+    S: { w: 64,  h: 48, maxW: 168 },
+    M: { w: 96,  h: 72, maxW: 220 },
+    L: { w: 128, h: 96, maxW: 300 }
+};
+
+function setHoverGallery(enabled) {
+    hoverSettings.galleryEnabled = enabled;
+    _updateHoverSizeVisibility();
+}
+
+function setHoverLock(locked) {
+    hoverSettings.locked = locked;
+    _updateHoverSizeVisibility();
+}
+
+function setHoverSize(size) {
+    hoverSettings.size = size;
+    document.querySelectorAll('.hover-size-btn').forEach(b => {
+        const active = b.dataset.size === size;
+        b.style.background = active ? 'var(--primary)' : 'var(--bg-app)';
+        b.style.color = active ? 'white' : 'var(--text-main)';
+    });
+}
+
+function _updateHoverSizeVisibility() {
+    const el = document.getElementById('hover-size-controls');
+    if (el) el.style.display = (hoverSettings.galleryEnabled && !hoverSettings.locked) ? 'flex' : 'none';
+}
+
+// =========================
 // HOVER GALERIE
 // =========================
 let _hoverTimeout = null;
@@ -765,7 +804,31 @@ document.addEventListener('mousemove', e => { _mousePos.x = e.clientX; _mousePos
 
 async function showHoverGallery(e, pin) {
     hideHoverGallery();
+    if (hoverSettings.locked) return;
+
     const markerRect = e.currentTarget.getBoundingClientRect();
+    const displayName = pin.plant_name
+        ? `${pin.name} · ${pin.plant_name}`
+        : pin.name;
+
+    if (!hoverSettings.galleryEnabled) {
+        // Nur Namens-Label, kein Fetch
+        _hoverTimeout = setTimeout(() => {
+            const popup = document.createElement('div');
+            popup.id = 'hover-gallery-popup';
+            popup.style.cssText = `
+                position:fixed; z-index:9999; background:var(--bg-card);
+                border:1px solid var(--border); border-radius:var(--radius-md);
+                box-shadow:var(--shadow-medium); padding:6px 10px; pointer-events:none;
+            `;
+            popup.innerHTML = `<p style="font-size:0.8rem;font-weight:600;margin:0;color:var(--text-main);white-space:nowrap;">${displayName}</p>`;
+            document.body.appendChild(popup);
+            positionHoverPopup(popup, markerRect);
+        }, 300);
+        return;
+    }
+
+    // Galerie-Hover mit Fetch
     _hoverTimeout = setTimeout(async () => {
         const res  = await fetch('backend/api.php', {
             method: 'POST',
@@ -773,34 +836,39 @@ async function showHoverGallery(e, pin) {
             body: JSON.stringify({ action: 'getImagesForPin', plant_id: pin.id, group_id: pin.group_id })
         });
         const data = await res.json();
-        if (!data.success || !data.images.length) return;
+
+        const { w, h, maxW } = HOVER_SIZE_MAP[hoverSettings.size] || HOVER_SIZE_MAP.M;
 
         const popup = document.createElement('div');
         popup.id = 'hover-gallery-popup';
         popup.style.cssText = `
             position:fixed; z-index:9999; background:var(--bg-card);
             border:1px solid var(--border); border-radius:var(--radius-md);
-            box-shadow:var(--shadow-medium); padding:8px; max-width:220px;
+            box-shadow:var(--shadow-medium); padding:8px; max-width:${maxW}px;
             cursor:pointer;
         `;
+
+        const hasImages = data.success && data.images.length;
         popup.innerHTML = `
-            <p style="font-size:0.75rem;font-weight:600;margin:0 0 6px;color:var(--text-muted);">${pin.name}</p>
+            <p style="font-size:0.75rem;font-weight:600;margin:0${hasImages ? ' 0 6px' : ''};color:var(--text-muted);">${displayName}</p>
+            ${hasImages ? `
             <div style="display:flex;flex-wrap:wrap;gap:4px;">
                 ${data.images.map(img => {
                     const isPlant = img.src === 'plant';
                     const badgeColor = isPlant ? 'rgba(34,197,94,0.9)' : 'rgba(99,102,241,0.9)';
                     const badgeText  = isPlant ? 'Pflanze' : 'Gruppe';
                     return `<div style="position:relative;display:inline-block;">
-                        <img src="${img.file_path}" style="width:96px;height:72px;object-fit:cover;border-radius:6px;display:block;">
+                        <img src="${img.file_path}" style="width:${w}px;height:${h}px;object-fit:cover;border-radius:6px;display:block;">
                         <span style="position:absolute;bottom:3px;left:3px;background:${badgeColor};color:white;font-size:0.5rem;font-weight:700;padding:1px 5px;border-radius:10px;text-transform:uppercase;letter-spacing:0.03em;">${badgeText}</span>
                     </div>`;
                 }).join('')}
             </div>
             <p style="font-size:0.65rem;color:var(--primary);font-weight:700;text-align:center;margin:6px 0 0;text-transform:uppercase;letter-spacing:0.03em;">🖼 Klick für Galerie</p>
+            ` : ''}
         `;
         popup.addEventListener('mouseenter', () => clearTimeout(_hoverHideTimeout));
         popup.addEventListener('mouseleave', () => hideHoverGallery());
-        popup.addEventListener('click', () => { hideHoverGallery(); openGalleryModal(pin); });
+        if (hasImages) popup.addEventListener('click', () => { hideHoverGallery(); openGalleryModal(pin); });
         document.body.appendChild(popup);
         positionHoverPopup(popup, markerRect);
     }, 0);
