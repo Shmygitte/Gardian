@@ -410,6 +410,9 @@
             loadAvatar();
             // Verwaiste Bilder still im Hintergrund bereinigen
             fetch('backend/api.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'cleanupImages' }) });
+            // View aus URL-Hash laden (z.B. index.html#einstellungen)
+            const hash = location.hash.replace('#', '');
+            if (hash && views.includes(hash)) showView(hash);
 
             document.getElementById('avatar-upload').addEventListener('change', async (e) => {
                 const file = e.target.files[0];
