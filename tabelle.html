@@ -92,10 +92,13 @@
                         <th style="width:90px;">Marker-Icon</th>
                         <th style="width:70px;">Pos X</th>
                         <th style="width:70px;">Pos Y</th>
+                        <th style="width:110px;">Gepflanzt</th>
+                        <th style="width:110px;">Verschwunden</th>
+                        <th style="width:130px;">Grund</th>
                     </tr>
                 </thead>
                 <tbody id="tbl-body">
-                    <tr><td colspan="20" style="text-align:center;padding:32px;color:var(--text-muted);">Lade…</td></tr>
+                    <tr><td colspan="23" style="text-align:center;padding:32px;color:var(--text-muted);">Lade…</td></tr>
                 </tbody>
             </table>
         </div>
@@ -150,7 +153,7 @@ async function loadData() {
     const r = await api('getPlantsList');
     if (!r.success) {
         document.getElementById('tbl-body').innerHTML =
-            '<tr><td colspan="20" style="text-align:center;color:red;padding:24px;">Fehler beim Laden.</td></tr>';
+            '<tr><td colspan="23" style="text-align:center;color:red;padding:24px;">Fehler beim Laden.</td></tr>';
         return;
     }
     tblData = r;
@@ -168,7 +171,7 @@ function render() {
             for (const p of g.plants) rows.push(plantRow(p, g));
     }
     document.getElementById('tbl-body').innerHTML = rows.join('') ||
-        '<tr><td colspan="20" style="padding:24px;text-align:center;color:var(--text-muted);">Keine Einträge.</td></tr>';
+        '<tr><td colspan="23" style="padding:24px;text-align:center;color:var(--text-muted);">Keine Einträge.</td></tr>';
 }
 
 // ---- Display helpers ----
@@ -209,14 +212,27 @@ function posDisp(v) {
         ? parseFloat(v).toFixed(1) + '%'
         : '<span style="color:var(--text-muted)">—</span>';
 }
+function plantedDisp(v) {
+    if (!v) return '<span style="color:var(--text-muted)">—</span>';
+    const [y, m] = v.split('-');
+    const names = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+    return (names[parseInt(m, 10) - 1] || m) + ' ' + y;
+}
+const REMOVED_REASON_OPTS = [{v:'',l:'—'},{v:'manuell',l:'Manuell entfernt'},{v:'selbst',l:'Von selbst'}];
+function removedReasonDisp(v) {
+    if (!v) return '<span style="color:var(--text-muted)">—</span>';
+    return REMOVED_REASON_OPTS.find(o => o.v === v)?.l ?? v;
+}
 
 // Rendert einen Feldwert anhand seines Typs
 function fieldDisp(field, v) {
-    if (BOOL_FIELDS.has(field))                   return boolBadge(v);
-    if (field === 'bloom_months')                  return bloomDisp(v);
-    if (field === 'marker_color')                  return colorDisp(v);
-    if (SELECT_FIELDS.has(field))                  return optLabel(field, v);
-    if (field === 'pos_x' || field === 'pos_y')    return posDisp(v);
+    if (BOOL_FIELDS.has(field))                                    return boolBadge(v);
+    if (field === 'bloom_months')                                  return bloomDisp(v);
+    if (field === 'marker_color')                                  return colorDisp(v);
+    if (SELECT_FIELDS.has(field))                                  return optLabel(field, v);
+    if (field === 'pos_x' || field === 'pos_y')                    return posDisp(v);
+    if (field === 'planted_month_year' || field === 'removed_month_year') return plantedDisp(v);
+    if (field === 'removed_reason')                                return removedReasonDisp(v);
     return dash(v);
 }
 
@@ -263,6 +279,9 @@ function groupRow(g) {
         ${td('marker_icon','g',g.id, dash(g.marker_icon))}
         <td style="color:var(--text-muted);">—</td>
         <td style="color:var(--text-muted);">—</td>
+        <td style="color:var(--text-muted);">—</td>
+        <td style="color:var(--text-muted);">—</td>
+        <td style="color:var(--text-muted);">—</td>
     </tr>`;
 }
 
@@ -287,8 +306,11 @@ function plantRow(p, g) {
         ${td('marker_color','p',p.id, plantCellDisp(p, g, 'marker_color'))}
         ${td('marker_size','p',p.id,  plantCellDisp(p, g, 'marker_size'))}
         ${td('marker_icon','p',p.id,  plantCellDisp(p, g, 'marker_icon'))}
-        ${td('pos_x','p',p.id,        posDisp(p.pos_x))}
-        ${td('pos_y','p',p.id,        posDisp(p.pos_y))}
+        ${td('pos_x','p',p.id,              posDisp(p.pos_x))}
+        ${td('pos_y','p',p.id,              posDisp(p.pos_y))}
+        ${td('planted_month_year','p',p.id,  plantedDisp(p.planted_month_year))}
+        ${td('removed_month_year','p',p.id,  plantedDisp(p.removed_month_year))}
+        ${td('removed_reason','p',p.id, removedReasonDisp(p.removed_reason))}
     </tr>`;
 }
 
@@ -348,11 +370,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (cell.querySelector('input,select')) return;
         const { f: field, rt, id } = cell.dataset;
         const effective = getEffective(rt, id, field);
-        if (BOOL_FIELDS.has(field))         doToggleBool(cell, rt, id, field, effective);
-        else if (field === 'bloom_months')  doBloomPopup(cell, parseInt(effective) || 0);
-        else if (field === 'marker_color')  doColor(cell, rt, id, field, effective);
-        else if (SELECT_FIELDS.has(field))  doSelect(cell, rt, id, field, effective);
-        else                                doText(cell, rt, id, field, effective);
+        if (BOOL_FIELDS.has(field))                  doToggleBool(cell, rt, id, field, effective);
+        else if (field === 'bloom_months')           doBloomPopup(cell, parseInt(effective) || 0);
+        else if (field === 'marker_color')           doColor(cell, rt, id, field, effective);
+        else if (SELECT_FIELDS.has(field))           doSelect(cell, rt, id, field, effective);
+        else if (field === 'planted_month_year')     doMonth(cell, rt, id, field, effective);
+        else if (field === 'removed_month_year')     doMonth(cell, rt, id, field, effective);
+        else if (field === 'removed_reason')         doRemovedReason(cell, rt, id, effective);
+        else                                         doText(cell, rt, id, field, effective);
     });
     init();
 });
@@ -376,6 +401,46 @@ function doText(cell, rt, id, field, cur) {
         if (e.key === 'Escape') refreshCell(cell, rt, id, field);
     });
     inp.addEventListener('blur', save);
+}
+
+// ---- Edit: month ----
+function doMonth(cell, rt, id, field, cur) {
+    const inp = document.createElement('input');
+    inp.type  = 'month';
+    inp.value = cur ?? '';
+    inp.className = 'c-inp';
+    cell.innerHTML = ''; cell.appendChild(inp);
+    inp.focus();
+    async function save() {
+        await doSave(cell, rt, id, field, inp.value || null);
+    }
+    inp.addEventListener('change', save);
+    inp.addEventListener('keydown', e => {
+        if (e.key === 'Enter')  { e.preventDefault(); inp.blur(); }
+        if (e.key === 'Escape') refreshCell(cell, rt, id, field);
+    });
+    inp.addEventListener('blur', save);
+}
+
+// ---- Edit: removed_reason (select, nur wenn removed_month_year gesetzt) ----
+function doRemovedReason(cell, rt, id, cur) {
+    const sel = document.createElement('select');
+    sel.className = 'c-sel';
+    REMOVED_REASON_OPTS.forEach(o => {
+        const opt = document.createElement('option');
+        opt.value = o.v; opt.textContent = o.l;
+        if (String(o.v) === String(cur)) opt.selected = true;
+        sel.appendChild(opt);
+    });
+    cell.innerHTML = ''; cell.appendChild(sel);
+    sel.focus();
+    let changed = false;
+    sel.addEventListener('change', async () => {
+        changed = true;
+        await doSave(cell, rt, id, 'removed_reason', sel.value || null);
+    });
+    sel.addEventListener('blur', () => { if (!changed) refreshCell(cell, rt, id, 'removed_reason'); });
+    sel.addEventListener('keydown', e => { if (e.key === 'Escape') refreshCell(cell, rt, id, 'removed_reason'); });
 }
 
 // ---- Edit: select ----
