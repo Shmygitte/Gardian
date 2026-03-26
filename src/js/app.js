@@ -580,7 +580,7 @@ function handleMapClick(e) {
 
 const NEW_GROUP_FIELDS = [
     { key: 'name',         label: 'Name *',            type: 'text',     required: true },
-    { key: 'type',         label: 'Typ *',             type: 'select',   options: [{v:'tree',l:'Baum'},{v:'shrub',l:'Strauch'},{v:'flower',l:'Blume'},{v:'s_flower',l:'Saisonblume'}], required: true },
+    { key: 'type',         label: 'Typ *',             type: 'select',   options: [{v:'tree',l:'Baum'},{v:'shrub',l:'Strauch'},{v:'flower',l:'Blume'},{v:'s_flower',l:'Blümchen'}], required: true },
     { key: 'bloom_start',  label: 'Blüte von (Monat)', type: 'number' },
     { key: 'bloom_end',    label: 'Blüte bis (Monat)', type: 'number' },
     { key: 'marker_color', label: 'Marker-Farbe',      type: 'color' },

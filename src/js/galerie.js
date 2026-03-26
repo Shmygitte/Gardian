@@ -3,7 +3,7 @@
  */
 
 const TYPE_ICONS = { tree: '🌳', shrub: '🌿', flower: '🌸', s_flower: '🌼' };
-const TYPE_LABELS_GAL = { tree: 'Baum', shrub: 'Strauch', flower: 'Blume', s_flower: 'Saisonblume' };
+const TYPE_LABELS_GAL = { tree: 'Baum', shrub: 'Strauch', flower: 'Blume', s_flower: 'Blümchen' };
 
 let _galerieImages = [];
 

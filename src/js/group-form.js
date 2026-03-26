@@ -7,7 +7,7 @@ const GF_TYPE_OPTIONS = [
     { v: 'tree',     l: '🌳 Baum' },
     { v: 'shrub',    l: '🌿 Strauch' },
     { v: 'flower',   l: '🌸 Blume' },
-    { v: 's_flower', l: '🌼 Saisonblume' },
+    { v: 's_flower', l: '🌼 Blümchen' },
 ];
 
 const GF_STECKBRIEF = [

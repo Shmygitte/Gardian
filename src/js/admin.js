@@ -4,7 +4,7 @@
 
 const GROUP_FIELDS_ADMIN = [
     { key: 'name',         label: 'Name',             type: 'text',   required: true },
-    { key: 'type',         label: 'Typ',               type: 'select', options: ['tree','shrub','flower','s_flower'], labels: ['Baum','Strauch','Blume','Saisonblume'], required: true },
+    { key: 'type',         label: 'Typ',               type: 'select', options: ['tree','shrub','flower','s_flower'], labels: ['Baum','Strauch','Blume','Blümchen'], required: true },
     { key: 'bloom_months', label: 'Blütezeit',         type: 'bloom_toggle' },
     { key: 'marker_icon',  label: 'Marker-Icon',       type: 'text' },
     { key: 'marker_color', label: 'Marker-Farbe',      type: 'color' },

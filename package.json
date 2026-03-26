@@ -2,7 +2,7 @@
   "name": "gardian",
   "version": "1.0.0",
   "scripts": {
-    "build": "rm -rf ../Gardian-runtime/src ../Gardian-runtime/backend && rm -f ../Gardian-runtime/index.html ../Gardian-runtime/login.html && mkdir -p ../Gardian-runtime/src ../Gardian-runtime/backend ../Gardian-runtime/assets/maps && cp -r backend/* ../Gardian-runtime/backend/ && cp -r src/* ../Gardian-runtime/src/ && cp -r assets/* ../Gardian-runtime/assets/ && cp index.html login.html ../Gardian-runtime/",
+    "build": "rm -rf ../Gardian-runtime/src ../Gardian-runtime/backend && rm -f ../Gardian-runtime/index.html ../Gardian-runtime/login.html && mkdir -p ../Gardian-runtime/src ../Gardian-runtime/backend ../Gardian-runtime/assets/maps && cp -r backend/* ../Gardian-runtime/backend/ && cp -r src/* ../Gardian-runtime/src/ && cp -r assets/* ../Gardian-runtime/assets/ && cp index.html login.html tabelle.html ../Gardian-runtime/",
     "start": "php -S localhost:8888 -t ../Gardian-runtime/"
   }
 }
