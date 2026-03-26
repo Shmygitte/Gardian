@@ -35,8 +35,8 @@
                         <button id="nav-dashboard" class="c-btn c-btn--secondary" style="justify-content: flex-start;" onclick="showView('dashboard')">Gartenkarte</button>
                         <button id="nav-pflanzen" class="c-btn c-btn--text" style="justify-content: flex-start;" onclick="showView('pflanzen')">Pflanzen</button>
                         <button id="nav-galerie" class="c-btn c-btn--text" style="justify-content: flex-start;" onclick="showView('galerie')">Galerie</button>
-                        <a href="tabelle.html" class="c-btn c-btn--text" style="justify-content: flex-start; text-decoration:none;">Tabelle</a>
-                        <a href="kalender.html" class="c-btn c-btn--text" style="justify-content: flex-start; text-decoration:none;">Gartenkalender</a>
+                        <a href="tabelle.html" onclick="if(typeof EffectManager !== 'undefined') EffectManager.trigger('sidebar-click', this);" class="c-btn c-btn--text" style="justify-content: flex-start; text-decoration:none;">Tabelle</a>
+                        <a href="kalender.html" onclick="if(typeof EffectManager !== 'undefined') EffectManager.trigger('sidebar-click', this);" class="c-btn c-btn--text" style="justify-content: flex-start; text-decoration:none;">Gartenkalender</a>
                         <button id="nav-einstellungen" class="c-btn c-btn--text" style="justify-content: flex-start;" onclick="showView('einstellungen')">Einstellungen</button>
                         <button id="nav-admin" class="c-btn c-btn--text" style="justify-content: flex-start; display:none; color: var(--danger);" onclick="showView('admin')">Admin</button>
                     </nav>

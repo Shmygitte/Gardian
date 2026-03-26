@@ -69,13 +69,13 @@
             <div class="c-form-group">
                 <label class="c-label">Menü</label>
                 <nav style="display: flex; flex-direction: column; gap: 4px;">
-                    <button class="c-btn c-btn--text" style="justify-content: flex-start;" onclick="location.href='index.html#dashboard'">Gartenkarte</button>
-                    <button class="c-btn c-btn--text" style="justify-content: flex-start;" onclick="location.href='index.html#pflanzen'">Pflanzen</button>
-                    <button class="c-btn c-btn--text" style="justify-content: flex-start;" onclick="location.href='index.html#galerie'">Galerie</button>
+                    <button class="c-btn c-btn--text" style="justify-content: flex-start;" onclick="if(typeof EffectManager !== 'undefined') EffectManager.trigger('sidebar-click', this); setTimeout(() => location.href='index.html#dashboard', 100);">Gartenkarte</button>
+                    <button class="c-btn c-btn--text" style="justify-content: flex-start;" onclick="if(typeof EffectManager !== 'undefined') EffectManager.trigger('sidebar-click', this); setTimeout(() => location.href='index.html#pflanzen', 100);">Pflanzen</button>
+                    <button class="c-btn c-btn--text" style="justify-content: flex-start;" onclick="if(typeof EffectManager !== 'undefined') EffectManager.trigger('sidebar-click', this); setTimeout(() => location.href='index.html#galerie', 100);">Galerie</button>
                     <button class="c-btn c-btn--secondary" style="justify-content: flex-start;">Tabelle</button>
-                    <button class="c-btn c-btn--text" style="justify-content: flex-start;" onclick="location.href='kalender.html'">Gartenkalender</button>
-                    <button class="c-btn c-btn--text" style="justify-content: flex-start;" onclick="location.href='index.html#einstellungen'">Einstellungen</button>
-                    <button id="nav-admin" class="c-btn c-btn--text" style="justify-content: flex-start; display:none; color: var(--danger);" onclick="location.href='index.html#admin'">Admin</button>
+                    <button class="c-btn c-btn--text" style="justify-content: flex-start;" onclick="if(typeof EffectManager !== 'undefined') EffectManager.trigger('sidebar-click', this); setTimeout(() => location.href='kalender.html', 100);">Gartenkalender</button>
+                    <button class="c-btn c-btn--text" style="justify-content: flex-start;" onclick="if(typeof EffectManager !== 'undefined') EffectManager.trigger('sidebar-click', this); setTimeout(() => location.href='index.html#einstellungen', 100);">Einstellungen</button>
+                    <button id="nav-admin" class="c-btn c-btn--text" style="justify-content: flex-start; display:none; color: var(--danger);" onclick="if(typeof EffectManager !== 'undefined') EffectManager.trigger('sidebar-click', this); setTimeout(() => location.href='index.html#admin', 100);">Admin</button>
                 </nav>
             </div>
         </aside>
@@ -123,6 +123,10 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<script src="src/js/effects/effects-library.js"></script>
+<script src="src/js/effects/effects-config.js"></script>
+<script src="src/js/effects/effects-manager.js"></script>
 <div id="bloom-pop" style="display:none;"></div>
 
 <script>
@@ -163,8 +167,11 @@ async function init() {
     if (auth.role === 'admin') document.getElementById('nav-admin').style.display = 'flex';
     try {
         const cfg = await api('getGardenConfig');
-        if (cfg.success && cfg.config?.theme)
-            document.documentElement.setAttribute('data-theme', cfg.config.theme);
+        if (cfg.success && cfg.config) {
+            const c = cfg.config;
+            if (c.theme) document.documentElement.setAttribute('data-theme', c.theme);
+            window.effectsEnabled = parseInt(c.effects_enabled) !== 0;
+        }
     } catch(e) {}
     await loadData();
 }
