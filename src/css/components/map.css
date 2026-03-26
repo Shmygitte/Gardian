@@ -180,4 +180,11 @@
     font-size: 0.85rem;
     font-weight: 600;
     box-shadow: 0 2px 4px var(--color-shadow);
+    cursor: pointer;
+    color: var(--color-text);
+    white-space: nowrap;
+}
+
+.map__btn:hover {
+    background-color: var(--color-surface-hover, var(--color-border));
 }

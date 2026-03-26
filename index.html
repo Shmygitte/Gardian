@@ -273,8 +273,10 @@
                     <!-- Karte -->
                     <div class="map" style="flex:1; position:relative; border-radius:0;">
                         <div class="map__canvas" style="width: 100%; height: 100%; overflow: hidden; position: relative; cursor: default;"></div>
-                        <div id="map-controls" class="map__controls" style="position: absolute; bottom: 16px; right: 16px; display: flex; flex-direction: column; gap: 8px;">
-                            <label class="c-btn c-btn--secondary" style="cursor: pointer;">
+                        <div id="map-controls" class="map__controls">
+                            <button class="map__btn" id="btn-zoom-width" onclick="zoomFitWidth()" title="Auf Breite anpassen" style="display:none;">↔ Breite</button>
+                            <button class="map__btn" id="btn-zoom-height" onclick="zoomFitHeight()" title="Auf Höhe anpassen" style="display:none;">↕ Höhe</button>
+                            <label id="map-upload-label" class="c-btn c-btn--secondary" style="cursor: pointer;">
                                 Karte hochladen
                                 <input type="file" id="map-upload-input" accept="image/*" style="display: none;">
                             </label>

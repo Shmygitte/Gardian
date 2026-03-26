@@ -53,13 +53,13 @@ async function init() {
     
     // 1. Structure
     setupMapStructure();
-    
+    initBloomSlider();
+
     // 2. Data
     await loadGardenConfig();
     await loadBloomObservationsAll();
     await loadPins();
     loadFilterGroups();
-    initBloomSlider();
 
     // 3. Events
     setupEventListeners();
@@ -117,13 +117,17 @@ async function loadGardenConfig() {
 function updateMapBackground(url) {
     const img = elements.mapWrapper.querySelector('.map__img');
     const placeholder = elements.mapWrapper.querySelector('.map__placeholder-bg');
-    const controls = document.getElementById('map-controls');
+    const uploadLabel = document.getElementById('map-upload-label');
+    const btnZoomWidth = document.getElementById('btn-zoom-width');
+    const btnZoomHeight = document.getElementById('btn-zoom-height');
     if (img && placeholder) {
         img.src = url;
         img.style.display = 'block';
         placeholder.style.display = 'none';
     }
-    if (controls) controls.style.display = 'none';
+    if (uploadLabel) uploadLabel.style.display = 'none';
+    if (btnZoomWidth) btnZoomWidth.style.display = '';
+    if (btnZoomHeight) btnZoomHeight.style.display = '';
 }
 
 async function handleMapUpload(e) {
@@ -566,6 +570,28 @@ function updateTransform() {
     if (elements.mapWrapper) {
         elements.mapWrapper.style.transform = `translate(${state.panX}px, ${state.panY}px) scale(${state.zoom})`;
     }
+}
+
+function zoomFitWidth() {
+    const img = elements.mapWrapper?.querySelector('.map__img');
+    if (!img || img.style.display === 'none') return;
+    const canvasRect = elements.mapCanvas.getBoundingClientRect();
+    state.zoom = canvasRect.width / img.naturalWidth;
+    state.panX = 0;
+    state.panY = 0;
+    updateTransform();
+    scheduleSaveConfig();
+}
+
+function zoomFitHeight() {
+    const img = elements.mapWrapper?.querySelector('.map__img');
+    if (!img || img.style.display === 'none') return;
+    const canvasRect = elements.mapCanvas.getBoundingClientRect();
+    state.zoom = canvasRect.height / img.naturalHeight;
+    state.panX = 0;
+    state.panY = 0;
+    updateTransform();
+    scheduleSaveConfig();
 }
 
 // =========================
