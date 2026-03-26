@@ -1,5 +1,5 @@
 /**
- * Gardian – Pflegekalender Overlay (Karte)
+ * Gardian – Gartenkalender Overlay (Karte)
  */
 
 let _careOverlayActive = false;

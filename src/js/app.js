@@ -128,6 +128,8 @@ function updateMapBackground(url) {
     if (uploadLabel) uploadLabel.style.display = 'none';
     if (btnZoomWidth) btnZoomWidth.style.display = '';
     if (btnZoomHeight) btnZoomHeight.style.display = '';
+    const sep = document.getElementById('zoom-btn-separator');
+    if (sep) sep.style.display = '';
 }
 
 async function handleMapUpload(e) {

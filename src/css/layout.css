@@ -11,7 +11,9 @@
 .l-header,
 .app__header {
     height: 70px;
-    background-color: var(--bg-card);
+    background: linear-gradient(120deg, #fce7f3, #cffafe, #fef9c3, #e9d5ff);
+    background-size: 400% 400%;
+    animation: unicornGradient 40s ease infinite;
     box-shadow: var(--shadow-soft);
     display: flex;
     align-items: center;
@@ -43,7 +45,7 @@
 .l-main-content,
 .app__content {
     flex: 1;
-    padding: 32px;
+    padding: 0;
     background-color: var(--bg-app);
     overflow-y: auto;
 }

@@ -55,16 +55,28 @@
                  style="height:40px;width:40px;border-radius:50%;object-fit:cover;">
             <h1 style="font-size:1.5rem;color:var(--primary-dark);">Gardian</h1>
         </div>
-        <nav style="display:flex;align-items:center;gap:8px;">
-            <a href="index.html"    class="c-btn c-btn--text"     style="text-decoration:none;">Gartenkarte</a>
-            <span                   class="c-btn c-btn--secondary" style="cursor:default;">Tabelle</span>
-            <a href="kalender.html" class="c-btn c-btn--text"     style="text-decoration:none;">Pflegekalender</a>
+        <nav class="c-nav">
             <span id="save-status" style="font-size:0.8rem;color:var(--text-muted);min-width:90px;text-align:right;"></span>
             <button class="c-btn c-btn--text" onclick="doLogout()">Abmelden</button>
         </nav>
     </header>
 
-    <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;background:var(--bg-app);">
+    <div class="l-app-body">
+        <aside class="l-sidebar">
+            <div class="c-form-group">
+                <label class="c-label">Menü</label>
+                <nav style="display:flex;flex-direction:column;gap:4px;">
+                    <a href="index.html"    class="c-btn c-btn--text"      style="justify-content:flex-start;text-decoration:none;">Gartenkarte</a>
+                    <a href="index.html"    class="c-btn c-btn--text"      style="justify-content:flex-start;text-decoration:none;">Pflanzen</a>
+                    <a href="index.html"    class="c-btn c-btn--text"      style="justify-content:flex-start;text-decoration:none;">Galerie</a>
+                    <span                   class="c-btn c-btn--secondary"  style="justify-content:flex-start;cursor:default;">Tabelle</span>
+                    <a href="kalender.html" class="c-btn c-btn--text"      style="justify-content:flex-start;text-decoration:none;">Gartenkalender</a>
+                    <a href="index.html"    class="c-btn c-btn--text"      style="justify-content:flex-start;text-decoration:none;">Einstellungen</a>
+                </nav>
+            </div>
+        </aside>
+
+        <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;background:var(--bg-app);">
         <div style="padding:16px 24px 8px;display:flex;align-items:center;justify-content:space-between;">
             <h2 style="font-size:1.1rem;font-weight:700;color:var(--text-main);">Alle Pflanzen</h2>
             <span id="tbl-info" style="font-size:0.8rem;color:var(--text-muted);"></span>
@@ -605,5 +617,6 @@ async function doLogout() {
     location.href = 'login.html';
 }
 </script>
+</div><!-- /l-app-body -->
 </body>
 </html>

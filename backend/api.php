@@ -18,7 +18,7 @@ try { $db->exec("CREATE TABLE IF NOT EXISTS gd_care_task_types (
     name VARCHAR(150) NOT NULL UNIQUE,
     icon VARCHAR(10)  NULL DEFAULT NULL
 )"); } catch (PDOException $e) {}
-// Schema-Migration: Pflegekalender-Tabellen (einmalig)
+// Schema-Migration: Gartenkalender-Tabellen (einmalig)
 try { $db->exec("CREATE TABLE IF NOT EXISTS gd_care_tasks (
     id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id       INT UNSIGNED NOT NULL,

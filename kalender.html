@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gardian – Pflegekalender</title>
+    <title>Gardian – Gartenkalender</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
@@ -72,15 +72,27 @@
                  style="height:40px;width:40px;border-radius:50%;object-fit:cover;">
             <h1 style="font-size:1.5rem;color:var(--primary-dark);">Gardian</h1>
         </div>
-        <nav style="display:flex;align-items:center;gap:8px;">
-            <a href="index.html"   class="c-btn c-btn--text"      style="text-decoration:none;">Gartenkarte</a>
-            <a href="tabelle.html" class="c-btn c-btn--text"      style="text-decoration:none;">Tabelle</a>
-            <span                  class="c-btn c-btn--secondary"  style="cursor:default;">Pflegekalender</span>
+        <nav class="c-nav">
             <button class="c-btn c-btn--text" onclick="doLogout()">Abmelden</button>
         </nav>
     </header>
 
-    <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;background:var(--bg-app);">
+    <div class="l-app-body">
+        <aside class="l-sidebar">
+            <div class="c-form-group">
+                <label class="c-label">Menü</label>
+                <nav style="display:flex;flex-direction:column;gap:4px;">
+                    <a href="index.html"    class="c-btn c-btn--text"      style="justify-content:flex-start;text-decoration:none;">Gartenkarte</a>
+                    <a href="index.html"    class="c-btn c-btn--text"      style="justify-content:flex-start;text-decoration:none;">Pflanzen</a>
+                    <a href="index.html"    class="c-btn c-btn--text"      style="justify-content:flex-start;text-decoration:none;">Galerie</a>
+                    <a href="tabelle.html"  class="c-btn c-btn--text"      style="justify-content:flex-start;text-decoration:none;">Tabelle</a>
+                    <span                   class="c-btn c-btn--secondary"  style="justify-content:flex-start;cursor:default;">Gartenkalender</span>
+                    <a href="index.html"    class="c-btn c-btn--text"      style="justify-content:flex-start;text-decoration:none;">Einstellungen</a>
+                </nav>
+            </div>
+        </aside>
+
+        <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;background:var(--bg-app);">
 
         <!-- Toolbar -->
         <div class="kal-toolbar">
@@ -494,5 +506,6 @@ async function doLogout() {
 
 document.addEventListener('DOMContentLoaded', init);
 </script>
+</div><!-- /l-app-body -->
 </body>
 </html>
