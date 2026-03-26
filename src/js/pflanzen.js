@@ -53,7 +53,7 @@ function renderFieldTable(obj, fields) {
 }
 
 const GROUP_FIELDS = ['type','bloom_months','marker_icon','marker_color','marker_size','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen'];
-const PLANT_FIELDS = ['pos_x','pos_y','bloom_months','marker_icon','marker_color','marker_size','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen','created_at'];
+const PLANT_FIELDS = ['bloom_months','marker_icon','marker_color','marker_size','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen'];
 
 let _pflanzenData = null;
 const _bloomLoaded = new Set();
@@ -111,23 +111,27 @@ function renderPflanzenListe(data) {
                 return `
                 <div style="margin:4px 0 0 12px; border-left:3px solid var(--primary-light); padding-left:10px;">
                     <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 0;">
-                        <span onclick="toggleAccordion('${plantId}'); ensureBloomLoaded('plant', ${plant.id}, ${group.bloom_months_resolved || 0}); loadImages('plant', null, ${plant.id}, 'images-plant-${plant.id}')" style="cursor:pointer; font-size:0.9rem; font-weight:600; flex:1;">Pflanze #${plant.id} <span style="color:var(--text-muted); font-weight:400;">(${plant.pos_x !== null ? parseFloat(plant.pos_x).toFixed(1) + '% / ' + parseFloat(plant.pos_y).toFixed(1) + '%' : 'keine Position'})</span></span>
+                        <span id="plant-label-${plant.id}" onclick="toggleAccordion('${plantId}'); ensureBloomLoaded('plant', ${plant.id}, ${group.bloom_months_resolved || 0}); loadImages('plant', null, ${plant.id}, 'images-plant-${plant.id}')" ondblclick="event.stopPropagation(); startPlantRename(${plant.id})" style="cursor:pointer; font-size:0.9rem; font-weight:600; flex:1;" title="Doppelklick zum Umbenennen">${plant.plant_name || 'Pflanze #' + plant.id}</span>
                         <div style="display:flex; align-items:center; gap:6px;">
                             <button class="c-btn c-btn--text" style="font-size:0.75rem; color:var(--danger); padding:2px 6px;" onclick="deletePlant(${plant.id})">Löschen</button>
                             <span onclick="toggleAccordion('${plantId}'); ensureBloomLoaded('plant', ${plant.id}, ${group.bloom_months_resolved || 0})" id="${plantId}-icon" style="font-size:0.8rem; color:var(--text-muted); cursor:pointer;">▶</span>
                         </div>
                     </div>
                     <div id="${plantId}" style="display:none; padding-bottom:8px;">
-                        ${renderFieldTable(plant, PLANT_FIELDS)}
-                        <div style="margin-top:10px; border-top:1px solid var(--border); padding-top:10px;">
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:12px;">
+                            <div>
+                                ${renderFieldTable(plant, PLANT_FIELDS)}
+                            </div>
+                            <div>
+                                <p style="font-size:0.8rem; font-weight:700; color:var(--text-muted); margin-bottom:6px;">FOTOS</p>
+                                <div id="images-plant-${plant.id}"></div>
+                                <input type="file" id="file-plant-${plant.id}" accept="image/*" style="position:absolute;opacity:0;width:0;height:0;" onchange="uploadImage(this,'plant',null,${plant.id},'images-plant-${plant.id}')">
+                                <button class="c-btn c-btn--text" style="font-size:0.8rem;" onclick="document.getElementById('file-plant-${plant.id}').click()">+ Foto hochladen</button>
+                            </div>
+                        </div>
+                        <div style="border-top:1px solid var(--border); padding-top:10px;">
                             <p style="font-size:0.8rem; font-weight:700; color:var(--text-muted); margin-bottom:6px;">BLÜTEZEIT & BEOBACHTUNGEN</p>
                             <div id="bloom-plant-${plant.id}"><p style="font-size:0.8rem;color:var(--text-muted);">Lade...</p></div>
-                        </div>
-                        <div style="margin-top:10px; border-top:1px solid var(--border); padding-top:10px;">
-                            <p style="font-size:0.8rem; font-weight:700; color:var(--text-muted); margin-bottom:6px;">FOTOS</p>
-                            <div id="images-plant-${plant.id}"></div>
-                            <input type="file" id="file-plant-${plant.id}" accept="image/*" style="position:absolute;opacity:0;width:0;height:0;" onchange="uploadImage(this,'plant',null,${plant.id},'images-plant-${plant.id}')">
-                            <button class="c-btn c-btn--text" style="font-size:0.8rem;" onclick="document.getElementById('file-plant-${plant.id}').click()">+ Foto hochladen</button>
                         </div>
                     </div>
                 </div>`;
@@ -145,23 +149,55 @@ function renderPflanzenListe(data) {
                 </div>
             </div>
             <div id="${groupId}" style="display:none; padding:12px 16px; background:var(--bg-surface);">
-                <p style="font-size:0.8rem; font-weight:600; color:var(--text-muted); margin-bottom:8px;">GRUPPENFELDER</p>
-                ${renderFieldTable(group, GROUP_FIELDS)}
-                <div style="margin-top:12px; border-top:1px solid var(--border); padding-top:10px;">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:12px;">
+                    <div>
+                        <p style="font-size:0.8rem; font-weight:600; color:var(--text-muted); margin-bottom:8px;">GRUPPENFELDER</p>
+                        ${renderFieldTable(group, GROUP_FIELDS)}
+                    </div>
+                    <div>
+                        <p style="font-size:0.8rem; font-weight:700; color:var(--text-muted); margin-bottom:6px;">FOTOS</p>
+                        <div id="images-group-${group.id}"></div>
+                        <input type="file" id="file-group-${group.id}" accept="image/*" style="position:absolute;opacity:0;width:0;height:0;" onchange="uploadImage(this,'group',${group.group_id || null},null,'images-group-${group.id}',${group.id})">
+                        <button class="c-btn c-btn--text" style="font-size:0.8rem;" onclick="document.getElementById('file-group-${group.id}').click()">+ Foto hochladen</button>
+                    </div>
+                </div>
+                <div style="border-top:1px solid var(--border); padding-top:10px;">
                     <p style="font-size:0.8rem; font-weight:700; color:var(--text-muted); margin-bottom:6px;">BLÜTEZEIT & BEOBACHTUNGEN</p>
                     <div id="bloom-group-${group.id}"><p style="font-size:0.8rem;color:var(--text-muted);">Lade...</p></div>
-                </div>
-                <div style="margin-top:12px; border-top:1px solid var(--border); padding-top:10px;">
-                    <p style="font-size:0.8rem; font-weight:700; color:var(--text-muted); margin-bottom:6px;">FOTOS</p>
-                    <div id="images-group-${group.id}"></div>
-                    <input type="file" id="file-group-${group.id}" accept="image/*" style="position:absolute;opacity:0;width:0;height:0;" onchange="uploadImage(this,'group',${group.group_id || null},null,'images-group-${group.id}',${group.id})">
-                    <button class="c-btn c-btn--text" style="font-size:0.8rem;" onclick="document.getElementById('file-group-${group.id}').click()">+ Foto hochladen</button>
                 </div>
                 <p style="font-size:0.8rem; font-weight:600; color:var(--text-muted); margin:12px 0 4px;">PFLANZEN</p>
                 ${plantsHtml}
             </div>
         </div>`;
     }).join('');
+}
+
+function startPlantRename(plantId) {
+    const label = document.getElementById(`plant-label-${plantId}`);
+    if (!label) return;
+    const currentName = label.textContent.trim();
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = currentName.startsWith('Pflanze #') ? '' : currentName;
+    input.placeholder = `Pflanze #${plantId}`;
+    input.style.cssText = 'font-size:0.9rem; font-weight:600; border:none; border-bottom:2px solid var(--primary); background:transparent; outline:none; width:180px;';
+
+    const save = async () => {
+        const newName = input.value.trim() || null;
+        await fetch('backend/api.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'updatePlant', id: plantId, name: newName })
+        });
+        label.textContent = newName || `Pflanze #${plantId}`;
+        input.replaceWith(label);
+    };
+
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') save(); if (e.key === 'Escape') input.replaceWith(label); });
+    input.addEventListener('blur', save);
+    label.replaceWith(input);
+    input.focus();
+    input.select();
 }
 
 function toggleAccordion(id) {
@@ -206,7 +242,7 @@ function renderBloomSection(container, type, id, inheritedBitmask, observations)
     const allYears = [...new Set([...defaultYears, ...observations.map(o => parseInt(o.year))])].sort();
 
     const tabs = [
-        { key: 'std', label: 'Standard', bitmask: inheritedBitmask, readonly: true },
+        ...(type === 'group' ? [{ key: 'std', label: 'Standard', bitmask: inheritedBitmask, readonly: true }] : []),
         ...allYears.map(y => ({ key: String(y), label: String(y), bitmask: obsMap[y] ?? 0, readonly: false }))
     ];
 
@@ -234,14 +270,14 @@ function renderBloomSection(container, type, id, inheritedBitmask, observations)
     const firstTab = tabs[0];
     container.innerHTML = `
         <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px;">
-            <div id="bloom-tabs-${type}-${id}" style="display:flex;gap:4px;flex-wrap:wrap;">${tabsHtml(firstTab.key)}</div>
+            <div id="bloom-tabs-${type}-${id}" style="display:flex;gap:4px;flex-wrap:wrap;">${firstTab ? tabsHtml(firstTab.key) : ''}</div>
             <button type="button" onclick="addBloomYear('${type}', ${id})"
                 style="padding:4px 10px;border-radius:20px;border:1px dashed var(--border);font-size:0.8rem;cursor:pointer;background:transparent;color:var(--text-muted);">+ Jahr</button>
         </div>
         <div id="bloom-toggles-${type}-${id}" style="display:flex;gap:4px;flex-wrap:wrap;">
-            ${togglesHtml(firstTab.bitmask, firstTab.readonly, firstTab.key)}
+            ${firstTab ? togglesHtml(firstTab.bitmask, firstTab.readonly, firstTab.key) : ''}
         </div>
-        <input type="hidden" id="bloom-activekey-${type}-${id}" value="${firstTab.key}">
+        <input type="hidden" id="bloom-activekey-${type}-${id}" value="${firstTab ? firstTab.key : ''}">
         <script type="application/json" id="bloom-tabdata-${type}-${id}">${JSON.stringify(tabs)}</script>`;
 }
 

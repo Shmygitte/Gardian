@@ -101,6 +101,7 @@ if ($action === 'getPins') {
                 p.id,
                 p.pos_x,
                 p.pos_y,
+                p.name as plant_name,
                 COALESCE(ug_direct.name, dg.name) as name,
                 COALESCE(ug_direct.type, ug.type, dg.type) as type,
                 COALESCE(p.marker_color, ug_direct.marker_color, ug.marker_color, dg.marker_color) as marker_color,
@@ -264,7 +265,7 @@ if ($action === 'getPlantsList') {
         // Pflanzen je Gruppe laden (Standard-Gruppen via group_id, eigene via user_group_id)
         $stmtPlants = $db->prepare("
             SELECT
-                p.id, p.group_id, p.user_group_id, p.pos_x, p.pos_y,
+                p.id, p.name as plant_name, p.group_id, p.user_group_id, p.pos_x, p.pos_y,
                 p.bloom_months,
                 p.marker_icon, p.marker_color, p.marker_size,
                 p.height, p.location, p.spacing,
@@ -462,7 +463,7 @@ if ($action === 'updateUserGroup') {
 if ($action === 'updatePlant') {
     $id = $data['id'] ?? null;
     if (!$id) { echo json_encode(['success' => false, 'error' => 'ID fehlt']); exit; }
-    $allowed = ['marker_color','marker_size','marker_icon','bloom_months'];
+    $allowed = ['name','marker_color','marker_size','marker_icon','bloom_months'];
     $sets = []; $vals = [];
     foreach ($allowed as $f) {
         if (array_key_exists($f, $data)) {

@@ -397,7 +397,8 @@ function renderMarkers() {
 
 function openPlantEditModal(pin) {
     document.getElementById('edit-plant-id').value      = pin.id;
-    document.getElementById('modal-edit-title').textContent = `${pin.name} bearbeiten`;
+    document.getElementById('modal-edit-title').textContent = `Pflanze bearbeiten`;
+    document.getElementById('edit-plant-name').value    = pin.plant_name  || '';
     document.getElementById('edit-marker-color').value  = pin.marker_color || '#4CAF50';
     document.getElementById('edit-marker-size').value   = pin.marker_size  || '';
     document.getElementById('edit-marker-icon').value   = pin.marker_icon  || '';
@@ -413,6 +414,7 @@ async function savePlantEdit() {
     const payload = {
         action:       'updatePlant',
         id:           parseInt(id),
+        name:         document.getElementById('edit-plant-name').value  || null,
         marker_color: document.getElementById('edit-marker-color').value,
         marker_size:  document.getElementById('edit-marker-size').value  || null,
         marker_icon:  document.getElementById('edit-marker-icon').value  || null,
