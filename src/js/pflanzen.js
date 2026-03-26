@@ -494,23 +494,73 @@ async function saveGruppeBearbeiten(groupId, formId) {
 // =========================
 // BILD-UPLOAD & GALERIE
 // =========================
-async function uploadImage(input, type, groupId, plantId, containerId, userGroupId) {
-    if (!input.files[0]) return;
-    const formData = new FormData();
-    formData.append('action', 'uploadImage');
-    formData.append('type', type);
-    formData.append('image', input.files[0]);
-    if (groupId)     formData.append('group_id',      groupId);
-    if (plantId)     formData.append('plant_id',      plantId);
-    if (userGroupId) formData.append('user_group_id', userGroupId);
+// Pflanzen-Foto Cropper
+let plantCropper = null;
+let _plantCropUploadMeta = null;
 
-    const res  = await fetch('backend/api.php', { method: 'POST', body: formData });
-    const data = await res.json();
-    if (data.success) {
-        loadImages(type, groupId, plantId, containerId, userGroupId);
-    } else {
-        alert(data.error || 'Upload fehlgeschlagen');
+function uploadImage(input, type, groupId, plantId, containerId, userGroupId) {
+    const file = input.files[0];
+    if (!file) return;
+    input.value = '';
+    _plantCropUploadMeta = { type, groupId, plantId, containerId, userGroupId };
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const modal = document.getElementById('modal-plant-crop');
+        const img = document.getElementById('plant-crop-image');
+        img.src = e.target.result;
+        modal.style.display = 'flex';
+        if (plantCropper) plantCropper.destroy();
+        plantCropper = new Cropper(img, {
+            aspectRatio: NaN,
+            viewMode: 1,
+            dragMode: 'move',
+            autoCropArea: 1,
+            restore: false,
+            guides: false,
+            center: false,
+            highlight: false,
+            cropBoxMovable: true,
+            cropBoxResizable: true,
+            toggleDragModeOnDblclick: false,
+            minContainerHeight: 300
+        });
+    };
+    reader.readAsDataURL(file);
+}
+
+function closePlantCropModal() {
+    const modal = document.getElementById('modal-plant-crop');
+    modal.style.display = 'none';
+    if (plantCropper) {
+        plantCropper.destroy();
+        plantCropper = null;
     }
+    _plantCropUploadMeta = null;
+}
+
+async function saveCroppedPlantImage() {
+    if (!plantCropper || !_plantCropUploadMeta) return;
+    const { type, groupId, plantId, containerId, userGroupId } = _plantCropUploadMeta;
+    const canvas = plantCropper.getCroppedCanvas({ maxWidth: 1200, maxHeight: 1200 });
+    canvas.toBlob(async (blob) => {
+        const formData = new FormData();
+        formData.append('action', 'uploadImage');
+        formData.append('type', type);
+        formData.append('image', blob, 'photo.jpg');
+        if (groupId)     formData.append('group_id',      groupId);
+        if (plantId)     formData.append('plant_id',      plantId);
+        if (userGroupId) formData.append('user_group_id', userGroupId);
+
+        const res  = await fetch('backend/api.php', { method: 'POST', body: formData });
+        const data = await res.json();
+        if (data.success) {
+            loadImages(type, groupId, plantId, containerId, userGroupId);
+        } else {
+            alert(data.error || 'Upload fehlgeschlagen');
+        }
+        closePlantCropModal();
+    }, 'image/jpeg', 0.9);
 }
 
 async function loadImages(type, groupId, plantId, containerId, userGroupId) {

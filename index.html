@@ -429,6 +429,30 @@
         </div>
     </div>
 
+    <!-- Pflanzen-Foto Crop Modal -->
+    <div id="modal-plant-crop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:2000; align-items:center; justify-content:center; padding:20px;">
+        <div class="c-card" style="width:min(600px, 95vw); max-height:90vh; display:flex; flex-direction:column; overflow:hidden;">
+            <div class="c-card__header">
+                <h2 class="c-card__title">Foto zuschneiden</h2>
+                <button class="c-btn c-btn--text" onclick="closePlantCropModal()">✕</button>
+            </div>
+            <div class="c-card__body" style="padding:0; flex:1; overflow:hidden; min-height:300px; display:flex; align-items:center; justify-content:center; background:#000;">
+                <img id="plant-crop-image" src="" style="max-width:100%; display:block;">
+            </div>
+            <div class="c-card__footer" style="display:flex; justify-content:space-between; align-items:center;">
+                <div style="display:flex; gap:8px;">
+                    <button class="c-btn c-btn--secondary" onclick="plantCropper.zoom(0.1)" title="Zoom In">+</button>
+                    <button class="c-btn c-btn--secondary" onclick="plantCropper.zoom(-0.1)" title="Zoom Out">-</button>
+                    <button class="c-btn c-btn--secondary" onclick="plantCropper.rotate(90)" title="Drehen">⟳</button>
+                </div>
+                <div>
+                    <button class="c-btn c-btn--primary" onclick="saveCroppedPlantImage()">Speichern</button>
+                    <button class="c-btn c-btn--text" onclick="closePlantCropModal()">Abbrechen</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
     <script src="src/js/galerie.js"></script>

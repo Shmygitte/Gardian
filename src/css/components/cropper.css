@@ -1,12 +1,57 @@
 /* Cropper.js Custom Styling for Circular Avatar */
-.cropper-view-box,
-.cropper-face {
+#modal-avatar-crop .cropper-view-box,
+#modal-avatar-crop .cropper-face {
     border-radius: 50%;
 }
 
-.cropper-view-box {
+#modal-avatar-crop .cropper-view-box {
     outline: 0;
     box-shadow: 0 0 0 1px #fff;
+}
+
+/* Pflanzen-Foto Crop Modal */
+#modal-plant-crop .cropper-view-box {
+    outline: 2px solid rgba(255,255,255,0.8);
+    border-radius: 4px;
+}
+
+#modal-plant-crop .cropper-point {
+    background-color: #fff;
+    opacity: 0.7;
+    border-radius: 50%;
+}
+
+#modal-plant-crop .cropper-line {
+    background-color: rgba(255,255,255,0.4);
+}
+
+#modal-plant-crop .cropper-dashed {
+    border-color: rgba(255,255,255,0.25);
+}
+
+#modal-plant-crop .cropper-center {
+    display: none;
+}
+
+#modal-plant-crop .cropper-modal {
+    background: #000;
+    opacity: 0.5;
+}
+
+#modal-plant-crop .cropper-bg {
+    background-image: none !important;
+    background: #000 !important;
+}
+
+#modal-plant-crop .c-card__body {
+    background: #000 !important;
+    max-height: 500px;
+}
+
+#modal-plant-crop .c-card__footer {
+    background: var(--bg-card);
+    border-top: 1px solid var(--border);
+    padding: 12px 16px;
 }
 
 /* Ensure the modal is dark and centered */
