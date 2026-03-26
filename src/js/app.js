@@ -389,9 +389,11 @@ function renderMarkers() {
             marker.style.transition = 'opacity 0.3s ease';
         }
 
-        const iconContent = resolveMarkerIcon(pin.marker_icon, pin.type);
+        const iconContent = resolveMarkerIcon(pin.marker_icon, pin.type, pin.marker_icon_color);
+        const customSize = pin.marker_size ? `width:${pin.marker_size}px;height:${pin.marker_size}px;` : '';
+        const fontSize = pin.marker_size ? `font-size:${Math.max(pin.marker_size * 0.5, 8)}px;` : '';
         marker.innerHTML = `
-            <div class="marker__pin" style="background:${markerColor}; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid white; box-shadow:0 2px 4px rgba(0,0,0,0.2);">
+            <div class="marker__pin" style="background:${markerColor}; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; border:1px solid white; box-shadow:0 2px 4px rgba(0,0,0,0.2);${customSize}${fontSize}">
                 ${iconContent}
             </div>
         `;
@@ -414,10 +416,16 @@ function renderMarkers() {
 
 function openPlantEditModal(pin) {
     document.getElementById('edit-plant-id').value      = pin.id;
-    document.getElementById('modal-edit-title').textContent = `Pflanze bearbeiten`;
+    document.getElementById('modal-edit-title').textContent = `Marker`;
     document.getElementById('edit-plant-name').value    = pin.plant_name  || '';
     document.getElementById('edit-marker-color').value  = pin.marker_color || '#4CAF50';
-    document.getElementById('edit-marker-size').value   = pin.marker_size  || '';
+    const defaultSize = { tree: 44, shrub: 34, flower: 24, s_flower: 18 }[pin.type] || 30;
+    document.getElementById('edit-marker-size').value = pin.marker_size || '';
+    document.getElementById('edit-marker-size').dataset.defaultSize = defaultSize;
+    document.getElementById('edit-marker-size').dataset.pinType = pin.type || 'flower';
+    document.getElementById('edit-marker-icon-color').value = pin.marker_icon_color || '#333333';
+    updateMarkerSizeDisplay();
+    updateMarkerPreview();
 
     // Icon-Picker initialisieren
     const iconVal = pin.marker_icon || '';
@@ -444,6 +452,42 @@ function closePlantEditModal() {
     document.getElementById('modal-pflanze-edit').style.display = 'none';
 }
 
+function adjustMarkerSize(delta) {
+    const input = document.getElementById('edit-marker-size');
+    const defaultSize = parseInt(input.dataset.defaultSize) || 30;
+    const current = parseInt(input.value) || defaultSize;
+    const newVal = Math.max(8, Math.min(80, current + delta));
+    input.value = newVal === defaultSize ? '' : newVal;
+    updateMarkerSizeDisplay();
+    updateMarkerPreview();
+}
+
+function updateMarkerSizeDisplay() {
+    // Größe wird jetzt direkt durch die Marker-Vorschau visualisiert
+}
+
+function updateMarkerPreview() {
+    const preview = document.getElementById('edit-marker-preview');
+    if (!preview) return;
+    const input = document.getElementById('edit-marker-size');
+    const defaultSize = parseInt(input.dataset.defaultSize) || 30;
+    const size = parseInt(input.value) || defaultSize;
+    const displaySize = Math.min(size, 48);
+    const color = document.getElementById('edit-marker-color').value || '#4CAF50';
+    const iconVal = document.getElementById('edit-marker-icon').value;
+    const pinType = input.dataset.pinType || 'flower';
+    const isSvg = iconVal && (iconVal.startsWith('lib:') || iconVal.startsWith('user:'));
+    const iconColor = isSvg ? document.getElementById('edit-marker-icon-color').value : null;
+    const iconContent = resolveMarkerIcon(iconVal || '', pinType, iconColor);
+    const fontSize = displaySize < 20 ? '0.5rem' : displaySize < 30 ? '0.7rem' : displaySize < 40 ? '0.9rem' : '1.2rem';
+    preview.style.width = displaySize + 'px';
+    preview.style.height = displaySize + 'px';
+    preview.style.background = color;
+    preview.style.fontSize = fontSize;
+    preview.style.color = 'white';
+    preview.innerHTML = iconContent;
+}
+
 async function savePlantEdit() {
     const id = document.getElementById('edit-plant-id').value;
     const payload = {
@@ -453,6 +497,7 @@ async function savePlantEdit() {
         marker_color: document.getElementById('edit-marker-color').value,
         marker_size:  document.getElementById('edit-marker-size').value  || null,
         marker_icon:  document.getElementById('edit-marker-icon').value  || null,
+        marker_icon_color: document.getElementById('edit-marker-icon-color').value || null,
     };
     const res  = await fetch('backend/api.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     const data = await res.json();
@@ -485,21 +530,31 @@ async function loadIconCaches() {
     if (userData.success) _userIconsCache   = Object.fromEntries(userData.icons.map(i => [String(i.id), i.file_path]));
 }
 
-function resolveMarkerIcon(markerIcon, type) {
+function resolveMarkerIcon(markerIcon, type, iconColor) {
     if (!markerIcon) return `<span>${getEmoji(type)}</span>`;
 
     // SVG-Icon aus Bibliothek: "lib:123"
     if (markerIcon.startsWith('lib:')) {
         const iconId = markerIcon.substring(4);
         const path = _iconLibraryCache?.[iconId];
-        if (path) return `<img src="${path}" style="width:65%;height:65%;object-fit:contain;" alt="">`;
+        if (path) {
+            if (iconColor) {
+                return `<div style="width:65%;height:65%;background:${iconColor};-webkit-mask:url(${path}) center/contain no-repeat;mask:url(${path}) center/contain no-repeat;"></div>`;
+            }
+            return `<img src="${path}" style="width:65%;height:65%;object-fit:contain;" alt="">`;
+        }
         return `<span>${getEmoji(type)}</span>`;
     }
     // SVG-Icon vom User: "user:123"
     if (markerIcon.startsWith('user:')) {
         const iconId = markerIcon.substring(5);
         const path = _userIconsCache?.[iconId];
-        if (path) return `<img src="${path}" style="width:65%;height:65%;object-fit:contain;" alt="">`;
+        if (path) {
+            if (iconColor) {
+                return `<div style="width:65%;height:65%;background:${iconColor};-webkit-mask:url(${path}) center/contain no-repeat;mask:url(${path}) center/contain no-repeat;"></div>`;
+            }
+            return `<img src="${path}" style="width:65%;height:65%;object-fit:contain;" alt="">`;
+        }
         return `<span>${getEmoji(type)}</span>`;
     }
     // Emoji oder Text
@@ -510,11 +565,10 @@ function resolveMarkerIcon(markerIcon, type) {
 // ICON PICKER
 // ========================
 function switchIconTab(tab) {
-    document.querySelectorAll('.icon-tab-btn').forEach(b => {
-        b.className = 'c-btn c-btn--text icon-tab-btn' + (b.dataset.tab === tab ? ' active' : '');
-        if (b.dataset.tab === tab) b.style.fontWeight = '600';
-        else b.style.fontWeight = '';
-    });
+    // Radio-Buttons synchronisieren
+    const radio = document.querySelector(`input[name="icon-source"][value="${tab}"]`);
+    if (radio) radio.checked = true;
+    // Panels umschalten
     document.querySelectorAll('.icon-tab-panel').forEach(p => p.style.display = 'none');
     document.getElementById('icon-tab-' + tab).style.display = 'block';
     if (tab === 'library') renderIconLibraryGrid();
@@ -524,22 +578,36 @@ function switchIconTab(tab) {
 function updateIconPreview(value) {
     const preview = document.getElementById('icon-picker-current');
     const label   = document.getElementById('icon-picker-label');
+    const colorWrap = document.getElementById('icon-color-picker-wrap');
     document.getElementById('edit-marker-icon').value = value || '';
+    const isSvg = value && (value.startsWith('lib:') || value.startsWith('user:'));
+    colorWrap.style.display = isSvg ? 'flex' : 'none';
+    const iconColor = isSvg ? document.getElementById('edit-marker-icon-color').value : null;
+
     if (!value) {
         preview.innerHTML = getEmoji('flower');
         label.textContent = 'Standard-Emoji';
     } else if (value.startsWith('lib:')) {
         const path = _iconLibraryCache?.[value.substring(4)];
-        preview.innerHTML = path ? `<img src="${path}" style="width:22px;height:22px;">` : '?';
-        label.textContent = 'Bibliothek-Icon';
+        if (path && iconColor) {
+            preview.innerHTML = `<div style="width:22px;height:22px;background:${iconColor};-webkit-mask:url(${path}) center/contain no-repeat;mask:url(${path}) center/contain no-repeat;"></div>`;
+        } else {
+            preview.innerHTML = path ? `<img src="${path}" style="width:22px;height:22px;">` : '?';
+        }
+        label.textContent = 'Bibliothek';
     } else if (value.startsWith('user:')) {
         const path = _userIconsCache?.[value.substring(5)];
-        preview.innerHTML = path ? `<img src="${path}" style="width:22px;height:22px;">` : '?';
-        label.textContent = 'Eigenes Icon';
+        if (path && iconColor) {
+            preview.innerHTML = `<div style="width:22px;height:22px;background:${iconColor};-webkit-mask:url(${path}) center/contain no-repeat;mask:url(${path}) center/contain no-repeat;"></div>`;
+        } else {
+            preview.innerHTML = path ? `<img src="${path}" style="width:22px;height:22px;">` : '?';
+        }
+        label.textContent = 'Eigenes';
     } else {
         preview.innerHTML = `<span>${value}</span>`;
         label.textContent = 'Emoji';
     }
+    updateMarkerPreview();
 }
 
 function selectEmojiIcon(val) {
@@ -557,6 +625,19 @@ function selectUserIcon(id) {
 function resetMarkerIcon() {
     document.getElementById('edit-marker-emoji').value = '';
     updateIconPreview(null);
+}
+
+function resetAllMarkerSettings() {
+    // Farbe auf Standard-Grün
+    document.getElementById('edit-marker-color').value = '#4CAF50';
+    // Größe zurücksetzen (leer = Typ-Standard)
+    document.getElementById('edit-marker-size').value = '';
+    // Icon zurücksetzen
+    document.getElementById('edit-marker-emoji').value = '';
+    document.getElementById('edit-marker-icon-color').value = '#333333';
+    updateIconPreview(null);
+    updateMarkerSizeDisplay();
+    updateMarkerPreview();
 }
 
 function renderIconLibraryGrid() {
