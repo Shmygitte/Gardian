@@ -58,6 +58,7 @@ async function init() {
     // 2. Data
     await loadGardenConfig();
     await loadBloomObservationsAll();
+    await loadIconCaches();
     await loadPins();
     loadFilterGroups();
 
@@ -388,9 +389,10 @@ function renderMarkers() {
             marker.style.transition = 'opacity 0.3s ease';
         }
 
+        const iconContent = resolveMarkerIcon(pin.marker_icon, pin.type);
         marker.innerHTML = `
             <div class="marker__pin" style="background:${markerColor}; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid white; box-shadow:0 2px 4px rgba(0,0,0,0.2);">
-                <span>${getEmoji(pin.type)}</span>
+                ${iconContent}
             </div>
         `;
 
@@ -416,7 +418,25 @@ function openPlantEditModal(pin) {
     document.getElementById('edit-plant-name').value    = pin.plant_name  || '';
     document.getElementById('edit-marker-color').value  = pin.marker_color || '#4CAF50';
     document.getElementById('edit-marker-size').value   = pin.marker_size  || '';
-    document.getElementById('edit-marker-icon').value   = pin.marker_icon  || '';
+
+    // Icon-Picker initialisieren
+    const iconVal = pin.marker_icon || '';
+    document.getElementById('edit-marker-icon').value = iconVal;
+    if (iconVal && !iconVal.startsWith('lib:') && !iconVal.startsWith('user:')) {
+        document.getElementById('edit-marker-emoji').value = iconVal;
+        switchIconTab('emoji');
+    } else if (iconVal.startsWith('lib:')) {
+        document.getElementById('edit-marker-emoji').value = '';
+        switchIconTab('library');
+    } else if (iconVal.startsWith('user:')) {
+        document.getElementById('edit-marker-emoji').value = '';
+        switchIconTab('own');
+    } else {
+        document.getElementById('edit-marker-emoji').value = '';
+        switchIconTab('emoji');
+    }
+    updateIconPreview(iconVal || null);
+
     document.getElementById('modal-pflanze-edit').style.display = 'flex';
 }
 
@@ -448,6 +468,162 @@ function getEmoji(type) {
     if (type === 'tree') return '🌳';
     if (type === 'shrub') return '🌿';
     return '🌸';
+}
+
+// Icon-Caches für SVG-Pfade
+let _iconLibraryCache = null;
+let _userIconsCache = null;
+
+async function loadIconCaches() {
+    const [libRes, userRes] = await Promise.all([
+        fetch('backend/api.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'getIconLibrary' }) }),
+        fetch('backend/api.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'getUserIcons' }) })
+    ]);
+    const libData  = await libRes.json();
+    const userData = await userRes.json();
+    if (libData.success)  _iconLibraryCache = Object.fromEntries(libData.icons.map(i => [String(i.id), i.file_path]));
+    if (userData.success) _userIconsCache   = Object.fromEntries(userData.icons.map(i => [String(i.id), i.file_path]));
+}
+
+function resolveMarkerIcon(markerIcon, type) {
+    if (!markerIcon) return `<span>${getEmoji(type)}</span>`;
+
+    // SVG-Icon aus Bibliothek: "lib:123"
+    if (markerIcon.startsWith('lib:')) {
+        const iconId = markerIcon.substring(4);
+        const path = _iconLibraryCache?.[iconId];
+        if (path) return `<img src="${path}" style="width:65%;height:65%;object-fit:contain;" alt="">`;
+        return `<span>${getEmoji(type)}</span>`;
+    }
+    // SVG-Icon vom User: "user:123"
+    if (markerIcon.startsWith('user:')) {
+        const iconId = markerIcon.substring(5);
+        const path = _userIconsCache?.[iconId];
+        if (path) return `<img src="${path}" style="width:65%;height:65%;object-fit:contain;" alt="">`;
+        return `<span>${getEmoji(type)}</span>`;
+    }
+    // Emoji oder Text
+    return `<span>${markerIcon}</span>`;
+}
+
+// ========================
+// ICON PICKER
+// ========================
+function switchIconTab(tab) {
+    document.querySelectorAll('.icon-tab-btn').forEach(b => {
+        b.className = 'c-btn c-btn--text icon-tab-btn' + (b.dataset.tab === tab ? ' active' : '');
+        if (b.dataset.tab === tab) b.style.fontWeight = '600';
+        else b.style.fontWeight = '';
+    });
+    document.querySelectorAll('.icon-tab-panel').forEach(p => p.style.display = 'none');
+    document.getElementById('icon-tab-' + tab).style.display = 'block';
+    if (tab === 'library') renderIconLibraryGrid();
+    if (tab === 'own') renderUserIconGrid();
+}
+
+function updateIconPreview(value) {
+    const preview = document.getElementById('icon-picker-current');
+    const label   = document.getElementById('icon-picker-label');
+    document.getElementById('edit-marker-icon').value = value || '';
+    if (!value) {
+        preview.innerHTML = getEmoji('flower');
+        label.textContent = 'Standard-Emoji';
+    } else if (value.startsWith('lib:')) {
+        const path = _iconLibraryCache?.[value.substring(4)];
+        preview.innerHTML = path ? `<img src="${path}" style="width:22px;height:22px;">` : '?';
+        label.textContent = 'Bibliothek-Icon';
+    } else if (value.startsWith('user:')) {
+        const path = _userIconsCache?.[value.substring(5)];
+        preview.innerHTML = path ? `<img src="${path}" style="width:22px;height:22px;">` : '?';
+        label.textContent = 'Eigenes Icon';
+    } else {
+        preview.innerHTML = `<span>${value}</span>`;
+        label.textContent = 'Emoji';
+    }
+}
+
+function selectEmojiIcon(val) {
+    updateIconPreview(val.trim() || null);
+}
+
+function selectLibraryIcon(id) {
+    updateIconPreview('lib:' + id);
+}
+
+function selectUserIcon(id) {
+    updateIconPreview('user:' + id);
+}
+
+function resetMarkerIcon() {
+    document.getElementById('edit-marker-emoji').value = '';
+    updateIconPreview(null);
+}
+
+function renderIconLibraryGrid() {
+    const grid = document.getElementById('icon-library-grid');
+    if (!_iconLibraryCache) { grid.innerHTML = '<span style="color:var(--text-muted);font-size:0.8rem;grid-column:1/-1;">Keine Icons vorhanden</span>'; return; }
+    const currentVal = document.getElementById('edit-marker-icon').value;
+    grid.innerHTML = Object.entries(_iconLibraryCache).map(([id, path]) =>
+        `<button type="button" onclick="selectLibraryIcon('${id}')" title="Icon #${id}"
+            style="width:100%;aspect-ratio:1;border:2px solid ${currentVal === 'lib:'+id ? 'var(--primary)' : 'var(--border)'};border-radius:var(--radius-sm);background:var(--bg-app);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:4px;">
+            <img src="${path}" style="width:100%;height:100%;object-fit:contain;">
+        </button>`
+    ).join('');
+}
+
+function renderUserIconGrid() {
+    const grid = document.getElementById('icon-user-grid');
+    if (!_userIconsCache || Object.keys(_userIconsCache).length === 0) {
+        grid.innerHTML = '<span style="color:var(--text-muted);font-size:0.8rem;grid-column:1/-1;">Noch keine eigenen Icons</span>';
+        return;
+    }
+    const currentVal = document.getElementById('edit-marker-icon').value;
+    grid.innerHTML = Object.entries(_userIconsCache).map(([id, path]) =>
+        `<div style="position:relative;">
+            <button type="button" onclick="selectUserIcon('${id}')" title="Eigenes Icon #${id}"
+                style="width:100%;aspect-ratio:1;border:2px solid ${currentVal === 'user:'+id ? 'var(--primary)' : 'var(--border)'};border-radius:var(--radius-sm);background:var(--bg-app);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:4px;">
+                <img src="${path}" style="width:100%;height:100%;object-fit:contain;">
+            </button>
+            <button type="button" onclick="deleteUserIcon('${id}')" title="Löschen"
+                style="position:absolute;top:-4px;right:-4px;width:16px;height:16px;border-radius:50%;background:var(--danger);color:white;border:none;font-size:0.6rem;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">✕</button>
+        </div>`
+    ).join('');
+}
+
+async function uploadUserIcon(input) {
+    const file = input.files[0];
+    if (!file) return;
+    if (!file.name.toLowerCase().endsWith('.svg')) { alert('Nur SVG-Dateien erlaubt.'); return; }
+    if (file.size > 51200) { alert('Datei zu groß (max. 50KB).'); return; }
+
+    const formData = new FormData();
+    formData.append('action', 'uploadIcon');
+    formData.append('target', 'user');
+    formData.append('name', file.name.replace('.svg', ''));
+    formData.append('icon', file);
+
+    const res  = await fetch('backend/api.php', { method: 'POST', body: formData });
+    const data = await res.json();
+    if (data.success) {
+        _userIconsCache[String(data.id)] = data.file_path;
+        selectUserIcon(String(data.id));
+        renderUserIconGrid();
+    } else {
+        alert(data.error || 'Upload fehlgeschlagen');
+    }
+    input.value = '';
+}
+
+async function deleteUserIcon(id) {
+    if (!confirm('Icon wirklich löschen?')) return;
+    const res  = await fetch('backend/api.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'deleteIcon', target: 'user', id }) });
+    const data = await res.json();
+    if (data.success) {
+        delete _userIconsCache[id];
+        const current = document.getElementById('edit-marker-icon').value;
+        if (current === 'user:' + id) resetMarkerIcon();
+        renderUserIconGrid();
+    }
 }
 
 function handleWheel(e) {
@@ -881,7 +1057,7 @@ async function showHoverGallery(e, pin) {
         const res  = await fetch('backend/api.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'getImagesForPin', plant_id: pin.id, group_id: pin.group_id })
+            body: JSON.stringify({ action: 'getImagesForPin', plant_id: pin.id, group_id: pin.group_id, user_group_id: pin.user_group_id || null })
         });
         const data = await res.json();
 

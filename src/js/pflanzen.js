@@ -178,7 +178,7 @@ function renderPflanzenListe(data) {
         return `
         <div style="margin-bottom:4px; border:1px solid var(--border); border-radius:var(--radius-md); overflow:hidden;">
             <div style="padding:6px 12px; background:var(--bg-card); display:flex; justify-content:space-between; align-items:center;">
-                <span onclick="toggleAccordion('${groupId}'); ensureBloomLoaded('group', ${group.id}, ${group.bloom_months_resolved || 0}); loadImages('group', ${group.group_id || null}, null, 'images-group-${group.id}')" style="cursor:pointer; font-weight:600; flex:1;">${group.name || '(Unbenannte Gruppe)'}</span>
+                <span onclick="toggleAccordion('${groupId}'); ensureBloomLoaded('group', ${group.id}, ${group.bloom_months_resolved || 0}); loadImages('group', ${group.group_id || null}, null, 'images-group-${group.id}', ${group.id})" style="cursor:pointer; font-weight:600; flex:1;">${group.name || '(Unbenannte Gruppe)'}</span>
                 <div style="display:flex; align-items:center; gap:10px;">
                     <button class="c-btn c-btn--text" style="font-size:0.8rem;" onclick="openGruppeBearbeitenModal(${group.id})">Bearbeiten</button>
                     <button class="c-btn c-btn--text" style="font-size:0.8rem; color:var(--danger);" onclick="deleteUserGroup(${group.id}, ${group.plants.length})">Löschen</button>
@@ -507,19 +507,21 @@ async function uploadImage(input, type, groupId, plantId, containerId, userGroup
     const res  = await fetch('backend/api.php', { method: 'POST', body: formData });
     const data = await res.json();
     if (data.success) {
-        loadImages(type, groupId, plantId, containerId);
+        loadImages(type, groupId, plantId, containerId, userGroupId);
     } else {
         alert(data.error || 'Upload fehlgeschlagen');
     }
 }
 
-async function loadImages(type, groupId, plantId, containerId) {
+async function loadImages(type, groupId, plantId, containerId, userGroupId) {
     const container = document.getElementById(containerId);
     if (!container) return;
+    const payload = { action: 'getImages', type, group_id: groupId, plant_id: plantId };
+    if (userGroupId) payload.user_group_id = userGroupId;
     const res  = await fetch('backend/api.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'getImages', type, group_id: groupId, plant_id: plantId })
+        body: JSON.stringify(payload)
     });
     const data = await res.json();
     if (!data.success || !data.images.length) {

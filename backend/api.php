@@ -706,17 +706,18 @@ if ($action === 'uploadImage') {
 // GET IMAGES
 // =========================
 if ($action === 'getImages') {
-    $type    = $data['type']     ?? null;
-    $groupId = $data['group_id'] ?? null;
-    $plantId = $data['plant_id'] ?? null;
+    $type        = $data['type']          ?? null;
+    $groupId     = $data['group_id']      ?? null;
+    $plantId     = $data['plant_id']      ?? null;
+    $userGroupId = $data['user_group_id'] ?? null;
     try {
         if ($type === 'plant' && $plantId) {
             $stmt = $db->prepare("SELECT * FROM gd_images WHERE type='plant' AND plant_id=? ORDER BY is_primary DESC, uploaded_at DESC");
             $stmt->execute([$plantId]);
-        } elseif ($type === 'group' && $groupId) {
-            // User-Gruppe zuerst, dann Default
-            $stmt = $db->prepare("SELECT * FROM gd_images WHERE (type='group' AND group_id=? AND user_id=?) OR (type='default' AND group_id=?) ORDER BY type ASC, is_primary DESC, uploaded_at DESC");
-            $stmt->execute([$groupId, $_SESSION['user_id'], $groupId]);
+        } elseif ($type === 'group' && $userGroupId) {
+            // User-Gruppe Fotos + Default-Fotos der Library-Gruppe
+            $stmt = $db->prepare("SELECT * FROM gd_images WHERE (type='group' AND user_group_id=? AND user_id=?) OR (type='default' AND group_id=?) ORDER BY type ASC, is_primary DESC, uploaded_at DESC");
+            $stmt->execute([$userGroupId, $_SESSION['user_id'], $groupId]);
         } elseif ($type === 'default' && $groupId) {
             $stmt = $db->prepare("SELECT * FROM gd_images WHERE type='default' AND group_id=? ORDER BY is_primary DESC, uploaded_at DESC");
             $stmt->execute([$groupId]);
@@ -757,21 +758,22 @@ if ($action === 'deleteImage') {
 // GET IMAGES FOR PIN (Hover)
 // =========================
 if ($action === 'getImagesForPin') {
-    $plantId = $data['plant_id'] ?? null;
-    $groupId = $data['group_id'] ?? null;   // default_group_id
+    $plantId     = $data['plant_id']      ?? null;
+    $groupId     = $data['group_id']      ?? null;   // default_group_id
+    $userGroupId = $data['user_group_id'] ?? null;
     if (!$plantId) { echo json_encode(['success' => false, 'error' => 'Parameter fehlen']); exit; }
     try {
         // Pflanze zuerst, dann User-Gruppe, dann Default
         $stmt = $db->prepare("
             (SELECT file_path, is_primary, 'plant' as src FROM gd_images WHERE type='plant' AND plant_id=? AND user_id=?)
             UNION ALL
-            (SELECT file_path, is_primary, 'group' as src FROM gd_images WHERE type='group' AND group_id=? AND user_id=?)
+            (SELECT file_path, is_primary, 'group' as src FROM gd_images WHERE type='group' AND user_group_id=? AND user_id=?)
             UNION ALL
             (SELECT file_path, is_primary, 'default' as src FROM gd_images WHERE type='default' AND group_id=?)
             ORDER BY FIELD(src,'plant','group','default'), is_primary DESC
             LIMIT 5
         ");
-        $stmt->execute([$plantId, $_SESSION['user_id'], $groupId, $_SESSION['user_id'], $groupId]);
+        $stmt->execute([$plantId, $_SESSION['user_id'], $userGroupId, $_SESSION['user_id'], $groupId]);
         echo json_encode(['success' => true, 'images' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
     } catch (PDOException $e) {
         echo json_encode(['success' => false, 'error' => $e->getMessage()]);
