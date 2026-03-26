@@ -3,25 +3,26 @@
  */
 
 const FIELD_LABELS = {
-    type:         'Typ',
-    bloom_months: 'Blütezeit (Standard)',
-    marker_icon:  'Marker-Icon',
-    marker_color: 'Marker-Farbe',
-    marker_size:  'Marker-Größe',
-    height:       'Höhe',
-    location:     'Standort',
-    spacing:      'Pflanzabstand',
-    care:         'Pflege',
-    water:        'Wasser',
-    hardy:        'Winterhart',
-    scented:      'Duftend',
-    cutflower:    'Schnittblume',
-    lifespan:     'Lebenszeit',
-    features:     'Besonderheiten',
-    evergreen:    'Immergrün',
-    pos_x:        'Position X (%)',
-    pos_y:        'Position Y (%)',
-    created_at:   'Erstellt am',
+    type:               'Typ',
+    bloom_months:       'Blütezeit (Standard)',
+    marker_icon:        'Marker-Icon',
+    marker_color:       'Marker-Farbe',
+    marker_size:        'Marker-Größe',
+    height:             'Höhe',
+    location:           'Standort',
+    spacing:            'Pflanzabstand',
+    care:               'Pflege',
+    water:              'Wasser',
+    hardy:              'Winterhart',
+    scented:            'Duftend',
+    cutflower:          'Schnittblume',
+    lifespan:           'Lebenszeit',
+    features:           'Besonderheiten',
+    evergreen:          'Immergrün',
+    planted_month_year: 'Gepflanzt',
+    pos_x:              'Position X (%)',
+    pos_y:              'Position Y (%)',
+    created_at:         'Erstellt am',
 };
 
 const TYPE_LABELS = { tree: 'Baum', shrub: 'Strauch', flower: 'Blume', s_flower: 'Saisonblume' };
@@ -32,6 +33,11 @@ function formatValue(key, val) {
     if (key === 'hardy' || key === 'scented' || key === 'cutflower' || key === 'evergreen') return val == 1 ? 'Ja' : 'Nein';
     if (key === 'marker_color') return `<span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${val};border:1px solid #ccc;vertical-align:middle;margin-right:4px;"></span>${val}`;
     if (key === 'pos_x' || key === 'pos_y') return parseFloat(val).toFixed(1) + '%';
+    if (key === 'planted_month_year') {
+        const [y, m] = val.split('-');
+        const names = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+        return (names[parseInt(m, 10) - 1] || m) + ' ' + y;
+    }
     if (key === 'bloom_months') {
         const names = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
         const bitmask = parseInt(val) || 0;
@@ -53,7 +59,7 @@ function renderFieldTable(obj, fields) {
 }
 
 const GROUP_FIELDS = ['type','bloom_months','marker_icon','marker_color','marker_size','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen'];
-const PLANT_FIELDS = ['bloom_months','marker_icon','marker_color','marker_size','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen'];
+const PLANT_FIELDS = ['planted_month_year','bloom_months','marker_icon','marker_color','marker_size','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen'];
 
 let _pflanzenData = null;
 const _bloomLoaded = new Set();
@@ -121,6 +127,12 @@ function renderPflanzenListe(data) {
                         <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:12px;">
                             <div>
                                 ${renderFieldTable(plant, PLANT_FIELDS)}
+                                <div style="margin-top:8px; display:flex; align-items:center; gap:6px;">
+                                    <label style="font-size:0.78rem; color:var(--text-muted); white-space:nowrap;">Gepflanzt:</label>
+                                    <input type="month" value="${plant.planted_month_year || ''}"
+                                        style="font-size:0.8rem; padding:3px 6px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--bg-app); color:var(--text-main);"
+                                        onchange="savePlantedMonthYear(${plant.id}, this.value)">
+                                </div>
                             </div>
                             <div>
                                 <p style="font-size:0.8rem; font-weight:700; color:var(--text-muted); margin-bottom:6px;">FOTOS</p>
@@ -198,6 +210,20 @@ function startPlantRename(plantId) {
     label.replaceWith(input);
     input.focus();
     input.select();
+}
+
+async function savePlantedMonthYear(plantId, value) {
+    await fetch('backend/api.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'updatePlant', id: plantId, planted_month_year: value || null })
+    });
+    if (_pflanzenData) {
+        for (const g of _pflanzenData.groups) {
+            const p = g.plants.find(p => p.id === plantId);
+            if (p) { p.planted_month_year = value || null; break; }
+        }
+    }
 }
 
 function toggleAccordion(id) {
