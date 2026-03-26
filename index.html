@@ -327,59 +327,77 @@
 
     <!-- Modal: Pflanze bearbeiten (Rechtsklick) -->
     <div id="modal-pflanze-edit" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:1001; align-items:center; justify-content:center;">
-        <div class="c-card" style="width:340px;">
-            <div class="c-card__header">
-                <h2 class="c-card__title" id="modal-edit-title">Pflanze bearbeiten</h2>
-                <button class="c-btn c-btn--text" onclick="closePlantEditModal()">✕</button>
+        <div class="c-card" style="width:280px; padding:0; border-radius:12px; overflow:hidden; --radius-sm:4px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 14px; background:var(--bg-surface);">
+                <span id="modal-edit-title" style="font-size:0.85rem; font-weight:600; color:var(--text-main);">Marker</span>
+                <button class="c-btn c-btn--text" onclick="closePlantEditModal()" style="font-size:0.85rem; padding:0; min-height:auto; line-height:1;">✕</button>
             </div>
-            <div class="c-card__body">
+            <div style="padding:12px 14px;">
                 <input type="hidden" id="edit-plant-id">
-                <div class="c-form-group">
-                    <label class="c-label">Name (optional)</label>
-                    <input type="text" id="edit-plant-name" class="c-input" placeholder="z.B. Großer Apfelbaum">
+                <input type="hidden" id="edit-marker-size">
+                <input type="hidden" id="edit-marker-icon" value="">
+
+                <input type="text" id="edit-plant-name" class="c-input" placeholder="Einzelpflanzenname (optional)" style="padding:5px 8px; font-size:0.8rem; height:auto; width:100%; box-sizing:border-box; margin-bottom:14px;">
+
+                <!-- Marker-Vorschau zentral -->
+                <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:12px;">
+                    <button type="button" onclick="adjustMarkerSize(-1)" style="width:24px;height:24px;border:1px solid var(--border);border-radius:50%;background:var(--bg-app);cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;color:var(--text-muted);">−</button>
+                    <div style="width:56px;height:56px;display:flex;align-items:center;justify-content:center;">
+                        <div id="edit-marker-preview" style="display:flex;align-items:center;justify-content:center;border-radius:50%;border:1px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.2);transition:all 0.15s ease;"></div>
+                    </div>
+                    <button type="button" onclick="adjustMarkerSize(1)" style="width:24px;height:24px;border:1px solid var(--border);border-radius:50%;background:var(--bg-app);cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;color:var(--text-muted);">+</button>
                 </div>
-                <div class="c-form-group">
-                    <label class="c-label">Marker-Farbe</label>
-                    <input type="color" id="edit-marker-color" class="c-input" style="height:42px; padding:4px 8px;">
+
+                <!-- Farben -->
+                <div style="display:flex; align-items:center; justify-content:center; gap:14px; margin-bottom:14px;">
+                    <label style="font-size:0.72rem; color:var(--text-muted); display:flex; align-items:center; gap:5px; cursor:pointer;">
+                        Marker <input type="color" id="edit-marker-color" style="width:24px; height:24px; padding:0; border:none; cursor:pointer; background:none;" oninput="updateMarkerPreview()">
+                    </label>
+                    <label id="icon-color-picker-wrap" style="font-size:0.72rem; color:var(--text-muted); display:none; align-items:center; gap:5px; cursor:pointer;">
+                        Icon <input type="color" id="edit-marker-icon-color" value="#333333" style="width:24px; height:24px; padding:0; border:none; cursor:pointer; background:none;" oninput="updateIconPreview(document.getElementById('edit-marker-icon').value); updateMarkerPreview();">
+                    </label>
                 </div>
-                <div class="c-form-group">
-                    <label class="c-label">Marker-Größe (px)</label>
-                    <input type="number" id="edit-marker-size" class="c-input" min="10" max="80" placeholder="Standard">
-                </div>
-                <div class="c-form-group">
-                    <label class="c-label">Marker-Icon</label>
-                    <input type="hidden" id="edit-marker-icon" value="">
-                    <div id="icon-picker-preview" style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-                        <div id="icon-picker-current" style="width:36px;height:36px;border-radius:50%;background:var(--bg-app);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.2rem;"></div>
-                        <span id="icon-picker-label" style="font-size:0.85rem;color:var(--text-muted);">Standard-Emoji</span>
-                        <button type="button" class="c-btn c-btn--text" style="font-size:0.8rem;margin-left:auto;" onclick="resetMarkerIcon()">Zurücksetzen</button>
-                    </div>
-                    <div style="display:flex; gap:4px; margin-bottom:8px;">
-                        <button type="button" class="c-btn c-btn--text icon-tab-btn active" data-tab="emoji" onclick="switchIconTab('emoji')" style="font-size:0.8rem;flex:1;">Emoji</button>
-                        <button type="button" class="c-btn c-btn--text icon-tab-btn" data-tab="library" onclick="switchIconTab('library')" style="font-size:0.8rem;flex:1;">Bibliothek</button>
-                        <button type="button" class="c-btn c-btn--text icon-tab-btn" data-tab="own" onclick="switchIconTab('own')" style="font-size:0.8rem;flex:1;">Eigene</button>
-                    </div>
-                    <!-- Tab: Emoji -->
-                    <div id="icon-tab-emoji" class="icon-tab-panel">
-                        <input type="text" id="edit-marker-emoji" class="c-input" placeholder="z.B. 🌸 🌳 🌿" style="margin-bottom:0;" oninput="selectEmojiIcon(this.value)">
-                    </div>
-                    <!-- Tab: Bibliothek -->
-                    <div id="icon-tab-library" class="icon-tab-panel" style="display:none;">
-                        <div id="icon-library-grid" style="display:grid; grid-template-columns:repeat(6, 1fr); gap:4px; max-height:160px; overflow-y:auto; padding:4px;"></div>
-                    </div>
-                    <!-- Tab: Eigene -->
-                    <div id="icon-tab-own" class="icon-tab-panel" style="display:none;">
-                        <div id="icon-user-grid" style="display:grid; grid-template-columns:repeat(6, 1fr); gap:4px; max-height:120px; overflow-y:auto; padding:4px; margin-bottom:8px;"></div>
-                        <label class="c-btn c-btn--text" style="font-size:0.8rem; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
-                            + SVG hochladen
-                            <input type="file" accept=".svg" style="display:none;" onchange="uploadUserIcon(this)">
+
+                <!-- Icon-Auswahl -->
+                <div style="border-top:1px solid var(--border); padding-top:10px;">
+                    <div id="icon-picker-preview" style="display:none;"></div>
+                    <div id="icon-picker-current" style="display:none;"></div>
+                    <span id="icon-picker-label" style="display:none;"></span>
+
+                    <div style="display:flex; gap:14px; margin-bottom:8px;">
+                        <label style="font-size:0.75rem; color:var(--text-muted); display:flex; align-items:center; gap:4px; cursor:pointer;">
+                            <input type="radio" name="icon-source" value="emoji" checked onchange="switchIconTab('emoji')" style="margin:0; accent-color:var(--primary);"> Emoji
+                        </label>
+                        <label style="font-size:0.75rem; color:var(--text-muted); display:flex; align-items:center; gap:4px; cursor:pointer;">
+                            <input type="radio" name="icon-source" value="library" onchange="switchIconTab('library')" style="margin:0; accent-color:var(--primary);"> Bibliothek
+                        </label>
+                        <label style="font-size:0.75rem; color:var(--text-muted); display:flex; align-items:center; gap:4px; cursor:pointer;">
+                            <input type="radio" name="icon-source" value="own" onchange="switchIconTab('own')" style="margin:0; accent-color:var(--primary);"> Eigene
                         </label>
                     </div>
+
+                    <div style="min-height:36px;">
+                        <div id="icon-tab-emoji" class="icon-tab-panel">
+                            <input type="text" id="edit-marker-emoji" class="c-input" placeholder="z.B. 🌸 🌳 🌿" style="padding:5px 8px; font-size:0.8rem; height:auto; width:100%; box-sizing:border-box;" oninput="selectEmojiIcon(this.value)">
+                        </div>
+                        <div id="icon-tab-library" class="icon-tab-panel" style="display:none;">
+                            <div id="icon-library-grid" style="display:grid; grid-template-columns:repeat(6, 1fr); gap:4px; max-height:100px; overflow-y:auto;"></div>
+                        </div>
+                        <div id="icon-tab-own" class="icon-tab-panel" style="display:none;">
+                            <div id="icon-user-grid" style="display:grid; grid-template-columns:repeat(6, 1fr); gap:4px; max-height:70px; overflow-y:auto; margin-bottom:6px;"></div>
+                            <label style="font-size:0.7rem; color:var(--primary); cursor:pointer; display:flex; align-items:center; gap:4px;">
+                                + SVG hochladen
+                                <input type="file" accept=".svg" style="display:none;" onchange="uploadUserIcon(this)">
+                            </label>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="c-card__footer">
-                <button class="c-btn c-btn--primary" onclick="savePlantEdit()">Speichern</button>
-                <button class="c-btn c-btn--text" onclick="closePlantEditModal()">Abbrechen</button>
+            <div style="padding:8px 14px; border-top:1px solid var(--border); display:flex; align-items:center;">
+                <button type="button" class="c-btn c-btn--text" style="font-size:0.68rem; color:var(--danger); padding:0; min-height:auto;" onclick="resetAllMarkerSettings()">Zurücksetzen</button>
+                <span style="flex:1;"></span>
+                <button class="c-btn c-btn--text" style="font-size:0.78rem;" onclick="closePlantEditModal()">Abbrechen</button>
+                <button class="c-btn c-btn--primary" style="font-size:0.78rem; padding:5px 16px; margin-left:6px;" onclick="savePlantEdit()">Speichern</button>
             </div>
         </div>
     </div>

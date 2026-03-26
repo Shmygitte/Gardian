@@ -13,6 +13,9 @@ $db = getDB();
 // Schema-Migration: user_group_id in gd_images (einmalig)
 try { $db->exec("ALTER TABLE gd_images ADD COLUMN user_group_id INT NULL DEFAULT NULL"); } catch (PDOException $e) {}
 try { $db->exec("ALTER TABLE gd_images ADD COLUMN file_path_gallery VARCHAR(500) NULL DEFAULT NULL"); } catch (PDOException $e) {}
+try { $db->exec("ALTER TABLE gd_user_plants ADD COLUMN marker_icon_color VARCHAR(7) NULL DEFAULT NULL"); } catch (PDOException $e) {}
+try { $db->exec("ALTER TABLE gd_default_groups ADD COLUMN marker_icon_color VARCHAR(7) NULL DEFAULT NULL"); } catch (PDOException $e) {}
+try { $db->exec("ALTER TABLE gd_user_groups ADD COLUMN marker_icon_color VARCHAR(7) NULL DEFAULT NULL"); } catch (PDOException $e) {}
 // Schema-Migration: Aufgaben-Typen (einmalig)
 try { $db->exec("CREATE TABLE IF NOT EXISTS gd_care_task_types (
     id   INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -151,6 +154,8 @@ if ($action === 'getPins') {
                 COALESCE(ug_direct.type, ug.type, dg.type) as type,
                 COALESCE(p.marker_color, ug_direct.marker_color, ug.marker_color, dg.marker_color) as marker_color,
                 COALESCE(p.marker_icon, ug_direct.marker_icon, ug.marker_icon, dg.marker_icon) as marker_icon,
+                COALESCE(p.marker_icon_color, ug_direct.marker_icon_color, ug.marker_icon_color, dg.marker_icon_color) as marker_icon_color,
+                p.marker_size,
                 COALESCE(p.evergreen, ug_direct.evergreen, ug.evergreen, dg.evergreen) as evergreen,
                 COALESCE(p.bloom_months, ug_direct.bloom_months, ug.bloom_months, dg.bloom_months) as bloom_months_resolved,
                 p.group_id,
@@ -517,7 +522,7 @@ if ($action === 'updateUserGroup') {
 if ($action === 'updatePlant') {
     $id = $data['id'] ?? null;
     if (!$id) { echo json_encode(['success' => false, 'error' => 'ID fehlt']); exit; }
-    $allowed = ['name','marker_color','marker_size','marker_icon','bloom_months','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen','pos_x','pos_y','planned_month_year','planted_month_year','removed_month_year','removed_reason'];
+    $allowed = ['name','marker_color','marker_size','marker_icon','marker_icon_color','bloom_months','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen','pos_x','pos_y','planned_month_year','planted_month_year','removed_month_year','removed_reason'];
     $sets = []; $vals = [];
     foreach ($allowed as $f) {
         if (array_key_exists($f, $data)) {
