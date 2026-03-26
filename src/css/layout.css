@@ -4,7 +4,8 @@
 .app {
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
+    height: 100vh;
+    overflow: hidden;
 }
 
 .l-header,
@@ -25,6 +26,7 @@
 .app__body {
     display: flex;
     flex: 1;
+    min-height: 0;
 }
 
 .l-sidebar,
