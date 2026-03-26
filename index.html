@@ -12,16 +12,18 @@
 <body>
     <div class="l-app-shell">
         <header class="l-header">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <label style="cursor: pointer;" title="Profilbild ändern">
-                    <img id="user-avatar" src="assets/logo.png" alt="Profilbild" style="height: 40px; width: 40px; border-radius: 50%; object-fit: cover;">
-                    <input type="file" id="avatar-upload" accept="image/*" style="display: none;">
+            <div style="display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.5); backdrop-filter:blur(4px); padding:4px 14px 4px 4px; border-radius:999px; border:1px solid rgba(0,0,0,0.06);">
+                <label style="cursor:pointer; display:flex;" title="Profilbild ändern">
+                    <img id="user-avatar" src="assets/logo.png" alt="Profilbild" style="height:34px; width:34px; border-radius:50%; object-fit:cover; border:2px solid var(--primary-light); box-shadow:0 0 0 1px rgba(0,0,0,0.05);">
+                    <input type="file" id="avatar-upload" accept="image/*" style="display:none;">
                 </label>
-                <h1 style="font-size: 1.5rem; color: var(--primary-dark);">Gardian</h1>
+                <span id="user-name" style="font-size:0.82rem; font-weight:600; color:var(--text-main);"></span>
             </div>
-            <nav class="c-nav">
-                <button class="c-btn c-btn--text" onclick="logout()">Abmelden</button>
-            </nav>
+            <div style="display:flex; align-items:center; gap:10px; display:flex; align-items:center;">
+                <img src="assets/logo.png" alt="Gardian" style="height:38px; width:38px; border-radius:50%; object-fit:cover;">
+                <h1 style="font-size:1.5rem; color:var(--primary-dark);">Gardian</h1>
+            </div>
+            <button class="c-btn c-btn--text" onclick="logout()" style="font-size:0.8rem;">Abmelden</button>
         </header>
 
         <div class="l-app-body">
@@ -135,10 +137,12 @@
                                 <button id="admin-tab-users"      class="c-btn c-btn--secondary" onclick="switchAdminTab('users')">Benutzer</button>
                                 <button id="admin-tab-groups"     class="c-btn c-btn--text"      onclick="switchAdminTab('groups')">Pflanzengruppen</button>
                                 <button id="admin-tab-care-types" class="c-btn c-btn--text"      onclick="switchAdminTab('care-types')">Aufgaben-Typen</button>
+                                <button id="admin-tab-icons"      class="c-btn c-btn--text"      onclick="switchAdminTab('icons')">Icon-Bibliothek</button>
                             </div>
                             <div id="admin-panel-users"></div>
                             <div id="admin-panel-groups"     style="display:none;"></div>
                             <div id="admin-panel-care-types" style="display:none;"></div>
+                            <div id="admin-panel-icons"      style="display:none;"></div>
                         </div>
                     </div>
                 </div>
@@ -327,8 +331,34 @@
                     <input type="number" id="edit-marker-size" class="c-input" min="10" max="80" placeholder="Standard">
                 </div>
                 <div class="c-form-group">
-                    <label class="c-label">Marker-Icon (Emoji)</label>
-                    <input type="text" id="edit-marker-icon" class="c-input" placeholder="z.B. 🌸">
+                    <label class="c-label">Marker-Icon</label>
+                    <input type="hidden" id="edit-marker-icon" value="">
+                    <div id="icon-picker-preview" style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                        <div id="icon-picker-current" style="width:36px;height:36px;border-radius:50%;background:var(--bg-app);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.2rem;"></div>
+                        <span id="icon-picker-label" style="font-size:0.85rem;color:var(--text-muted);">Standard-Emoji</span>
+                        <button type="button" class="c-btn c-btn--text" style="font-size:0.8rem;margin-left:auto;" onclick="resetMarkerIcon()">Zurücksetzen</button>
+                    </div>
+                    <div style="display:flex; gap:4px; margin-bottom:8px;">
+                        <button type="button" class="c-btn c-btn--text icon-tab-btn active" data-tab="emoji" onclick="switchIconTab('emoji')" style="font-size:0.8rem;flex:1;">Emoji</button>
+                        <button type="button" class="c-btn c-btn--text icon-tab-btn" data-tab="library" onclick="switchIconTab('library')" style="font-size:0.8rem;flex:1;">Bibliothek</button>
+                        <button type="button" class="c-btn c-btn--text icon-tab-btn" data-tab="own" onclick="switchIconTab('own')" style="font-size:0.8rem;flex:1;">Eigene</button>
+                    </div>
+                    <!-- Tab: Emoji -->
+                    <div id="icon-tab-emoji" class="icon-tab-panel">
+                        <input type="text" id="edit-marker-emoji" class="c-input" placeholder="z.B. 🌸 🌳 🌿" style="margin-bottom:0;" oninput="selectEmojiIcon(this.value)">
+                    </div>
+                    <!-- Tab: Bibliothek -->
+                    <div id="icon-tab-library" class="icon-tab-panel" style="display:none;">
+                        <div id="icon-library-grid" style="display:grid; grid-template-columns:repeat(6, 1fr); gap:4px; max-height:160px; overflow-y:auto; padding:4px;"></div>
+                    </div>
+                    <!-- Tab: Eigene -->
+                    <div id="icon-tab-own" class="icon-tab-panel" style="display:none;">
+                        <div id="icon-user-grid" style="display:grid; grid-template-columns:repeat(6, 1fr); gap:4px; max-height:120px; overflow-y:auto; padding:4px; margin-bottom:8px;"></div>
+                        <label class="c-btn c-btn--text" style="font-size:0.8rem; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
+                            + SVG hochladen
+                            <input type="file" accept=".svg" style="display:none;" onchange="uploadUserIcon(this)">
+                        </label>
+                    </div>
                 </div>
             </div>
             <div class="c-card__footer">
@@ -399,6 +429,9 @@
             const data = await res.json();
             if (data.success && data.avatar) {
                 document.getElementById('user-avatar').src = data.avatar;
+            }
+            if (data.username) {
+                document.getElementById('user-name').textContent = data.username;
             }
             if (data.role === 'admin') {
                 document.getElementById('nav-admin').style.display = 'flex';

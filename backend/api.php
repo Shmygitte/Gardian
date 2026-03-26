@@ -46,6 +46,21 @@ try { $db->exec("ALTER TABLE gd_user_plants ADD COLUMN planted_month_year CHAR(7
 // Schema-Migration: removed_month_year + removed_reason in gd_user_plants (einmalig)
 try { $db->exec("ALTER TABLE gd_user_plants ADD COLUMN removed_month_year CHAR(7) NULL DEFAULT NULL COMMENT 'Format YYYY-MM'"); } catch (PDOException $e) {}
 try { $db->exec("ALTER TABLE gd_user_plants ADD COLUMN removed_reason ENUM('manuell','selbst') NULL DEFAULT NULL"); } catch (PDOException $e) {}
+// Schema-Migration: Icon-Bibliothek + User-Icons (einmalig)
+try { $db->exec("CREATE TABLE IF NOT EXISTS gd_icon_library (
+    id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name       VARCHAR(150) NOT NULL,
+    file_path  VARCHAR(500) NOT NULL,
+    category   VARCHAR(100) NULL,
+    created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+)"); } catch (PDOException $e) {}
+try { $db->exec("CREATE TABLE IF NOT EXISTS gd_user_icons (
+    id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id    INT UNSIGNED NOT NULL,
+    name       VARCHAR(150) NOT NULL,
+    file_path  VARCHAR(500) NOT NULL,
+    created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+)"); } catch (PDOException $e) {}
 
 // =========================
 // PROTECTION
@@ -203,10 +218,10 @@ if ($action === 'getPlantDetails') {
 // GET AVATAR
 // =========================
 if ($action === 'getAvatar') {
-    $stmt = $db->prepare("SELECT avatar_path, role FROM gd_users WHERE id = ?");
+    $stmt = $db->prepare("SELECT username, avatar_path, role FROM gd_users WHERE id = ?");
     $stmt->execute([$_SESSION['user_id']]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    echo json_encode(['success' => true, 'avatar' => $row['avatar_path'], 'role' => $row['role']]);
+    echo json_encode(['success' => true, 'avatar' => $row['avatar_path'], 'role' => $row['role'], 'username' => $row['username']]);
     exit;
 }
 
@@ -1135,6 +1150,117 @@ if ($action === 'adminDeleteCareTaskType') {
     if (!$id) { echo json_encode(['success' => false]); exit; }
     $db->prepare("UPDATE gd_care_tasks SET task_type_id=NULL WHERE task_type_id=?")->execute([$id]);
     $db->prepare("DELETE FROM gd_care_task_types WHERE id=?")->execute([$id]);
+    echo json_encode(['success' => true]);
+    exit;
+}
+
+// =========================
+// ICON LIBRARY (alle User)
+// =========================
+if ($action === 'getIconLibrary') {
+    $stmt = $db->query("SELECT id, name, file_path, category FROM gd_icon_library ORDER BY category, name");
+    echo json_encode(['success' => true, 'icons' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+    exit;
+}
+
+// =========================
+// USER ICONS (eigene)
+// =========================
+if ($action === 'getUserIcons') {
+    $stmt = $db->prepare("SELECT id, name, file_path FROM gd_user_icons WHERE user_id = ? ORDER BY name");
+    $stmt->execute([$_SESSION['user_id']]);
+    echo json_encode(['success' => true, 'icons' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+    exit;
+}
+
+// =========================
+// UPLOAD ICON (User oder Admin)
+// =========================
+if ($action === 'uploadIcon') {
+    $target = $_POST['target'] ?? null; // 'library' oder 'user'
+    $name   = trim($_POST['name'] ?? '');
+    $category = trim($_POST['category'] ?? '') ?: null;
+
+    if (!$target || !in_array($target, ['library', 'user'])) {
+        echo json_encode(['success' => false, 'error' => 'Ungültiges Ziel']); exit;
+    }
+    if ($target === 'library') requireAdmin($db, $_SESSION['user_id']);
+
+    if (!isset($_FILES['icon'])) {
+        echo json_encode(['success' => false, 'error' => 'Keine Datei']); exit;
+    }
+    $file = $_FILES['icon'];
+    $ext  = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    if ($ext !== 'svg') {
+        echo json_encode(['success' => false, 'error' => 'Nur SVG-Dateien erlaubt']); exit;
+    }
+    if ($file['size'] > 51200) { // 50KB Limit
+        echo json_encode(['success' => false, 'error' => 'Datei zu groß (max. 50KB)']); exit;
+    }
+
+    // SVG-Inhalt prüfen: kein <script>, kein on*-Attribut
+    $svgContent = file_get_contents($file['tmp_name']);
+    if (preg_match('/<script/i', $svgContent) || preg_match('/\bon\w+\s*=/i', $svgContent)) {
+        echo json_encode(['success' => false, 'error' => 'SVG enthält unsicheren Code']); exit;
+    }
+
+    if (!$name) $name = pathinfo($file['name'], PATHINFO_FILENAME);
+
+    if ($target === 'library') {
+        $targetDir = __DIR__ . '/../assets/icons/library/';
+        $dbPrefix  = 'assets/icons/library/';
+    } else {
+        $userId    = $_SESSION['user_id'];
+        $targetDir = __DIR__ . '/../assets/icons/user_' . $userId . '/';
+        $dbPrefix  = 'assets/icons/user_' . $userId . '/';
+    }
+    if (!is_dir($targetDir)) mkdir($targetDir, 0777, true);
+
+    $filename = 'icon_' . time() . '_' . mt_rand(100, 999) . '.svg';
+    $targetPath = $targetDir . $filename;
+    $dbPath     = $dbPrefix . $filename;
+
+    if (move_uploaded_file($file['tmp_name'], $targetPath)) {
+        if ($target === 'library') {
+            $stmt = $db->prepare("INSERT INTO gd_icon_library (name, file_path, category) VALUES (?, ?, ?)");
+            $stmt->execute([$name, $dbPath, $category]);
+        } else {
+            $stmt = $db->prepare("INSERT INTO gd_user_icons (user_id, name, file_path) VALUES (?, ?, ?)");
+            $stmt->execute([$_SESSION['user_id'], $name, $dbPath]);
+        }
+        echo json_encode(['success' => true, 'id' => $db->lastInsertId(), 'file_path' => $dbPath, 'name' => $name]);
+    } else {
+        echo json_encode(['success' => false, 'error' => 'Upload fehlgeschlagen']);
+    }
+    exit;
+}
+
+// =========================
+// DELETE ICON
+// =========================
+if ($action === 'deleteIcon') {
+    $target = $data['target'] ?? null; // 'library' oder 'user'
+    $id     = $data['id']     ?? null;
+    if (!$id || !$target) { echo json_encode(['success' => false, 'error' => 'Parameter fehlen']); exit; }
+
+    if ($target === 'library') {
+        requireAdmin($db, $_SESSION['user_id']);
+        $stmt = $db->prepare("SELECT file_path FROM gd_icon_library WHERE id = ?");
+        $stmt->execute([$id]);
+        $icon = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$icon) { echo json_encode(['success' => false, 'error' => 'Nicht gefunden']); exit; }
+        $filePath = __DIR__ . '/../' . $icon['file_path'];
+        if (file_exists($filePath)) unlink($filePath);
+        $db->prepare("DELETE FROM gd_icon_library WHERE id = ?")->execute([$id]);
+    } else {
+        $stmt = $db->prepare("SELECT file_path FROM gd_user_icons WHERE id = ? AND user_id = ?");
+        $stmt->execute([$id, $_SESSION['user_id']]);
+        $icon = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$icon) { echo json_encode(['success' => false, 'error' => 'Nicht gefunden']); exit; }
+        $filePath = __DIR__ . '/../' . $icon['file_path'];
+        if (file_exists($filePath)) unlink($filePath);
+        $db->prepare("DELETE FROM gd_user_icons WHERE id = ? AND user_id = ?")->execute([$id, $_SESSION['user_id']]);
+    }
     echo json_encode(['success' => true]);
     exit;
 }

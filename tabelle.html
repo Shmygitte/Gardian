@@ -50,15 +50,18 @@
 <div class="l-app-shell">
 
     <header class="l-header">
-        <div style="display:flex;align-items:center;gap:12px;">
-            <img id="user-avatar" src="assets/logo.png" alt=""
-                 style="height:40px;width:40px;border-radius:50%;object-fit:cover;">
+        <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.5);backdrop-filter:blur(4px);padding:4px 14px 4px 4px;border-radius:999px;border:1px solid rgba(0,0,0,0.06);">
+            <img id="user-avatar" src="assets/logo.png" alt="" style="height:34px;width:34px;border-radius:50%;object-fit:cover;border:2px solid var(--primary-light);box-shadow:0 0 0 1px rgba(0,0,0,0.05);">
+            <span id="user-name" style="font-size:0.82rem;font-weight:600;color:var(--text-main);"></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;display:flex;align-items:center;">
+            <img src="assets/logo.png" alt="Gardian" style="height:38px;width:38px;border-radius:50%;object-fit:cover;">
             <h1 style="font-size:1.5rem;color:var(--primary-dark);">Gardian</h1>
         </div>
-        <nav class="c-nav">
+        <div style="display:flex;align-items:center;gap:12px;">
             <span id="save-status" style="font-size:0.8rem;color:var(--text-muted);min-width:90px;text-align:right;"></span>
-            <button class="c-btn c-btn--text" onclick="doLogout()">Abmelden</button>
-        </nav>
+            <button class="c-btn c-btn--text" onclick="doLogout()" style="font-size:0.8rem;">Abmelden</button>
+        </div>
     </header>
 
     <div class="l-app-body">
@@ -156,6 +159,7 @@ async function init() {
     const auth = await api('getAvatar');
     if (!auth.success) { location.href = 'login.html'; return; }
     if (auth.avatar) document.getElementById('user-avatar').src = auth.avatar;
+    if (auth.username) document.getElementById('user-name').textContent = auth.username;
     if (auth.role === 'admin') document.getElementById('nav-admin').style.display = 'flex';
     try {
         const cfg = await api('getGardenConfig');
