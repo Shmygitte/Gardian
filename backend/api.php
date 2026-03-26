@@ -443,13 +443,19 @@ if ($action === 'addPlant') {
 if ($action === 'updateUserGroup') {
     $id = $data['id'] ?? null;
     if (!$id) { echo json_encode(['success' => false, 'error' => 'ID fehlt']); exit; }
-    $fields = ['name','type','bloom_months','marker_icon','marker_color','marker_size','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen'];
-    $set  = implode(', ', array_map(fn($f) => "$f = ?", $fields));
-    $vals = array_map(fn($f) => (($data[$f] ?? null) !== '' && ($data[$f] ?? null) !== null) ? $data[$f] : null, $fields);
+    $allowed = ['name','type','bloom_months','marker_icon','marker_color','marker_size','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen'];
+    $sets = []; $vals = [];
+    foreach ($allowed as $f) {
+        if (array_key_exists($f, $data)) {
+            $sets[] = "$f = ?";
+            $vals[] = ($data[$f] !== '' && $data[$f] !== null) ? $data[$f] : null;
+        }
+    }
+    if (!$sets) { echo json_encode(['success' => true]); exit; }
     $vals[] = $_SESSION['user_id'];
     $vals[] = $id;
     try {
-        $db->prepare("UPDATE gd_user_groups SET $set WHERE user_id = ? AND id = ?")->execute($vals);
+        $db->prepare("UPDATE gd_user_groups SET " . implode(', ', $sets) . " WHERE user_id = ? AND id = ?")->execute($vals);
         echo json_encode(['success' => true]);
     } catch (PDOException $e) {
         echo json_encode(['success' => false, 'error' => $e->getMessage()]);
@@ -463,7 +469,7 @@ if ($action === 'updateUserGroup') {
 if ($action === 'updatePlant') {
     $id = $data['id'] ?? null;
     if (!$id) { echo json_encode(['success' => false, 'error' => 'ID fehlt']); exit; }
-    $allowed = ['name','marker_color','marker_size','marker_icon','bloom_months'];
+    $allowed = ['name','marker_color','marker_size','marker_icon','bloom_months','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen','pos_x','pos_y'];
     $sets = []; $vals = [];
     foreach ($allowed as $f) {
         if (array_key_exists($f, $data)) {

@@ -24,7 +24,7 @@ const FIELD_LABELS = {
     created_at:   'Erstellt am',
 };
 
-const TYPE_LABELS = { tree: 'Baum', shrub: 'Strauch', flower: 'Blume', s_flower: 'Saisonblume' };
+const TYPE_LABELS = { tree: 'Baum', shrub: 'Strauch', flower: 'Blume', s_flower: 'Blümchen' };
 
 function formatValue(key, val) {
     if (val === null || val === undefined || val === '') return '—';
