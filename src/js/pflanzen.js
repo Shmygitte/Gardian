@@ -130,7 +130,6 @@ function renderPflanzenListe(data) {
                     <div id="${plantId}" style="display:none; padding-bottom:8px;">
                         <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:12px;">
                             <div>
-                                ${renderFieldTable(plant, PLANT_FIELDS)}
                                 <div style="margin-top:8px; display:flex; flex-direction:column; gap:6px;">
                                     <div style="display:flex; align-items:center; gap:6px;">
                                         <label style="font-size:0.78rem; color:var(--text-muted); white-space:nowrap; width:90px;">Geplant:</label>
@@ -188,10 +187,6 @@ function renderPflanzenListe(data) {
             </div>
             <div id="${groupId}" style="display:none; padding:12px 16px; background:var(--bg-surface);">
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:12px;">
-                    <div>
-                        <p style="font-size:0.8rem; font-weight:600; color:var(--text-muted); margin-bottom:8px;">GRUPPENFELDER</p>
-                        ${renderFieldTable(group, GROUP_FIELDS)}
-                    </div>
                     <div>
                         <p style="font-size:0.8rem; font-weight:700; color:var(--text-muted); margin-bottom:6px;">FOTOS</p>
                         <div id="images-group-${group.id}"></div>
