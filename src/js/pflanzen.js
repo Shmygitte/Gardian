@@ -119,7 +119,7 @@ function renderPflanzenListe(data) {
             ? group.plants.map((plant, pi) => {
                 const plantId = `plant-${gi}-${pi}`;
                 return `
-                <div style="margin:4px 0 0 12px; border-left:3px solid var(--primary-light); padding-left:10px;">
+                <div style="margin:10px 0; padding:10px 14px; border-left:5px solid var(--primary); background:var(--bg-app); border-radius:0 var(--radius-sm) var(--radius-sm) 0; box-shadow:inset 0 0 0 1px var(--border), 0 2px 6px rgba(0,0,0,0.1);">
                     <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 0;">
                         <span id="plant-label-${plant.id}" onclick="toggleAccordion('${plantId}'); ensureBloomLoaded('plant', ${plant.id}, ${group.bloom_months_resolved || 0}); loadImages('plant', null, ${plant.id}, 'images-plant-${plant.id}')" ondblclick="event.stopPropagation(); startPlantRename(${plant.id})" style="cursor:pointer; font-size:0.9rem; font-weight:600; flex:1;" title="Doppelklick zum Umbenennen">${plant.plant_name || 'Pflanze #' + plant.id}</span>
                         <div style="display:flex; align-items:center; gap:6px;">
@@ -188,17 +188,17 @@ function renderPflanzenListe(data) {
             <div id="${groupId}" style="display:none; padding:12px 16px; background:var(--bg-surface);">
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:12px;">
                     <div>
-                        <p style="font-size:0.8rem; font-weight:700; color:var(--text-muted); margin-bottom:6px;">FOTOS</p>
+                        <p style="font-size:0.85rem; font-weight:700; color:var(--text-main); margin-bottom:6px;">FOTOS</p>
                         <div id="images-group-${group.id}"></div>
                         <input type="file" id="file-group-${group.id}" accept="image/*" style="position:absolute;opacity:0;width:0;height:0;" onchange="uploadImage(this,'group',${group.group_id || null},null,'images-group-${group.id}',${group.id})">
                         <button class="c-btn c-btn--text" style="font-size:0.8rem;" onclick="document.getElementById('file-group-${group.id}').click()">+ Foto hochladen</button>
                     </div>
                 </div>
                 <div style="border-top:1px solid var(--border); padding-top:10px;">
-                    <p style="font-size:0.8rem; font-weight:700; color:var(--text-muted); margin-bottom:6px;">BLÜTEZEIT & BEOBACHTUNGEN</p>
+                    <p style="font-size:0.85rem; font-weight:700; color:var(--text-main); margin-bottom:6px;">BLÜTEZEIT & BEOBACHTUNGEN</p>
                     <div id="bloom-group-${group.id}"><p style="font-size:0.8rem;color:var(--text-muted);">Lade...</p></div>
                 </div>
-                <p style="font-size:0.8rem; font-weight:600; color:var(--text-muted); margin:12px 0 4px;">PFLANZEN</p>
+                <p style="font-size:0.75rem; font-weight:600; color:var(--text-muted); margin:16px 0 4px; letter-spacing:0.05em; text-transform:uppercase;">Einzelpflanzen</p>
                 ${plantsHtml}
             </div>
         </div>`;
