@@ -532,7 +532,18 @@ async function handleMouseUp(e) {
 
         state.isDragging = false;
         state.draggingPinId = null;
-        setTimeout(() => { state.hasMoved = false; }, 50);
+        setTimeout(() => {
+            state.hasMoved = false;
+            // Hover neu triggern falls Maus noch über einem Marker ist
+            if (hoverSettings.galleryEnabled && !hoverSettings.locked) {
+                const markerUnder = document.elementFromPoint(_mousePos.x, _mousePos.y)?.closest('.marker');
+                if (markerUnder) {
+                    const pinId = markerUnder.dataset.id;
+                    const pin = state.pins.find(p => String(p.id) === pinId);
+                    if (pin) showHoverGallery({ currentTarget: markerUnder }, pin);
+                }
+            }
+        }, 50);
         return;
     }
 
