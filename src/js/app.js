@@ -818,8 +818,8 @@ async function showHoverGallery(e, pin) {
             popup.id = 'hover-gallery-popup';
             popup.style.cssText = `
                 position:fixed; z-index:9999; background:var(--bg-card);
-                border:1px solid var(--border); border-radius:var(--radius-md);
-                box-shadow:var(--shadow-medium); padding:6px 10px; pointer-events:none;
+                border:1px solid var(--border); border-radius:4px;
+                box-shadow:var(--shadow-medium); padding:4px 7px; pointer-events:none;
             `;
             popup.innerHTML = `<p style="font-size:0.8rem;font-weight:600;margin:0;color:var(--text-main);white-space:nowrap;">${displayName}</p>`;
             document.body.appendChild(popup);
@@ -843,27 +843,27 @@ async function showHoverGallery(e, pin) {
         popup.id = 'hover-gallery-popup';
         popup.style.cssText = `
             position:fixed; z-index:9999; background:var(--bg-card);
-            border:1px solid var(--border); border-radius:var(--radius-md);
-            box-shadow:var(--shadow-medium); padding:8px; max-width:${maxW}px;
+            border:1px solid var(--border); border-radius:4px;
+            box-shadow:var(--shadow-medium); padding:5px; width:fit-content;
             cursor:pointer;
         `;
 
         const hasImages = data.success && data.images.length;
         popup.innerHTML = `
-            <p style="font-size:0.75rem;font-weight:600;margin:0${hasImages ? ' 0 6px' : ''};color:var(--text-muted);">${displayName}</p>
+            <p style="font-size:0.75rem;font-weight:600;margin:0${hasImages ? ' 0 4px' : ''};color:var(--text-muted);">${displayName}</p>
             ${hasImages ? `
-            <div style="display:flex;flex-wrap:wrap;gap:4px;">
-                ${data.images.map(img => {
+            <div style="display:grid;grid-template-columns:repeat(2,${w}px);gap:2px;">
+                ${data.images.slice(0, 6).map(img => {
                     const isPlant = img.src === 'plant';
                     const badgeColor = isPlant ? 'rgba(34,197,94,0.9)' : 'rgba(99,102,241,0.9)';
                     const badgeText  = isPlant ? 'Pflanze' : 'Gruppe';
-                    return `<div style="position:relative;display:inline-block;">
-                        <img src="${img.file_path}" style="width:${w}px;height:${h}px;object-fit:cover;border-radius:6px;display:block;">
-                        <span style="position:absolute;bottom:3px;left:3px;background:${badgeColor};color:white;font-size:0.5rem;font-weight:700;padding:1px 5px;border-radius:10px;text-transform:uppercase;letter-spacing:0.03em;">${badgeText}</span>
+                    return `<div style="position:relative;">
+                        <img src="${img.file_path}" style="width:${w}px;height:${h}px;object-fit:cover;border-radius:2px;display:block;">
+                        <span style="position:absolute;bottom:2px;left:2px;background:${badgeColor};color:white;font-size:0.5rem;font-weight:700;padding:1px 4px;border-radius:4px;text-transform:uppercase;letter-spacing:0.03em;">${badgeText}</span>
                     </div>`;
                 }).join('')}
             </div>
-            <p style="font-size:0.65rem;color:var(--primary);font-weight:700;text-align:center;margin:6px 0 0;text-transform:uppercase;letter-spacing:0.03em;">🖼 Klick für Galerie</p>
+            <p style="font-size:0.65rem;color:var(--primary);font-weight:700;text-align:center;margin:4px 0 0;text-transform:uppercase;letter-spacing:0.03em;">🖼 Klick für Galerie</p>
             ` : ''}
         `;
         popup.addEventListener('mouseenter', () => clearTimeout(_hoverHideTimeout));
@@ -875,8 +875,18 @@ async function showHoverGallery(e, pin) {
 }
 
 function positionHoverPopup(popup, rect) {
-    const x = Math.min(rect.right - 20,  window.innerWidth  - 240);
-    const y = Math.min(rect.top   + 20,  window.innerHeight - 200);
+    const pw = popup.offsetWidth  || 220;
+    const ph = popup.offsetHeight || 200;
+    // Kreis-Berührungspunkt rechts-unten: Mittelpunkt + Radius/√2
+    const cx = rect.left + rect.width  / 2;
+    const cy = rect.top  + rect.height / 2;
+    const r  = rect.width / 2;
+    const edge = r / Math.SQRT2 - 4;
+    let x = cx + edge;
+    let y = cy + edge;
+    // Viewport-Clipping: nach links/oben verschieben wenn nötig
+    if (x + pw > window.innerWidth)  x = cx - edge - pw;
+    if (y + ph > window.innerHeight) y = cy - edge - ph;
     popup.style.left = x + 'px';
     popup.style.top  = y + 'px';
 }
