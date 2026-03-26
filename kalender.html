@@ -88,6 +88,7 @@
                     <a href="tabelle.html"  class="c-btn c-btn--text"      style="justify-content:flex-start;text-decoration:none;">Tabelle</a>
                     <span                   class="c-btn c-btn--secondary"  style="justify-content:flex-start;cursor:default;">Gartenkalender</span>
                     <a href="index.html"    class="c-btn c-btn--text"      style="justify-content:flex-start;text-decoration:none;">Einstellungen</a>
+                    <a href="index.html"    id="nav-admin" class="c-btn c-btn--text" style="justify-content:flex-start;text-decoration:none;display:none;color:var(--danger);">Admin</a>
                 </nav>
             </div>
         </aside>
@@ -195,6 +196,7 @@ async function init() {
     const auth = await api('getAvatar');
     if (!auth.success) { location.href = 'login.html'; return; }
     if (auth.avatar) document.getElementById('user-avatar').src = auth.avatar;
+    if (auth.role === 'admin') document.getElementById('nav-admin').style.display = 'flex';
     try {
         const cfg = await api('getGardenConfig');
         if (cfg.success && cfg.config?.theme)
