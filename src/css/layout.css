@@ -35,7 +35,7 @@
     min-width: 220px;
     background-color: var(--bg-card);
     border-right: 1px solid rgba(0,0,0,0.05);
-    padding: 16px;
+    padding: 12px;
     overflow-y: auto;
     transition: var(--transition);
 }
