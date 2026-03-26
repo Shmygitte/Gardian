@@ -40,8 +40,3 @@
     background-color: var(--color-primary-light);
     color: var(--color-primary-dark);
 }
-
-.l-sidebar .c-btn {
-    padding: 6px 12px;
-    font-size: 0.875rem;
-}
