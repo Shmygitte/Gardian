@@ -188,3 +188,16 @@
 .map__btn:hover {
     background-color: var(--color-surface-hover, var(--color-border));
 }
+
+/* Icon Picker Tabs */
+.icon-tab-btn.active {
+    background: var(--primary) !important;
+    color: white !important;
+    border-radius: var(--radius-sm);
+}
+
+/* SVG in Marker */
+.marker__pin img {
+    pointer-events: none;
+    filter: brightness(0) invert(1);
+}

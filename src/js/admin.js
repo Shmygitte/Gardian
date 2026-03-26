@@ -26,10 +26,11 @@ let adminCurrentTab = 'users';
 
 function switchAdminTab(tab) {
     adminCurrentTab = tab;
-    ['users','groups','care-types'].forEach(t => {
+    ['users','groups','care-types','icons'].forEach(t => {
         document.getElementById(`admin-panel-${t}`).style.display = tab === t ? 'block' : 'none';
         document.getElementById(`admin-tab-${t}`).className = 'c-btn ' + (tab === t ? 'c-btn--secondary' : 'c-btn--text');
     });
+    if (tab === 'icons') loadAdminIcons();
 }
 
 async function loadAdminView() {
@@ -288,4 +289,104 @@ async function adminDeleteCareType(id, name) {
     const data = await res.json();
     if (data.success) loadAdminCareTypes();
     else alert(data.error || 'Fehler');
+}
+
+// ========================
+// ICON-BIBLIOTHEK (Admin)
+// ========================
+async function loadAdminIcons() {
+    const panel = document.getElementById('admin-panel-icons');
+    panel.innerHTML = '<p style="color:var(--text-muted)">Lade...</p>';
+    const res  = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'getIconLibrary' }) });
+    const data = await res.json();
+    if (!data.success) { panel.innerHTML = '<p style="color:red">Fehler.</p>'; return; }
+
+    const icons = data.icons;
+    const categories = [...new Set(icons.map(i => i.category || 'Ohne Kategorie'))];
+
+    let gridHtml = '';
+    if (icons.length === 0) {
+        gridHtml = '<p style="color:var(--text-muted);font-size:0.9rem;">Noch keine Icons in der Bibliothek.</p>';
+    } else {
+        categories.forEach(cat => {
+            const catIcons = icons.filter(i => (i.category || 'Ohne Kategorie') === cat);
+            gridHtml += `<div style="margin-bottom:16px;">
+                <p style="font-size:0.75rem;font-weight:700;color:var(--primary);letter-spacing:0.06em;margin-bottom:8px;">${cat.toUpperCase()}</p>
+                <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(80px, 1fr));gap:8px;">
+                    ${catIcons.map(icon => `
+                        <div style="position:relative;border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px;display:flex;flex-direction:column;align-items:center;gap:4px;background:var(--bg-app);">
+                            <img src="${icon.file_path}" style="width:40px;height:40px;object-fit:contain;" alt="${icon.name}">
+                            <span style="font-size:0.7rem;color:var(--text-muted);text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;">${icon.name}</span>
+                            <button class="c-btn c-btn--text" style="font-size:0.7rem;color:var(--danger);padding:2px 4px;" onclick="adminDeleteIcon(${icon.id}, '${icon.name.replace(/'/g, "\\'")}')">Löschen</button>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>`;
+        });
+    }
+
+    panel.innerHTML = `
+        ${gridHtml}
+        <div style="margin-top:16px; border:2px dashed var(--border); border-radius:var(--radius-md); padding:16px;">
+            <p style="font-weight:600; margin-bottom:12px;">Icon hochladen</p>
+            <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">
+                <div style="flex:1;min-width:120px;">
+                    <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:4px;">Name</label>
+                    <input type="text" id="admin-icon-name" class="c-input" placeholder="z.B. Rose">
+                </div>
+                <div style="min-width:120px;">
+                    <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:4px;">Kategorie (optional)</label>
+                    <input type="text" id="admin-icon-category" class="c-input" placeholder="z.B. Blumen">
+                </div>
+                <div>
+                    <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:4px;">SVG-Datei</label>
+                    <input type="file" id="admin-icon-file" accept=".svg" class="c-input" style="padding:6px;">
+                </div>
+                <button class="c-btn c-btn--primary" onclick="adminUploadIcon()">Hochladen</button>
+            </div>
+        </div>`;
+}
+
+async function adminUploadIcon() {
+    const fileInput = document.getElementById('admin-icon-file');
+    const name      = document.getElementById('admin-icon-name').value.trim();
+    const category  = document.getElementById('admin-icon-category').value.trim();
+    const file      = fileInput.files[0];
+
+    if (!file) { alert('Bitte eine SVG-Datei auswählen.'); return; }
+    if (!file.name.toLowerCase().endsWith('.svg')) { alert('Nur SVG-Dateien erlaubt.'); return; }
+    if (file.size > 51200) { alert('Datei zu groß (max. 50KB).'); return; }
+
+    const formData = new FormData();
+    formData.append('action', 'uploadIcon');
+    formData.append('target', 'library');
+    formData.append('name', name || file.name.replace('.svg', ''));
+    formData.append('category', category);
+    formData.append('icon', file);
+
+    const res  = await fetch('backend/api.php', { method:'POST', body: formData });
+    const data = await res.json();
+    if (data.success) {
+        // Icon-Cache in app.js aktualisieren
+        if (typeof _iconLibraryCache !== 'undefined' && _iconLibraryCache) {
+            _iconLibraryCache[String(data.id)] = data.file_path;
+        }
+        loadAdminIcons();
+    } else {
+        alert(data.error || 'Upload fehlgeschlagen');
+    }
+}
+
+async function adminDeleteIcon(id, name) {
+    if (!confirm(`Icon "${name}" wirklich löschen?`)) return;
+    const res  = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'deleteIcon', target:'library', id }) });
+    const data = await res.json();
+    if (data.success) {
+        if (typeof _iconLibraryCache !== 'undefined' && _iconLibraryCache) {
+            delete _iconLibraryCache[String(id)];
+        }
+        loadAdminIcons();
+    } else {
+        alert(data.error || 'Fehler beim Löschen');
+    }
 }

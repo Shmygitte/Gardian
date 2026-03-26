@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="src/css/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
 </head>
 <body>
     <div class="l-app-shell">
@@ -162,7 +163,7 @@
                                         <img id="settings-avatar" src="assets/logo.png" alt="Profilbild"
                                             style="width:72px; height:72px; border-radius:50%; object-fit:cover; border:3px solid var(--border);">
                                         <div style="position:absolute;bottom:0;right:0;background:var(--primary);color:white;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:0.75rem;">✎</div>
-                                        <input type="file" id="settings-avatar-upload" accept="image/*" style="display:none;" onchange="settingsUploadAvatar(this)">
+                                        <input type="file" id="settings-avatar-upload" accept="image/*" style="display:none;">
                                     </label>
                                     <div>
                                         <div id="settings-username" style="font-weight:700; font-size:1.1rem;"></div>
@@ -404,6 +405,32 @@
         </div>
     </div>
 
+    <!-- Modal: Avatar Zuschneiden -->
+    <div id="modal-avatar-crop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:2000; align-items:center; justify-content:center; padding:20px;">
+        <div class="c-card" style="width:min(500px, 95vw); max-height:90vh; display:flex; flex-direction:column; overflow:hidden;">
+            <div class="c-card__header">
+                <h2 class="c-card__title">Profilbild anpassen</h2>
+                <button class="c-btn c-btn--text" onclick="closeCropModal()">✕</button>
+            </div>
+            <div class="c-card__body" style="padding:0; flex:1; overflow:hidden; min-height:300px; display:flex; align-items:center; justify-content:center; background:#000;">
+                <img id="avatar-crop-image" src="" style="max-width:100%; display:block;">
+            </div>
+            <div class="c-card__footer" style="display:flex; justify-content:space-between; align-items:center;">
+                <div style="display:flex; gap:8px;">
+                    <button class="c-btn c-btn--secondary" onclick="cropper.zoom(0.1)" title="Zoom In">+</button>
+                    <button class="c-btn c-btn--secondary" onclick="cropper.zoom(-0.1)" title="Zoom Out">-</button>
+                    <button class="c-btn c-btn--secondary" onclick="cropper.rotate(90)" title="Rotate">⟳</button>
+                </div>
+                <div>
+                    <button class="c-btn c-btn--primary" onclick="saveCroppedAvatar()">Speichern</button>
+                    <button class="c-btn c-btn--text" onclick="closeCropModal()">Abbrechen</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+
     <script src="src/js/galerie.js"></script>
     <script src="src/js/admin.js"></script>
     <script src="src/js/group-form.js"></script>
@@ -428,7 +455,7 @@
             });
             const data = await res.json();
             if (data.success && data.avatar) {
-                document.getElementById('user-avatar').src = data.avatar;
+                document.getElementById('user-avatar').src = data.avatar + '?t=' + Date.now();
             }
             if (data.username) {
                 document.getElementById('user-name').textContent = data.username;
@@ -439,6 +466,61 @@
         }
 
         // Avatar Upload
+        let cropper = null;
+        const cropModal = document.getElementById('modal-avatar-crop');
+        const cropImg   = document.getElementById('avatar-crop-image');
+
+        function openCropModal(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                cropImg.src = e.target.result;
+                cropModal.style.display = 'flex';
+                if (cropper) cropper.destroy();
+                cropper = new Cropper(cropImg, {
+                    aspectRatio: 1,
+                    viewMode: 1,
+                    dragMode: 'move',
+                    autoCropArea: 1,
+                    restore: false,
+                    guides: false,
+                    center: true,
+                    highlight: false,
+                    cropBoxMovable: false,
+                    cropBoxResizable: false,
+                    toggleDragModeOnDblclick: false,
+                    minContainerHeight: 300
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function closeCropModal() {
+            cropModal.style.display = 'none';
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+        }
+
+        async function saveCroppedAvatar() {
+            if (!cropper) return;
+            const canvas = cropper.getCroppedCanvas({ width: 400, height: 400 });
+            canvas.toBlob(async (blob) => {
+                const formData = new FormData();
+                formData.append('action', 'uploadAvatar');
+                formData.append('avatar', blob, 'avatar.png');
+                const res = await fetch('backend/api.php', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.success) {
+                    const avatarUrl = data.avatar + '?t=' + Date.now();
+                    document.getElementById('user-avatar').src = avatarUrl;
+                    const settingsAv = document.getElementById('settings-avatar');
+                    if (settingsAv) settingsAv.src = avatarUrl;
+                    closeCropModal();
+                }
+            }, 'image/png');
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             loadAvatar();
             // Verwaiste Bilder still im Hintergrund bereinigen
@@ -447,18 +529,20 @@
             const hash = location.hash.replace('#', '');
             if (hash && views.includes(hash)) showView(hash);
 
-            document.getElementById('avatar-upload').addEventListener('change', async (e) => {
+            document.getElementById('avatar-upload').addEventListener('change', (e) => {
                 const file = e.target.files[0];
-                if (!file) return;
-                const formData = new FormData();
-                formData.append('action', 'uploadAvatar');
-                formData.append('avatar', file);
-                const res = await fetch('backend/api.php', { method: 'POST', body: formData });
-                const data = await res.json();
-                if (data.success) {
-                    document.getElementById('user-avatar').src = data.avatar + '?t=' + Date.now();
-                }
+                if (file) openCropModal(file);
+                e.target.value = ''; // Reset input
             });
+
+            const settingsAvUpload = document.getElementById('settings-avatar-upload');
+            if (settingsAvUpload) {
+                settingsAvUpload.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (file) openCropModal(file);
+                    e.target.value = ''; // Reset input
+                });
+            }
         });
 
         const views = ['dashboard', 'pflanzen', 'galerie', 'einstellungen', 'admin'];
@@ -495,7 +579,7 @@
             const u = data.user;
             document.getElementById('settings-username').textContent = u.username || '';
             document.getElementById('settings-email').textContent    = u.email    || '';
-            if (u.avatar_path) document.getElementById('settings-avatar').src = u.avatar_path;
+            if (u.avatar_path) document.getElementById('settings-avatar').src = u.avatar_path + '?t=' + Date.now();
             updateSettingsThemeBtn();
         }
 
@@ -510,7 +594,12 @@
         async function settingsSaveProfile() {
             const email    = document.getElementById('settings-new-email').value.trim();
             const password = document.getElementById('settings-new-password').value.trim();
-            if (!email && !password) return;
+            
+            if (!email && !password) {
+                alert('Gespeichert.'); // Provide feedback even if only avatar was changed visually
+                return;
+            }
+            
             const res  = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'updateUser', email: email||null, password: password||null }) });
             const data = await res.json();
             if (data.success) {
@@ -520,19 +609,6 @@
             }
         }
 
-        async function settingsUploadAvatar(input) {
-            const file = input.files[0];
-            if (!file) return;
-            const fd = new FormData();
-            fd.append('avatar', file);
-            fd.append('action', 'uploadAvatar');
-            const res  = await fetch('backend/api.php', { method:'POST', body: fd });
-            const data = await res.json();
-            if (data.success) {
-                document.getElementById('settings-avatar').src = data.avatar;
-                document.getElementById('user-avatar').src     = data.avatar;
-            }
-        }
 
         function setTheme(theme) {
             document.documentElement.setAttribute('data-theme', theme);

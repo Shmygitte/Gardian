@@ -137,6 +137,29 @@ CREATE TABLE IF NOT EXISTS gd_user_plants (
 );
  
 -- ------------------------------------------------------------
+-- ICON LIBRARY (Admin-defined, visible to all users)
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS gd_icon_library (
+    id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name          VARCHAR(150)  NOT NULL,
+    file_path     VARCHAR(500)  NOT NULL,
+    category      VARCHAR(100)  NULL,
+    created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ------------------------------------------------------------
+-- USER ICONS (per user, only visible to owner)
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS gd_user_icons (
+    id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id       INT UNSIGNED  NOT NULL,
+    name          VARCHAR(150)  NOT NULL,
+    file_path     VARCHAR(500)  NOT NULL,
+    created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_uicon_user FOREIGN KEY (user_id) REFERENCES gd_users(id) ON DELETE CASCADE
+);
+
+-- ------------------------------------------------------------
 -- IMAGES
 -- type defines the level: 'default' = admin, 'group' = user group, 'plant' = user plant
 -- Only the relevant FK is set, others are NULL

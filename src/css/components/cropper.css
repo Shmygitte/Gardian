@@ -1,0 +1,28 @@
+/* Cropper.js Custom Styling for Circular Avatar */
+.cropper-view-box,
+.cropper-face {
+    border-radius: 50%;
+}
+
+.cropper-view-box {
+    outline: 0;
+    box-shadow: 0 0 0 1px #fff;
+}
+
+/* Ensure the modal is dark and centered */
+#modal-avatar-crop .c-card__body {
+    background: #111 !important;
+    position: relative;
+    max-height: 500px;
+}
+
+#avatar-crop-image {
+    max-width: 100%;
+}
+
+/* Modal Footer spacing */
+#modal-avatar-crop .c-card__footer {
+    background: var(--bg-card);
+    border-top: 1px solid var(--border);
+    padding: 12px 16px;
+}
