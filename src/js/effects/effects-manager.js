@@ -40,5 +40,25 @@ const EffectManager = {
                 }
             }
         });
+    },
+
+    /**
+     * Checks the URL for an 'fx' parameter and triggers the effect if found.
+     * Useful for persisting effects across page loads.
+     */
+    initFromUrl: function() {
+        const params = new URLSearchParams(window.location.search);
+        const effectTriggerId = params.get('fx');
+        if (effectTriggerId) {
+            const element = document.getElementById(effectTriggerId);
+            // Trigger the effect after a short delay to ensure the page is visually ready
+            setTimeout(() => {
+                this.trigger('sidebar-click', element);
+            }, 50);
+            
+            // Clean up the URL without reloading the page
+            const newUrl = window.location.pathname + window.location.hash;
+            window.history.replaceState({}, document.title, newUrl);
+        }
     }
 };

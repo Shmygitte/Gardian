@@ -83,13 +83,13 @@
             <div class="c-form-group">
                 <label class="c-label">Menü</label>
                 <nav style="display: flex; flex-direction: column; gap: 4px;">
-                    <button class="c-btn c-btn--text" style="justify-content: flex-start;" onclick="if(typeof EffectManager !== 'undefined') EffectManager.trigger('sidebar-click', this); setTimeout(() => location.href='index.html#dashboard', 100);">Gartenkarte</button>
-                    <button class="c-btn c-btn--text" style="justify-content: flex-start;" onclick="if(typeof EffectManager !== 'undefined') EffectManager.trigger('sidebar-click', this); setTimeout(() => location.href='index.html#pflanzen', 100);">Pflanzen</button>
-                    <button class="c-btn c-btn--text" style="justify-content: flex-start;" onclick="if(typeof EffectManager !== 'undefined') EffectManager.trigger('sidebar-click', this); setTimeout(() => location.href='index.html#galerie', 100);">Galerie</button>
-                    <button class="c-btn c-btn--text" style="justify-content: flex-start;" onclick="if(typeof EffectManager !== 'undefined') EffectManager.trigger('sidebar-click', this); setTimeout(() => location.href='tabelle.html', 100);">Tabelle</button>
-                    <button class="c-btn c-btn--secondary" style="justify-content: flex-start;">Gartenkalender</button>
-                    <button class="c-btn c-btn--text" style="justify-content: flex-start;" onclick="if(typeof EffectManager !== 'undefined') EffectManager.trigger('sidebar-click', this); setTimeout(() => location.href='index.html#einstellungen', 100);">Einstellungen</button>
-                    <button id="nav-admin" class="c-btn c-btn--text" style="justify-content: flex-start; display:none; color: var(--danger);" onclick="if(typeof EffectManager !== 'undefined') EffectManager.trigger('sidebar-click', this); setTimeout(() => location.href='index.html#admin', 100);">Admin</button>
+                    <button id="nav-dashboard" class="c-btn c-btn--text" style="justify-content: flex-start;" onclick="location.href='index.html?fx=nav-dashboard#dashboard'">Gartenkarte</button>
+                    <button id="nav-pflanzen" class="c-btn c-btn--text" style="justify-content: flex-start;" onclick="location.href='index.html?fx=nav-pflanzen#pflanzen'">Pflanzen</button>
+                    <button id="nav-galerie" class="c-btn c-btn--text" style="justify-content: flex-start;" onclick="location.href='index.html?fx=nav-galerie#galerie'">Galerie</button>
+                    <button id="nav-tabelle" class="c-btn c-btn--text" style="justify-content: flex-start;" onclick="location.href='tabelle.html?fx=nav-tabelle'">Tabelle</button>
+                    <button id="nav-kalender" class="c-btn c-btn--secondary" style="justify-content: flex-start;">Gartenkalender</button>
+                    <button id="nav-einstellungen" class="c-btn c-btn--text" style="justify-content: flex-start;" onclick="location.href='index.html?fx=nav-einstellungen#einstellungen'">Einstellungen</button>
+                    <button id="nav-admin" class="c-btn c-btn--text" style="justify-content: flex-start; display:none; color: var(--danger);" onclick="location.href='index.html?fx=nav-admin#admin'">Admin</button>
                 </nav>
             </div>
         </aside>
@@ -211,6 +211,8 @@ async function init() {
             window.effectsEnabled = parseInt(c.effects_enabled) !== 0;
         }
     } catch(e) {}
+    // NEU: Animation-Trigger aus URL prüfen
+    if (typeof EffectManager !== 'undefined') EffectManager.initFromUrl();
     renderMonthTabs();
     await loadData();
 }

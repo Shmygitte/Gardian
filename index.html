@@ -35,8 +35,8 @@
                         <button id="nav-dashboard" class="c-btn c-btn--secondary" style="justify-content: flex-start;" onclick="showView('dashboard')">Gartenkarte</button>
                         <button id="nav-pflanzen" class="c-btn c-btn--text" style="justify-content: flex-start;" onclick="showView('pflanzen')">Pflanzen</button>
                         <button id="nav-galerie" class="c-btn c-btn--text" style="justify-content: flex-start;" onclick="showView('galerie')">Galerie</button>
-                        <a href="tabelle.html" onclick="if(typeof EffectManager !== 'undefined') EffectManager.trigger('sidebar-click', this);" class="c-btn c-btn--text" style="justify-content: flex-start; text-decoration:none;">Tabelle</a>
-                        <a href="kalender.html" onclick="if(typeof EffectManager !== 'undefined') EffectManager.trigger('sidebar-click', this);" class="c-btn c-btn--text" style="justify-content: flex-start; text-decoration:none;">Gartenkalender</a>
+                        <a id="nav-tabelle" href="tabelle.html?fx=nav-tabelle" class="c-btn c-btn--text" style="justify-content: flex-start; text-decoration:none;">Tabelle</a>
+                        <a id="nav-kalender" href="kalender.html?fx=nav-kalender" class="c-btn c-btn--text" style="justify-content: flex-start; text-decoration:none;">Gartenkalender</a>
                         <button id="nav-einstellungen" class="c-btn c-btn--text" style="justify-content: flex-start;" onclick="showView('einstellungen')">Einstellungen</button>
                         <button id="nav-admin" class="c-btn c-btn--text" style="justify-content: flex-start; display:none; color: var(--danger);" onclick="showView('admin')">Admin</button>
                     </nav>
@@ -149,19 +149,19 @@
                 </div>
 
                 <!-- View: Einstellungen -->
-                <div id="view-einstellungen" style="display: none; padding: 32px; overflow-y: auto;">
-                    <div style="max-width:600px; display:flex; flex-direction:column; gap:20px;">
-
-                        <!-- Profil -->
+                <div id="view-einstellungen" style="display: none; padding: 24px; overflow-y: auto;" class="view-einstellungen">
+                    <div class="settings-grid" style="max-width: 900px; display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));">
+                        
+                        <!-- Profil (Links) -->
                         <div class="c-card">
                             <div class="c-card__header">
-                                <h2 class="c-card__title">Profil</h2>
+                                <h2 class="c-card__title">👤 Profil</h2>
                             </div>
-                            <div class="c-card__body" style="display:flex; flex-direction:column; gap:16px;">
-                                <div style="display:flex; align-items:center; gap:16px;">
+                            <div class="c-card__body">
+                                <div style="display:flex; align-items:center; gap:16px; margin-bottom: 24px;">
                                     <label style="cursor:pointer; position:relative;" title="Profilbild ändern">
                                         <img id="settings-avatar" src="assets/logo.png" alt="Profilbild"
-                                            style="width:72px; height:72px; border-radius:50%; object-fit:cover; border:3px solid var(--border);">
+                                            style="width:68px; height:68px; border-radius:50%; object-fit:cover; border:2px solid var(--border);">
                                         <div style="position:absolute;bottom:0;right:0;background:var(--primary);color:white;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:0.75rem;">✎</div>
                                         <input type="file" id="settings-avatar-upload" accept="image/*" style="display:none;">
                                     </label>
@@ -170,59 +170,67 @@
                                         <div id="settings-email" style="color:var(--text-muted); font-size:0.9rem;"></div>
                                     </div>
                                 </div>
-                                <div class="c-form-group">
-                                    <label class="c-label">E-Mail ändern</label>
-                                    <input type="email" id="settings-new-email" class="c-input" placeholder="Neue E-Mail-Adresse">
+                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+                                    <div class="c-form-group">
+                                        <label class="c-label">E-Mail</label>
+                                        <input type="email" id="settings-new-email" class="c-input" placeholder="Neue E-Mail">
+                                    </div>
+                                    <div class="c-form-group">
+                                        <label class="c-label">Passwort</label>
+                                        <input type="password" id="settings-new-password" class="c-input" placeholder="••••••••">
+                                    </div>
                                 </div>
-                                <div class="c-form-group">
-                                    <label class="c-label">Neues Passwort</label>
-                                    <input type="password" id="settings-new-password" class="c-input" placeholder="Leer lassen = nicht ändern">
-                                </div>
-                                <div>
-                                    <button class="c-btn c-btn--primary" onclick="settingsSaveProfile()">Speichern</button>
-                                </div>
+                                <div style="flex: 1;"></div>
+                                <button class="c-btn c-btn--primary" onclick="settingsSaveProfile()" style="width: 100%; height: 44px; font-weight: 700;">Speichern</button>
                             </div>
                         </div>
 
-                        <!-- Erscheinungsbild -->
+                        <!-- Erscheinungsbild (Rechts) -->
                         <div class="c-card">
                             <div class="c-card__header">
-                                <h2 class="c-card__title">Erscheinungsbild</h2>
+                                <h2 class="c-card__title">🎨 Design</h2>
                             </div>
                             <div class="c-card__body">
-                                <div style="font-weight:600; margin-bottom:12px;">Theme</div>
-                                <div style="display:flex; gap:12px; flex-wrap:wrap;">
-                                    <div onclick="setTheme('light')" id="theme-opt-light" style="cursor:pointer; border-radius:var(--radius-md); overflow:hidden; border:3px solid transparent; transition:border-color 0.2s;">
-                                        <div style="width:120px; height:80px; background:#F5F7FA; border-radius:10px; padding:8px; box-sizing:border-box;">
-                                            <div style="height:12px; background:#4CAF50; border-radius:4px; margin-bottom:6px;"></div>
-                                            <div style="height:8px; background:#e2e8f0; border-radius:3px; margin-bottom:4px;"></div>
-                                            <div style="height:8px; background:#e2e8f0; border-radius:3px; width:70%;"></div>
+                                <div style="font-weight:700; font-size:0.75rem; margin-bottom:12px; color: var(--text-muted); letter-spacing: 0.05em;">THEME WÄHLEN</div>
+                                <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom: 24px;">
+                                    <!-- Light -->
+                                    <div onclick="setTheme('light')" id="theme-opt-light" class="c-theme-tile">
+                                        <div class="c-theme-tile__preview" style="background:#F5F7FA;">
+                                            <div style="height:8px; background:#4CAF50; border-radius:2px;"></div>
+                                            <div style="height:6px; background:#e2e8f0; border-radius:2px; width:80%;"></div>
                                         </div>
-                                        <div style="text-align:center; font-size:0.8rem; font-weight:600; padding:4px 0;">☀️ Hell</div>
+                                        <div class="c-theme-tile__label">Hell</div>
                                     </div>
-                                    <div onclick="setTheme('dark')" id="theme-opt-dark" style="cursor:pointer; border-radius:var(--radius-md); overflow:hidden; border:3px solid transparent; transition:border-color 0.2s;">
-                                        <div style="width:120px; height:80px; background:#1A202C; border-radius:10px; padding:8px; box-sizing:border-box;">
-                                            <div style="height:12px; background:#81C784; border-radius:4px; margin-bottom:6px;"></div>
-                                            <div style="height:8px; background:#2D3748; border-radius:3px; margin-bottom:4px;"></div>
-                                            <div style="height:8px; background:#2D3748; border-radius:3px; width:70%;"></div>
+                                    <!-- Dark -->
+                                    <div onclick="setTheme('dark')" id="theme-opt-dark" class="c-theme-tile">
+                                        <div class="c-theme-tile__preview" style="background:#1A202C;">
+                                            <div style="height:8px; background:#81C784; border-radius:2px;"></div>
+                                            <div style="height:6px; background:#2D3748; border-radius:2px; width:80%;"></div>
                                         </div>
-                                        <div style="text-align:center; font-size:0.8rem; font-weight:600; padding:4px 0;">🌙 Dunkel</div>
+                                        <div class="c-theme-tile__label">Dunkel</div>
                                     </div>
-                                    <div onclick="setTheme('unicorn')" id="theme-opt-unicorn" style="cursor:pointer; border-radius:var(--radius-md); overflow:hidden; border:3px solid transparent; transition:border-color 0.2s;">
-                                        <div style="width:120px; height:80px; background:linear-gradient(120deg,#fce7f3,#cffafe,#fef9c3,#e9d5ff); border-radius:10px; padding:8px; box-sizing:border-box;">
-                                            <div style="height:12px; background:rgba(217,70,239,0.8); border-radius:4px; margin-bottom:6px; backdrop-filter:blur(4px);"></div>
-                                            <div style="height:8px; background:rgba(255,255,255,0.65); border-radius:3px; margin-bottom:4px;"></div>
-                                            <div style="height:8px; background:rgba(255,255,255,0.65); border-radius:3px; width:70%;"></div>
+                                    <!-- Unicorn -->
+                                    <div onclick="setTheme('unicorn')" id="theme-opt-unicorn" class="c-theme-tile">
+                                        <div class="c-theme-tile__preview" style="background:linear-gradient(120deg,#fce7f3,#cffafe,#fef9c3,#e9d5ff);">
+                                            <div style="height:8px; background:rgba(217,70,239,0.7); border-radius:2px;"></div>
+                                            <div style="height:6px; background:rgba(255,255,255,0.6); border-radius:2px; width:80%;"></div>
                                         </div>
-                                        <div style="text-align:center; font-size:0.8rem; font-weight:600; padding:4px 0;">🦄 Unicorn</div>
+                                        <div class="c-theme-tile__label">Unicorn</div>
                                     </div>
                                 </div>
-                                <div style="margin-top:20px; padding-top:20px; border-top:1px solid var(--border);">
-                                    <label style="display:flex; align-items:center; gap:10px; cursor:pointer; user-select:none;">
-                                        <input type="checkbox" id="settings-effects-toggle" onchange="setEffectsEnabled(this.checked)" style="width:18px; height:18px; accent-color:var(--primary);">
-                                        <div style="font-weight:600;">Interaktionseffekte aktivieren</div>
+                                
+                                <div style="flex: 1;"></div>
+                                <div style="padding-top:20px; border-top:1px solid var(--border);">
+                                    <label class="c-switch">
+                                        <input type="checkbox" id="settings-effects-toggle" class="c-switch__input" onchange="setEffectsEnabled(this.checked)">
+                                        <div class="c-switch__track">
+                                            <div class="c-switch__handle"></div>
+                                        </div>
+                                        <div style="display:flex; flex-direction:column;">
+                                            <span style="font-weight:600; font-size:0.95rem;">Interaktionseffekte</span>
+                                            <span style="font-size:0.8rem; color:var(--text-muted); line-height: 1.2;">Animationen & Konfetti</span>
+                                        </div>
                                     </label>
-                                    <div style="font-size:0.8rem; color:var(--text-muted); margin-top:4px; margin-left:28px;">Spiele Animationen (z.B. Konfetti) bei Interaktionen ab.</div>
                                 </div>
                             </div>
                         </div>
@@ -524,6 +532,9 @@
                 const effectsToggle = document.getElementById('settings-effects-toggle');
                 if (effectsToggle) effectsToggle.checked = parseInt(c.effects_enabled) !== 0;
                 updateSettingsThemeBtn();
+                
+                // NEU: Animation-Trigger aus URL prüfen
+                if (typeof EffectManager !== 'undefined') EffectManager.initFromUrl();
             }
         }
 
