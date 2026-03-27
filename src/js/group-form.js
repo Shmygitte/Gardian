@@ -31,25 +31,25 @@ function renderGroupFormNice(data = {}, formId, onSubmit) {
     const leftCol = `
         <div style="display:flex;flex-direction:column;gap:12px;">
             <div>
-                <label class="c-modal__label">Name der Pflanze</label>
+                <label class="c-gf__label">Name der Pflanze</label>
                 <input type="text" name="name" value="${v('name')}" placeholder="z.B. Pfirsich 'Red Haven'" required>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                 <div>
-                    <label class="c-modal__label">Pflanzenart</label>
+                    <label class="c-gf__label">Pflanzenart</label>
                     <select name="type">
                         <option value="">— Wählen</option>
                         ${GF_TYPE_OPTIONS.map(o => `<option value="${o.v}" ${v('type') === o.v ? 'selected' : ''}>${o.l}</option>`).join('')}
                     </select>
                 </div>
                 <div>
-                    <label class="c-modal__label">Marker-Farbe</label>
+                    <label class="c-gf__label">Marker-Farbe</label>
                     <input type="color" name="marker_color" value="${v('marker_color') || '#4CAF50'}"
                         style="height:34px;padding:3px;cursor:pointer;">
                 </div>
             </div>
             <div>
-                <label class="c-modal__label">Blütezeit</label>
+                <label class="c-gf__label">Blütezeit</label>
                 ${renderBloomToggle('', parseInt(v('bloom_months')) || 0, 'bloom_months')}
             </div>
             <label style="background:var(--bg-app);border:1px solid var(--border);border-radius:4px;padding:8px 10px;display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.82rem;">
@@ -69,7 +69,7 @@ function renderGroupFormNice(data = {}, formId, onSubmit) {
                </select>`
             : `<input type="text" name="${f.key}" value="${val}" placeholder="${f.placeholder || ''}">`;
         return `<div>
-            <label class="c-modal__label">${f.icon} ${f.label}</label>
+            <label class="c-gf__label">${f.icon} ${f.label}</label>
             ${input}
         </div>`;
     }).join('');
@@ -83,7 +83,7 @@ function renderGroupFormNice(data = {}, formId, onSubmit) {
         </div>`;
 
     return `
-        <form id="${formId}" onsubmit="event.preventDefault(); ${onSubmit}" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;">
+        <form id="${formId}" class="c-group-form" onsubmit="event.preventDefault(); ${onSubmit}" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;">
             ${leftCol}
             ${rightCol}
             <div style="grid-column:1/-1;display:flex;gap:8px;justify-content:flex-end;padding-top:8px;border-top:1px solid var(--border);">

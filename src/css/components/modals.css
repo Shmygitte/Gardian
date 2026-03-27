@@ -144,3 +144,47 @@
     margin: 0;
     accent-color: var(--primary);
 }
+
+/* =========================
+   Group Form (.c-group-form)
+   Standalone form styles – works inside .c-modal AND on admin page
+   ========================= */
+.c-group-form label.c-gf__label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 4px;
+}
+
+.c-group-form input[type="text"],
+.c-group-form select,
+.c-group-form textarea {
+    width: 100%;
+    padding: 6px 10px;
+    font-size: 0.82rem;
+    height: auto;
+    box-sizing: border-box;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg-app);
+    color: var(--text-main);
+    font-family: inherit;
+    outline: none;
+}
+
+.c-group-form input[type="text"]:focus,
+.c-group-form select:focus,
+.c-group-form textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.c-group-form input[type="color"] {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg-app);
+}
