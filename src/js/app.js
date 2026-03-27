@@ -539,14 +539,16 @@ function updateMarkerPreview() {
 
 async function savePlantEdit() {
     const id = document.getElementById('edit-plant-id').value;
+    const iconVal = document.getElementById('edit-marker-icon').value || null;
+    const isSvgIcon = iconVal && (iconVal.startsWith('lib:') || iconVal.startsWith('user:'));
     const payload = {
         action:       'updatePlant',
         id:           parseInt(id),
         name:         document.getElementById('edit-plant-name').value  || null,
         marker_color: document.getElementById('edit-marker-color').value,
         marker_size:  document.getElementById('edit-marker-size').value  || null,
-        marker_icon:  document.getElementById('edit-marker-icon').value  || null,
-        marker_icon_color: document.getElementById('edit-marker-icon-color').value || null,
+        marker_icon:  iconVal,
+        marker_icon_color: isSvgIcon ? document.getElementById('edit-marker-icon-color').value : null,
     };
     const res  = await fetch('backend/api.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     const data = await res.json();
@@ -849,6 +851,12 @@ async function handleMouseUp(e) {
                 const addPayload = { action: 'addPlant', pos_x: finalX, pos_y: finalY };
                 if (clone.user_group_id) addPayload.user_group_id = clone.user_group_id;
                 else addPayload.group_id = clone.group_id;
+                // Marker-Einstellungen vom Original übernehmen
+                if (clone.marker_icon)       addPayload.marker_icon       = clone.marker_icon;
+                if (clone.marker_color)      addPayload.marker_color      = clone.marker_color;
+                if (clone.marker_size)       addPayload.marker_size       = clone.marker_size;
+                if (clone.marker_icon_color) addPayload.marker_icon_color = clone.marker_icon_color;
+                if (clone.plant_name)        addPayload.name              = clone.plant_name;
                 const res = await fetch('backend/api.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },

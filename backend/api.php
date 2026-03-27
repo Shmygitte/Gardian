@@ -463,25 +463,30 @@ if ($action === 'addPlant') {
     $posX        = $data['pos_x']         ?? null;
     $posY        = $data['pos_y']         ?? null;
 
+    // Optionale Marker-Einstellungen (beim Duplizieren)
+    $markerIcon      = $data['marker_icon']       ?? null;
+    $markerColor     = $data['marker_color']      ?? null;
+    $markerSize      = $data['marker_size']       ?? null;
+    $markerIconColor = $data['marker_icon_color']  ?? null;
+    $plantName       = $data['name']              ?? null;
+
     if ((!$groupId && !$userGroupId) || $posX === null || $posY === null) {
         echo json_encode(['success' => false, 'error' => 'Fehlende Parameter']);
         exit;
     }
     try {
         if ($userGroupId) {
-            // Eigene User-Gruppe — direkt speichern
-            $stmt = $db->prepare("INSERT INTO gd_user_plants (user_id, user_group_id, pos_x, pos_y) VALUES (?, ?, ?, ?)");
-            $stmt->execute([$_SESSION['user_id'], $userGroupId, $posX, $posY]);
+            $stmt = $db->prepare("INSERT INTO gd_user_plants (user_id, user_group_id, pos_x, pos_y, name, marker_icon, marker_color, marker_size, marker_icon_color) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$_SESSION['user_id'], $userGroupId, $posX, $posY, $plantName, $markerIcon, $markerColor, $markerSize, $markerIconColor]);
         } else {
-            // Standard-Gruppe — User-Gruppe anlegen falls noch nicht vorhanden
             $check = $db->prepare("SELECT id FROM gd_user_groups WHERE user_id = ? AND group_id = ?");
             $check->execute([$_SESSION['user_id'], $groupId]);
             if (!$check->fetch()) {
                 $ins = $db->prepare("INSERT INTO gd_user_groups (user_id, group_id) VALUES (?, ?)");
                 $ins->execute([$_SESSION['user_id'], $groupId]);
             }
-            $stmt = $db->prepare("INSERT INTO gd_user_plants (user_id, group_id, pos_x, pos_y) VALUES (?, ?, ?, ?)");
-            $stmt->execute([$_SESSION['user_id'], $groupId, $posX, $posY]);
+            $stmt = $db->prepare("INSERT INTO gd_user_plants (user_id, group_id, pos_x, pos_y, name, marker_icon, marker_color, marker_size, marker_icon_color) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$_SESSION['user_id'], $groupId, $posX, $posY, $plantName, $markerIcon, $markerColor, $markerSize, $markerIconColor]);
         }
         echo json_encode(['success' => true, 'id' => $db->lastInsertId()]);
     } catch (PDOException $e) {
