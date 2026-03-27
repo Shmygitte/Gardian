@@ -460,11 +460,6 @@ if ($action === 'createUserGroup') {
 
     $fields = ['name','group_id','type','bloom_months','marker_icon','marker_color','marker_size','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen'];
     $vals   = array_map(fn($f) => ($data[$f] ?? null) !== '' ? ($data[$f] ?? null) : null, $fields);
-    // Admin: User-Gruppe mit der neuen Standard-Gruppe verknüpfen
-    if ($isAdmin && $defaultGroupId) {
-        $groupIdIdx = array_search('group_id', $fields);
-        $vals[$groupIdIdx] = $defaultGroupId;
-    }
     $cols   = implode(',', $fields);
     $ph     = implode(',', array_fill(0, count($fields), '?'));
     try {
