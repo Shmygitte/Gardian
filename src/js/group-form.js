@@ -48,8 +48,19 @@ function renderGroupFormNice(data = {}, formId, onSubmit) {
                 <div>
                     <label class="c-gf__label" style="${GF_LABEL_STYLE}">Marker-Farbe</label>
                     <input type="color" name="marker_color" value="${v('marker_color') || '#4CAF50'}"
-                        style="height:34px;padding:3px;cursor:pointer;">
+                        style="width:100%;height:34px;padding:3px;cursor:pointer;border:1px solid var(--border);border-radius:4px;background:var(--bg-app);">
                 </div>
+            </div>
+            <div>
+                <label class="c-gf__label" style="${GF_LABEL_STYLE}">Marker-Icon</label>
+                <input type="hidden" name="marker_icon" value="${v('marker_icon') || ''}">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                    <div id="${formId}-icon-preview" style="width:28px;height:28px;border-radius:4px;background:var(--bg-app);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1rem;">
+                        ${_gfResolveIcon(v('marker_icon'))}
+                    </div>
+                    <button type="button" onclick="gfResetIcon('${formId}')" style="font-size:0.65rem;color:var(--text-muted);background:none;border:none;cursor:pointer;padding:0;">Zurücksetzen</button>
+                </div>
+                <div id="${formId}-icon-grid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:4px;max-height:80px;overflow-y:auto;"></div>
             </div>
             <div>
                 <label class="c-gf__label" style="${GF_LABEL_STYLE}">Blütezeit</label>
@@ -85,6 +96,9 @@ function renderGroupFormNice(data = {}, formId, onSubmit) {
             </div>
         </div>`;
 
+    // Icon-Grid nach DOM-Insert befüllen
+    setTimeout(() => gfRenderIconGrid(formId), 0);
+
     return `
         <form id="${formId}" class="c-group-form" onsubmit="event.preventDefault(); ${onSubmit}" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;">
             ${leftCol}
@@ -99,7 +113,7 @@ function getGroupFormNiceData(formId) {
     const form = document.getElementById(formId);
     if (!form) return {};
     const obj = {};
-    const fields = ['name','type','marker_color','bloom_months','evergreen','height','location','spacing','care','water','hardy','scented','cutflower','lifespan'];
+    const fields = ['name','type','marker_color','marker_icon','bloom_months','evergreen','height','location','spacing','care','water','hardy','scented','cutflower','lifespan'];
     fields.forEach(key => {
         const el = form.querySelector(`[name="${key}"]`);
         if (!el) return;
@@ -107,4 +121,53 @@ function getGroupFormNiceData(formId) {
         obj[key] = el.value || null;
     });
     return obj;
+}
+
+// Icon-Picker Funktionen für Gruppenformular
+function _gfResolveIcon(val) {
+    if (!val) return '<span style="color:var(--text-muted);font-size:0.7rem;">—</span>';
+    if (val.startsWith('lib:') && typeof _iconLibraryCache !== 'undefined' && _iconLibraryCache) {
+        const path = _iconLibraryCache[val.substring(4)];
+        if (path) return `<img src="${path}" style="width:20px;height:20px;object-fit:contain;">`;
+    }
+    return `<span>${val}</span>`;
+}
+
+function gfSelectIcon(formId, iconId) {
+    const form = document.getElementById(formId);
+    if (!form) return;
+    form.querySelector('[name="marker_icon"]').value = 'lib:' + iconId;
+    const preview = document.getElementById(formId + '-icon-preview');
+    if (preview) preview.innerHTML = _gfResolveIcon('lib:' + iconId);
+    // Highlight
+    const grid = document.getElementById(formId + '-icon-grid');
+    if (grid) grid.querySelectorAll('button').forEach(b => {
+        b.style.outline = b.dataset.iconId === iconId ? '2px solid var(--primary)' : 'none';
+    });
+}
+
+function gfResetIcon(formId) {
+    const form = document.getElementById(formId);
+    if (!form) return;
+    form.querySelector('[name="marker_icon"]').value = '';
+    const preview = document.getElementById(formId + '-icon-preview');
+    if (preview) preview.innerHTML = _gfResolveIcon('');
+    const grid = document.getElementById(formId + '-icon-grid');
+    if (grid) grid.querySelectorAll('button').forEach(b => b.style.outline = 'none');
+}
+
+function gfRenderIconGrid(formId) {
+    const grid = document.getElementById(formId + '-icon-grid');
+    if (!grid || typeof _iconLibraryCache === 'undefined' || !_iconLibraryCache) {
+        if (grid) grid.innerHTML = '<span style="color:var(--text-muted);font-size:0.7rem;grid-column:1/-1;">Keine Icons</span>';
+        return;
+    }
+    const currentVal = document.getElementById(formId)?.querySelector('[name="marker_icon"]')?.value || '';
+    grid.innerHTML = Object.entries(_iconLibraryCache).map(([id, path]) => {
+        const selected = currentVal === 'lib:' + id ? 'outline:2px solid var(--primary);' : '';
+        return `<button type="button" data-icon-id="${id}" onclick="gfSelectIcon('${formId}','${id}')"
+            style="width:100%;aspect-ratio:1;border:1px solid var(--border);border-radius:4px;background:var(--bg-app);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:4px;${selected}">
+            <img src="${path}" style="width:100%;height:100%;object-fit:contain;">
+        </button>`;
+    }).join('');
 }
