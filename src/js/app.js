@@ -421,9 +421,10 @@ function renderMarkers() {
 
 function openPlantEditModal(pin) {
     document.getElementById('edit-plant-id').value      = pin.id;
-    document.getElementById('modal-edit-title').textContent = `Marker`;
+    document.getElementById('modal-edit-title').textContent = `Pflanze`;
     document.getElementById('edit-plant-name').value    = pin.plant_name  || '';
     document.getElementById('edit-marker-color').value  = pin.marker_color || '#4CAF50';
+    loadPlantEditPhotos(pin.id);
     const defaultSize = { tree: 44, shrub: 34, flower: 24, s_flower: 18 }[pin.type] || 30;
     document.getElementById('edit-marker-size').value = pin.marker_size || '';
     document.getElementById('edit-marker-size').dataset.defaultSize = defaultSize;
@@ -455,6 +456,49 @@ function openPlantEditModal(pin) {
 
 function closePlantEditModal() {
     document.getElementById('modal-pflanze-edit').style.display = 'none';
+}
+
+async function loadPlantEditPhotos(plantId) {
+    const container = document.getElementById('edit-plant-photos');
+    const grid = document.getElementById('edit-plant-photos-grid');
+    grid.innerHTML = '';
+    container.style.display = 'none';
+    try {
+        const res = await fetch('backend/api.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'getImages', type: 'plant', plant_id: plantId })
+        });
+        const data = await res.json();
+        if (data.success && data.images.length) {
+            grid.innerHTML = data.images.map(img =>
+                `<img src="${img.file_path}" style="width:48px;height:48px;object-fit:cover;border-radius:4px;border:1px solid var(--border);cursor:pointer;" onclick="showFullImage('${img.file_path_gallery || img.file_path}')">`
+            ).join('');
+            container.style.display = 'block';
+        }
+    } catch (e) {}
+}
+
+async function deletePlantFromModal() {
+    const id = document.getElementById('edit-plant-id').value;
+    if (!id) return;
+    if (!confirm('Pflanze wirklich löschen? Alle zugehörigen Fotos und Daten werden entfernt.')) return;
+    try {
+        const res = await fetch('backend/api.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'deletePlant', plant_id: parseInt(id) })
+        });
+        const data = await res.json();
+        if (data.success) {
+            closePlantEditModal();
+            await loadPins();
+        } else {
+            alert(data.error || 'Fehler beim Löschen');
+        }
+    } catch (e) {
+        alert('Fehler beim Löschen');
+    }
 }
 
 function adjustMarkerSize(delta) {
