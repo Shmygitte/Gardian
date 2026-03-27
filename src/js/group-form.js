@@ -22,7 +22,10 @@ const GF_STECKBRIEF = [
     { key: 'lifespan',  label: 'Lebensdauer',   icon: '📅', type: 'select', options: [{v:'einjährig',l:'Einjährig'},{v:'zweijährig',l:'Zweijährig'},{v:'mehrjährig',l:'Mehrjährig'}] },
 ];
 
-// Styles werden jetzt über CSS gesteuert (modals.css)
+// Fallback-Styles falls CSS nicht greift (Admin-Seite etc.)
+const GF_INPUT_STYLE  = 'width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;background:var(--bg-app);color:var(--text-main);font-size:0.82rem;font-family:inherit;box-sizing:border-box;outline:none;';
+const GF_SELECT_STYLE = GF_INPUT_STYLE;
+const GF_LABEL_STYLE  = 'font-size:0.75rem;color:var(--text-muted);font-weight:600;display:flex;align-items:center;gap:5px;margin-bottom:4px;';
 
 function renderGroupFormNice(data = {}, formId, onSubmit) {
     const v = (key) => data[key] ?? '';
@@ -31,25 +34,25 @@ function renderGroupFormNice(data = {}, formId, onSubmit) {
     const leftCol = `
         <div style="display:flex;flex-direction:column;gap:12px;">
             <div>
-                <label class="c-gf__label">Name der Pflanze</label>
-                <input type="text" name="name" value="${v('name')}" placeholder="z.B. Pfirsich 'Red Haven'" required>
+                <label class="c-gf__label" style="${GF_LABEL_STYLE}">Name der Pflanze</label>
+                <input type="text" name="name" value="${v('name')}" placeholder="z.B. Pfirsich 'Red Haven'" style="${GF_INPUT_STYLE}" required>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                 <div>
-                    <label class="c-gf__label">Pflanzenart</label>
-                    <select name="type">
+                    <label class="c-gf__label" style="${GF_LABEL_STYLE}">Pflanzenart</label>
+                    <select name="type" style="${GF_SELECT_STYLE}">
                         <option value="">— Wählen</option>
                         ${GF_TYPE_OPTIONS.map(o => `<option value="${o.v}" ${v('type') === o.v ? 'selected' : ''}>${o.l}</option>`).join('')}
                     </select>
                 </div>
                 <div>
-                    <label class="c-gf__label">Marker-Farbe</label>
+                    <label class="c-gf__label" style="${GF_LABEL_STYLE}">Marker-Farbe</label>
                     <input type="color" name="marker_color" value="${v('marker_color') || '#4CAF50'}"
                         style="height:34px;padding:3px;cursor:pointer;">
                 </div>
             </div>
             <div>
-                <label class="c-gf__label">Blütezeit</label>
+                <label class="c-gf__label" style="${GF_LABEL_STYLE}">Blütezeit</label>
                 ${renderBloomToggle('', parseInt(v('bloom_months')) || 0, 'bloom_months')}
             </div>
             <label style="background:var(--bg-app);border:1px solid var(--border);border-radius:4px;padding:8px 10px;display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.82rem;">
@@ -63,13 +66,13 @@ function renderGroupFormNice(data = {}, formId, onSubmit) {
     const steckbriefFields = GF_STECKBRIEF.map(f => {
         const val = v(f.key);
         const input = f.type === 'select'
-            ? `<select name="${f.key}">
+            ? `<select name="${f.key}" style="${GF_SELECT_STYLE}">
                 <option value="">—</option>
                 ${f.options.map(o => `<option value="${o.v}" ${String(val) === o.v ? 'selected' : ''}>${o.l}</option>`).join('')}
                </select>`
-            : `<input type="text" name="${f.key}" value="${val}" placeholder="${f.placeholder || ''}">`;
+            : `<input type="text" name="${f.key}" value="${val}" placeholder="${f.placeholder || ''}" style="${GF_INPUT_STYLE}">`;
         return `<div>
-            <label class="c-gf__label">${f.icon} ${f.label}</label>
+            <label class="c-gf__label" style="${GF_LABEL_STYLE}">${f.icon} ${f.label}</label>
             ${input}
         </div>`;
     }).join('');
