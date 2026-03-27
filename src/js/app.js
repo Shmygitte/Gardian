@@ -539,14 +539,16 @@ function updateMarkerPreview() {
 
 async function savePlantEdit() {
     const id = document.getElementById('edit-plant-id').value;
+    const iconVal = document.getElementById('edit-marker-icon').value || null;
+    const isSvgIcon = iconVal && (iconVal.startsWith('lib:') || iconVal.startsWith('user:'));
     const payload = {
         action:       'updatePlant',
         id:           parseInt(id),
         name:         document.getElementById('edit-plant-name').value  || null,
         marker_color: document.getElementById('edit-marker-color').value,
         marker_size:  document.getElementById('edit-marker-size').value  || null,
-        marker_icon:  document.getElementById('edit-marker-icon').value  || null,
-        marker_icon_color: document.getElementById('edit-marker-icon-color').value || null,
+        marker_icon:  iconVal,
+        marker_icon_color: isSvgIcon ? document.getElementById('edit-marker-icon-color').value : null,
     };
     const res  = await fetch('backend/api.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     const data = await res.json();
