@@ -420,37 +420,51 @@ function renderMarkers() {
 }
 
 function openPlantEditModal(pin) {
-    document.getElementById('edit-plant-id').value      = pin.id;
-    document.getElementById('modal-edit-title').textContent = `Pflanze`;
-    document.getElementById('edit-plant-name').value    = pin.plant_name  || '';
-    document.getElementById('edit-marker-color').value  = pin.marker_color || '#4CAF50';
-    loadPlantEditPhotos(pin.id);
-    const defaultSize = { tree: 44, shrub: 34, flower: 24, s_flower: 18 }[pin.type] || 30;
-    document.getElementById('edit-marker-size').value = pin.marker_size || '';
-    document.getElementById('edit-marker-size').dataset.defaultSize = defaultSize;
-    document.getElementById('edit-marker-size').dataset.pinType = pin.type || 'flower';
-    document.getElementById('edit-marker-icon-color').value = pin.marker_icon_color || '#333333';
-    updateMarkerSizeDisplay();
-    updateMarkerPreview();
+    // Aktuelle Pin-Daten aus state.pins holen (nicht aus der Closure)
+    const p = state.pins.find(pp => String(pp.id) === String(pin.id)) || pin;
 
-    // Icon-Picker initialisieren
-    const iconVal = pin.marker_icon || '';
+    // 1. ALLE Felder hart zurücksetzen
+    document.getElementById('edit-plant-id').value = '';
+    document.getElementById('edit-plant-name').value = '';
+    document.getElementById('edit-marker-color').value = '#4CAF50';
+    document.getElementById('edit-marker-size').value = '';
+    document.getElementById('edit-marker-icon').value = '';
+    document.getElementById('edit-marker-emoji').value = '';
+    document.getElementById('edit-marker-icon-color').value = '#333333';
+
+    // 2. Neue Werte setzen
+    document.getElementById('edit-plant-id').value = p.id;
+    document.getElementById('modal-edit-title').textContent = 'Pflanze';
+    document.getElementById('edit-plant-name').value = p.plant_name || '';
+    document.getElementById('edit-marker-color').value = p.marker_color || '#4CAF50';
+
+    const defaultSize = { tree: 44, shrub: 34, flower: 24, s_flower: 18 }[p.type] || 30;
+    document.getElementById('edit-marker-size').value = p.marker_size || '';
+    document.getElementById('edit-marker-size').dataset.defaultSize = defaultSize;
+    document.getElementById('edit-marker-size').dataset.pinType = p.type || 'flower';
+    document.getElementById('edit-marker-icon-color').value = p.marker_icon_color || '#333333';
+
+    // 3. Icon-Picker
+    const iconVal = p.marker_icon || '';
     document.getElementById('edit-marker-icon').value = iconVal;
     if (iconVal && !iconVal.startsWith('lib:') && !iconVal.startsWith('user:')) {
         document.getElementById('edit-marker-emoji').value = iconVal;
         switchIconTab('emoji');
     } else if (iconVal.startsWith('lib:')) {
-        document.getElementById('edit-marker-emoji').value = '';
         switchIconTab('library');
     } else if (iconVal.startsWith('user:')) {
-        document.getElementById('edit-marker-emoji').value = '';
         switchIconTab('own');
     } else {
-        document.getElementById('edit-marker-emoji').value = '';
         switchIconTab('emoji');
     }
-    updateIconPreview(iconVal || null);
 
+    // 4. Previews aktualisieren
+    updateIconPreview(iconVal || null);
+    updateMarkerSizeDisplay();
+    updateMarkerPreview();
+
+    // 5. Fotos laden und Modal öffnen
+    loadPlantEditPhotos(p.id);
     document.getElementById('modal-pflanze-edit').style.display = 'flex';
 }
 
