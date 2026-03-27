@@ -123,51 +123,52 @@
 </div>
 
 <!-- Modal: Aufgabe anlegen/bearbeiten -->
-<div id="care-modal-backdrop">
-    <div class="c-card" style="width:min(95vw,520px);max-height:90vh;overflow-y:auto;">
-        <div class="c-card__header">
-            <h2 class="c-card__title" id="care-modal-title">Aufgabe anlegen</h2>
-            <button class="c-btn c-btn--text" onclick="closeTaskModal()">✕</button>
+<div id="care-modal-backdrop" class="c-modal">
+    <div class="c-card">
+        <div class="c-modal__header">
+            <span class="c-modal__title" id="care-modal-title">Aufgabe anlegen</span>
+            <button class="c-btn c-btn--text c-modal__close" onclick="closeTaskModal()">✕</button>
         </div>
-        <div class="c-card__body" style="display:flex;flex-direction:column;gap:16px;">
+        <div class="c-modal__body" style="display:flex;flex-direction:column;gap:10px;">
             <input type="hidden" id="cm-id">
-            <div class="c-form-group">
-                <label class="c-label">Aufgaben-Typ</label>
-                <select id="cm-type" class="c-input" onchange="updateNameField()" style="width:100%;"></select>
+            <div>
+                <label class="c-modal__label">Aufgaben-Typ</label>
+                <select id="cm-type" class="c-input" onchange="updateNameField()"></select>
             </div>
-            <div class="c-form-group" id="cm-custom-name-wrap" style="display:none;">
-                <label class="c-label">Eigener Name</label>
+            <div id="cm-custom-name-wrap" style="display:none;">
+                <label class="c-modal__label">Eigener Name</label>
                 <input type="text" id="cm-name" class="c-input" placeholder="z.B. Mein Spezialschnitt…">
             </div>
-            <div class="c-form-group">
-                <label class="c-label">Zuordnung</label>
-                <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                    <label style="display:flex;align-items:center;gap:5px;font-size:0.9rem;cursor:pointer;">
+            <div>
+                <label class="c-modal__label">Zuordnung</label>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                    <label class="c-modal__radio">
                         <input type="radio" name="cm-scope" value="general" checked onchange="updateScopeUI()"> Gesamter Garten
                     </label>
-                    <label style="display:flex;align-items:center;gap:5px;font-size:0.9rem;cursor:pointer;">
+                    <label class="c-modal__radio">
                         <input type="radio" name="cm-scope" value="group" onchange="updateScopeUI()"> Gruppe
                     </label>
-                    <label style="display:flex;align-items:center;gap:5px;font-size:0.9rem;cursor:pointer;">
+                    <label class="c-modal__radio">
                         <input type="radio" name="cm-scope" value="plant" onchange="updateScopeUI()"> Pflanze
                     </label>
                 </div>
-                <div id="cm-scope-select" style="margin-top:8px;display:none;">
-                    <select id="cm-target" class="c-input" style="width:100%;"></select>
+                <div id="cm-scope-select" style="margin-top:6px;display:none;">
+                    <select id="cm-target" class="c-input"></select>
                 </div>
             </div>
-            <div class="c-form-group">
-                <label class="c-label">Fällig in folgenden Monaten</label>
-                <div id="cm-months" style="display:flex;gap:4px;flex-wrap:wrap;"></div>
+            <div>
+                <label class="c-modal__label">Fällig in folgenden Monaten</label>
+                <div id="cm-months" style="display:flex;gap:3px;flex-wrap:wrap;"></div>
             </div>
-            <div class="c-form-group">
-                <label class="c-label">Notizen (optional)</label>
+            <div>
+                <label class="c-modal__label">Notizen (optional)</label>
                 <textarea id="cm-notes" class="c-input" rows="2" placeholder="z.B. Kali-Dünger verwenden" style="resize:vertical;"></textarea>
             </div>
         </div>
-        <div class="c-card__footer">
+        <div class="c-modal__footer">
+            <span class="c-modal__spacer"></span>
+            <button class="c-btn c-btn--text" onclick="closeTaskModal()">Abbrechen</button>
             <button class="c-btn c-btn--primary" onclick="submitTaskModal()">Speichern</button>
-            <button class="c-btn c-btn--text"    onclick="closeTaskModal()">Abbrechen</button>
         </div>
     </div>
 </div>
