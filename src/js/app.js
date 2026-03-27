@@ -1055,6 +1055,8 @@ async function saveNeueGruppe() {
             closeModal();
             await loadFilterGroups();
             await loadPins();
+        } else {
+            alert(plantData.error || 'Pflanze konnte nicht angelegt werden');
         }
     } else {
         await loadFilterGroups();
