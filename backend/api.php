@@ -441,8 +441,30 @@ if ($action === 'createUserGroup') {
         echo json_encode(['success' => false, 'error' => 'Name erforderlich']);
         exit;
     }
+
+    // Admin: automatisch auch Standard-Gruppe anlegen
+    $isAdmin = false;
+    $defaultGroupId = null;
+    $stmt = $db->prepare("SELECT role FROM gd_users WHERE id = ?");
+    $stmt->execute([$_SESSION['user_id']]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($row && $row['role'] === 'admin') {
+        $isAdmin = true;
+        $dgFields = ['name','type','bloom_months','marker_icon','marker_color','marker_size','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen'];
+        $dgVals = array_map(fn($f) => ($data[$f] ?? null) !== '' ? ($data[$f] ?? null) : null, $dgFields);
+        $dgCols = implode(',', $dgFields);
+        $dgPh   = implode(',', array_fill(0, count($dgFields), '?'));
+        $db->prepare("INSERT INTO gd_default_groups ($dgCols) VALUES ($dgPh)")->execute($dgVals);
+        $defaultGroupId = $db->lastInsertId();
+    }
+
     $fields = ['name','group_id','type','bloom_months','marker_icon','marker_color','marker_size','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen'];
     $vals   = array_map(fn($f) => ($data[$f] ?? null) !== '' ? ($data[$f] ?? null) : null, $fields);
+    // Admin: User-Gruppe mit der neuen Standard-Gruppe verknüpfen
+    if ($isAdmin && $defaultGroupId) {
+        $groupIdIdx = array_search('group_id', $fields);
+        $vals[$groupIdIdx] = $defaultGroupId;
+    }
     $cols   = implode(',', $fields);
     $ph     = implode(',', array_fill(0, count($fields), '?'));
     try {
