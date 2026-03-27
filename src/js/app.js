@@ -420,22 +420,24 @@ function renderMarkers() {
 }
 
 function openPlantEditModal(pin) {
-    document.getElementById('edit-plant-id').value      = pin.id;
+    // Aktuelle Pin-Daten aus state.pins holen (nicht aus der Closure)
+    const freshPin = state.pins.find(p => String(p.id) === String(pin.id)) || pin;
+
+    document.getElementById('edit-plant-id').value      = freshPin.id;
     document.getElementById('modal-edit-title').textContent = `Pflanze`;
-    document.getElementById('edit-plant-name').value    = pin.plant_name  || '';
-    document.getElementById('edit-marker-color').value  = pin.marker_color || '#4CAF50';
-    loadPlantEditPhotos(pin.id);
-    const defaultSize = { tree: 44, shrub: 34, flower: 24, s_flower: 18 }[pin.type] || 30;
-    document.getElementById('edit-marker-size').value = pin.marker_size || '';
+    document.getElementById('edit-plant-name').value    = freshPin.plant_name  || '';
+    document.getElementById('edit-marker-color').value  = freshPin.marker_color || '#4CAF50';
+    loadPlantEditPhotos(freshPin.id);
+    const defaultSize = { tree: 44, shrub: 34, flower: 24, s_flower: 18 }[freshPin.type] || 30;
+    document.getElementById('edit-marker-size').value = freshPin.marker_size || '';
     document.getElementById('edit-marker-size').dataset.defaultSize = defaultSize;
-    document.getElementById('edit-marker-size').dataset.pinType = pin.type || 'flower';
-    document.getElementById('edit-marker-icon-color').value = pin.marker_icon_color || '#333333';
-    updateMarkerSizeDisplay();
-    updateMarkerPreview();
+    document.getElementById('edit-marker-size').dataset.pinType = freshPin.type || 'flower';
+    document.getElementById('edit-marker-icon-color').value = freshPin.marker_icon_color || '#333333';
 
     // Icon-Picker initialisieren
-    const iconVal = pin.marker_icon || '';
+    const iconVal = freshPin.marker_icon || '';
     document.getElementById('edit-marker-icon').value = iconVal;
+    document.getElementById('edit-marker-emoji').value = '';
     if (iconVal && !iconVal.startsWith('lib:') && !iconVal.startsWith('user:')) {
         document.getElementById('edit-marker-emoji').value = iconVal;
         switchIconTab('emoji');
@@ -450,6 +452,8 @@ function openPlantEditModal(pin) {
         switchIconTab('emoji');
     }
     updateIconPreview(iconVal || null);
+    updateMarkerSizeDisplay();
+    updateMarkerPreview();
 
     document.getElementById('modal-pflanze-edit').style.display = 'flex';
 }
