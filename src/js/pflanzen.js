@@ -468,7 +468,7 @@ function openGruppeBearbeitenModal(groupId) {
     const body = document.getElementById('modal-neue-gruppe-body');
     const formId = `form-edit-gruppe-${groupId}`;
     body.innerHTML = renderGroupFormNice(group, formId, `saveGruppeBearbeiten(${groupId}, '${formId}')`);
-    document.querySelector('#modal-neue-gruppe .c-card__title').textContent = 'Pflanzengruppe bearbeiten';
+    document.getElementById('modal-neue-gruppe-title').textContent = 'Pflanzengruppe bearbeiten';
     document.getElementById('modal-neue-gruppe').style.display = 'flex';
 }
 

@@ -22,75 +22,72 @@ const GF_STECKBRIEF = [
     { key: 'lifespan',  label: 'Lebensdauer',   icon: '📅', type: 'select', options: [{v:'einjährig',l:'Einjährig'},{v:'zweijährig',l:'Zweijährig'},{v:'mehrjährig',l:'Mehrjährig'}] },
 ];
 
-const GF_INPUT_STYLE  = 'width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-app);color:var(--text-main);font-size:0.9rem;box-sizing:border-box;';
-const GF_SELECT_STYLE = 'width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-app);color:var(--text-main);font-size:0.9rem;';
-const GF_LABEL_STYLE  = 'font-size:0.75rem;color:var(--text-muted);font-weight:600;margin-bottom:4px;display:flex;align-items:center;gap:5px;';
+// Styles werden jetzt über CSS gesteuert (modals.css)
 
 function renderGroupFormNice(data = {}, formId, onSubmit) {
     const v = (key) => data[key] ?? '';
 
     // Linke Spalte: Name, Typ, Farbe, Blütezeit, Immergrün
     const leftCol = `
-        <div style="display:flex;flex-direction:column;gap:16px;">
+        <div style="display:flex;flex-direction:column;gap:12px;">
             <div>
-                <div style="${GF_LABEL_STYLE}">Name der Pflanze</div>
-                <input type="text" name="name" value="${v('name')}" placeholder="z.B. Pfirsich 'Red Haven'"
-                    style="${GF_INPUT_STYLE} font-size:1rem;" required>
+                <label class="c-modal__label">Name der Pflanze</label>
+                <input type="text" name="name" value="${v('name')}" placeholder="z.B. Pfirsich 'Red Haven'" required>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                 <div>
-                    <div style="${GF_LABEL_STYLE}">Pflanzenart</div>
-                    <select name="type" style="${GF_SELECT_STYLE}">
+                    <label class="c-modal__label">Pflanzenart</label>
+                    <select name="type">
                         <option value="">— Wählen</option>
                         ${GF_TYPE_OPTIONS.map(o => `<option value="${o.v}" ${v('type') === o.v ? 'selected' : ''}>${o.l}</option>`).join('')}
                     </select>
                 </div>
                 <div>
-                    <div style="${GF_LABEL_STYLE}">Marker-Farbe</div>
+                    <label class="c-modal__label">Marker-Farbe</label>
                     <input type="color" name="marker_color" value="${v('marker_color') || '#4CAF50'}"
-                        style="width:100%;height:42px;padding:4px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-app);cursor:pointer;">
+                        style="height:34px;padding:3px;cursor:pointer;">
                 </div>
             </div>
             <div>
-                <div style="${GF_LABEL_STYLE}">Blütezeit</div>
+                <label class="c-modal__label">Blütezeit</label>
                 ${renderBloomToggle('', parseInt(v('bloom_months')) || 0, 'bloom_months')}
             </div>
-            <div style="background:var(--bg-app);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 14px;display:flex;align-items:center;gap:10px;">
+            <label style="background:var(--bg-app);border:1px solid var(--border);border-radius:4px;padding:8px 10px;display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.82rem;">
                 <input type="checkbox" name="evergreen" id="${formId}-evergreen" ${v('evergreen') == 1 ? 'checked' : ''}
-                    style="width:16px;height:16px;cursor:pointer;accent-color:var(--primary);">
-                <label for="${formId}-evergreen" style="font-size:0.9rem;cursor:pointer;">🌿 Immergrün <span style="color:var(--text-muted);font-size:0.8rem;">(außerhalb der Blütezeit sichtbar)</span></label>
-            </div>
+                    style="width:15px;height:15px;cursor:pointer;accent-color:var(--primary);">
+                🌿 Immergrün <span style="color:var(--text-muted);font-size:0.75rem;">(außerhalb der Blütezeit sichtbar)</span>
+            </label>
         </div>`;
 
     // Rechte Spalte: Steckbrief
     const steckbriefFields = GF_STECKBRIEF.map(f => {
         const val = v(f.key);
         const input = f.type === 'select'
-            ? `<select name="${f.key}" style="${GF_SELECT_STYLE}">
+            ? `<select name="${f.key}">
                 <option value="">—</option>
                 ${f.options.map(o => `<option value="${o.v}" ${String(val) === o.v ? 'selected' : ''}>${o.l}</option>`).join('')}
                </select>`
-            : `<input type="text" name="${f.key}" value="${val}" placeholder="${f.placeholder || ''}" style="${GF_INPUT_STYLE}">`;
+            : `<input type="text" name="${f.key}" value="${val}" placeholder="${f.placeholder || ''}">`;
         return `<div>
-            <div style="${GF_LABEL_STYLE}">${f.icon} ${f.label}</div>
+            <label class="c-modal__label">${f.icon} ${f.label}</label>
             ${input}
         </div>`;
     }).join('');
 
     const rightCol = `
-        <div style="background:var(--bg-app);border:1px solid var(--border);border-radius:var(--radius-md);padding:16px;">
-            <div style="font-size:0.7rem;font-weight:700;color:var(--primary);letter-spacing:0.08em;margin-bottom:14px;">📋 STECKBRIEF</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div style="background:var(--bg-app);border:1px solid var(--border);border-radius:4px;padding:12px;">
+            <div style="font-size:0.68rem;font-weight:700;color:var(--primary);letter-spacing:0.06em;margin-bottom:10px;">📋 STECKBRIEF</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                 ${steckbriefFields}
             </div>
         </div>`;
 
     return `
-        <form id="${formId}" onsubmit="event.preventDefault(); ${onSubmit}" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;">
+        <form id="${formId}" onsubmit="event.preventDefault(); ${onSubmit}" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;">
             ${leftCol}
             ${rightCol}
-            <div style="grid-column:1/-1;display:flex;gap:8px;justify-content:flex-end;padding-top:8px;border-top:1px solid var(--border);margin-top:4px;">
-                <button type="submit" class="c-btn c-btn--primary">Speichern</button>
+            <div style="grid-column:1/-1;display:flex;gap:8px;justify-content:flex-end;padding-top:8px;border-top:1px solid var(--border);">
+                <button type="submit" class="c-btn c-btn--primary" style="font-size:0.78rem;padding:5px 16px;">Speichern</button>
             </div>
         </form>`;
 }

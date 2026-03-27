@@ -1000,6 +1000,7 @@ function onGroupSelectChange() {
 function openNeueGruppeModal() {
     const body = document.getElementById('modal-neue-gruppe-body');
     body.innerHTML = renderGroupFormNice({}, 'form-neue-gruppe', 'saveNeueGruppe()');
+    document.getElementById('modal-neue-gruppe-title').textContent = 'Neue Pflanzengruppe anlegen';
     document.getElementById('modal-neue-gruppe').style.display = 'flex';
 }
 

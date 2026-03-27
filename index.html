@@ -309,13 +309,13 @@
     </div>
 
     <!-- Modal: Galerie -->
-    <div id="gallery-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:1100; align-items:center; justify-content:center; padding:20px;">
-        <div style="background:var(--bg-card); border-radius:var(--radius-lg); width:min(95vw,900px); max-height:90vh; display:flex; flex-direction:column; overflow:hidden;">
-            <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border); flex-shrink:0;">
-                <h2 id="gallery-title" style="font-size:1.1rem; font-weight:700; margin:0;"></h2>
-                <button class="c-btn c-btn--text" onclick="closeGalleryModal()">✕</button>
+    <div id="gallery-modal" class="c-modal c-modal--xl" style="z-index:1100;">
+        <div class="c-card" style="max-height:90vh; display:flex; flex-direction:column; overflow:hidden;">
+            <div class="c-modal__header">
+                <span class="c-modal__title" id="gallery-title"></span>
+                <button class="c-btn c-btn--text c-modal__close" onclick="closeGalleryModal()">✕</button>
             </div>
-            <div id="gallery-images-container" style="display:flex; flex-wrap:wrap; gap:16px; padding:24px; overflow-y:auto; justify-content:center;"></div>
+            <div id="gallery-images-container" style="display:flex; flex-wrap:wrap; gap:12px; padding:12px 14px; overflow-y:auto; justify-content:center;"></div>
         </div>
     </div>
 
@@ -326,21 +326,21 @@
     </div>
 
     <!-- Modal: Pflanze bearbeiten (Rechtsklick) -->
-    <div id="modal-pflanze-edit" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:1001; align-items:center; justify-content:center;">
-        <div class="c-card" style="width:280px; padding:0; border-radius:12px; overflow:hidden; --radius-sm:4px;">
+    <div id="modal-pflanze-edit" class="c-modal" style="z-index:1001;">
+        <div class="c-card">
             <input type="hidden" id="edit-plant-id">
             <input type="hidden" id="edit-marker-size">
             <input type="hidden" id="edit-marker-icon" value="">
 
             <!-- Header -->
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 14px; background:var(--bg-surface);">
-                <span id="modal-edit-title" style="font-size:0.85rem; font-weight:600; color:var(--text-main);">Pflanze</span>
-                <button class="c-btn c-btn--text" onclick="closePlantEditModal()" style="font-size:0.85rem; padding:0; min-height:auto; line-height:1;">✕</button>
+            <div class="c-modal__header">
+                <span class="c-modal__title" id="modal-edit-title">Pflanze</span>
+                <button class="c-btn c-btn--text c-modal__close" onclick="closePlantEditModal()">✕</button>
             </div>
 
             <!-- Sektion: Pflanze -->
-            <div style="padding:10px 14px;">
-                <input type="text" id="edit-plant-name" class="c-input" placeholder="Einzelpflanzenname (optional)" style="padding:5px 8px; font-size:0.8rem; height:auto; width:100%; box-sizing:border-box;">
+            <div class="c-modal__body">
+                <input type="text" id="edit-plant-name" class="c-input" placeholder="Einzelpflanzenname (optional)">
 
                 <!-- Fotos -->
                 <div id="edit-plant-photos" style="display:none; margin-top:8px;">
@@ -349,9 +349,9 @@
             </div>
 
             <!-- Sektion: Marker -->
-            <div style="padding:8px 14px 10px; border-top:1px solid var(--border);">
+            <div class="c-modal__section">
                 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
-                    <span style="font-size:0.7rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em;">Marker</span>
+                    <span class="c-modal__section-title">Marker</span>
                     <button type="button" class="c-btn c-btn--text" style="font-size:0.62rem; color:var(--text-muted); padding:0; min-height:auto;" onclick="resetAllMarkerSettings()">Zurücksetzen</button>
                 </div>
 
@@ -409,48 +409,45 @@
             </div>
 
             <!-- Footer -->
-            <div style="padding:8px 14px; border-top:1px solid var(--border); display:flex; align-items:center;">
+            <div class="c-modal__footer">
                 <button type="button" class="c-btn c-btn--text" style="font-size:0.68rem; color:var(--danger); padding:0; min-height:auto;" onclick="deletePlantFromModal()">Pflanze löschen</button>
-                <span style="flex:1;"></span>
-                <button class="c-btn c-btn--text" style="font-size:0.78rem;" onclick="closePlantEditModal()">Abbrechen</button>
-                <button class="c-btn c-btn--primary" style="font-size:0.78rem; padding:5px 16px; margin-left:6px;" onclick="savePlantEdit()">Speichern</button>
+                <span class="c-modal__spacer"></span>
+                <button class="c-btn c-btn--text" onclick="closePlantEditModal()">Abbrechen</button>
+                <button class="c-btn c-btn--primary" onclick="savePlantEdit()">Speichern</button>
             </div>
         </div>
     </div>
 
     <!-- Modal: Pflanze hinzufügen -->
-    <div id="modal-pflanze" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:1000; align-items:center; justify-content:center;">
-        <div class="c-card" style="width:460px; max-height:85vh; overflow-y:auto;">
-            <div class="c-card__header">
-                <h2 class="c-card__title">Pflanze hinzufügen</h2>
-                <button class="c-btn c-btn--text" onclick="closeModal()">✕</button>
+    <div id="modal-pflanze" class="c-modal">
+        <div class="c-card">
+            <div class="c-modal__header">
+                <span class="c-modal__title">Pflanze hinzufügen</span>
+                <button class="c-btn c-btn--text c-modal__close" onclick="closeModal()">✕</button>
             </div>
-            <div class="c-card__body">
-                <div class="c-form-group">
-                    <label class="c-label">Pflanzengruppe</label>
-                    <select id="modal-group-select" class="c-input" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:var(--radius-md);" onchange="onGroupSelectChange()">
-                        <option value="">-- Bitte wählen --</option>
-                        <option value="__new__">+ Neue Gruppe anlegen...</option>
-                    </select>
-                </div>
-                <!-- Neue Gruppe → öffnet eigenes Modal -->
-
+            <div class="c-modal__body">
+                <label class="c-modal__label">Pflanzengruppe</label>
+                <select id="modal-group-select" class="c-input" onchange="onGroupSelectChange()">
+                    <option value="">-- Bitte wählen --</option>
+                    <option value="__new__">+ Neue Gruppe anlegen...</option>
+                </select>
             </div>
-            <div class="c-card__footer">
-                <button id="modal-submit-btn" class="c-btn c-btn--primary" onclick="confirmAddPlant()">Hinzufügen</button>
+            <div class="c-modal__footer">
+                <span class="c-modal__spacer"></span>
                 <button class="c-btn c-btn--text" onclick="closeModal()">Abbrechen</button>
+                <button id="modal-submit-btn" class="c-btn c-btn--primary" onclick="confirmAddPlant()">Hinzufügen</button>
             </div>
         </div>
     </div>
 
     <!-- Modal: Neue Pflanzengruppe anlegen -->
-    <div id="modal-neue-gruppe" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1002; align-items:center; justify-content:center; padding:20px;">
-        <div class="c-card" style="width:min(900px,95vw); max-height:90vh; overflow-y:auto;">
-            <div class="c-card__header">
-                <h2 class="c-card__title">Neue Pflanzengruppe anlegen</h2>
-                <button class="c-btn c-btn--text" onclick="closeNeueGruppeModal()">✕</button>
+    <div id="modal-neue-gruppe" class="c-modal c-modal--xl" style="z-index:1002;">
+        <div class="c-card" style="max-height:90vh; overflow-y:auto;">
+            <div class="c-modal__header">
+                <span class="c-modal__title" id="modal-neue-gruppe-title">Neue Pflanzengruppe anlegen</span>
+                <button class="c-btn c-btn--text c-modal__close" onclick="closeNeueGruppeModal()">✕</button>
             </div>
-            <div class="c-card__body" id="modal-neue-gruppe-body"></div>
+            <div class="c-modal__body" id="modal-neue-gruppe-body"></div>
         </div>
     </div>
 

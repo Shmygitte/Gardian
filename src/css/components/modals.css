@@ -1,0 +1,146 @@
+/* Modal Component (.c-modal) */
+
+/* Backdrop */
+.c-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Card inside modal – override .c-card defaults */
+.c-modal > .c-card {
+    padding: 0;
+    border-radius: 12px;
+    overflow: hidden;
+    width: 280px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.c-modal--wide > .c-card {
+    width: min(95vw, 480px);
+}
+
+.c-modal--xl > .c-card {
+    width: min(95vw, 900px);
+}
+
+/* Header */
+.c-modal .c-modal__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 14px;
+    background: var(--bg-surface);
+}
+
+.c-modal .c-modal__title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.c-modal .c-modal__close {
+    font-size: 0.85rem;
+    padding: 0;
+    min-height: auto;
+    line-height: 1;
+}
+
+/* Body */
+.c-modal .c-modal__body {
+    padding: 10px 14px;
+}
+
+/* Footer */
+.c-modal .c-modal__footer {
+    padding: 8px 14px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.c-modal .c-modal__footer .c-modal__spacer {
+    flex: 1;
+}
+
+/* Labels */
+.c-modal .c-modal__label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    display: block;
+    margin-bottom: 4px;
+}
+
+/* Section divider */
+.c-modal .c-modal__section {
+    padding: 8px 14px 10px;
+    border-top: 1px solid var(--border);
+}
+
+.c-modal .c-modal__section-title {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* ALL inputs/selects/textareas inside modals – single source of truth */
+.c-modal .c-input,
+.c-modal select,
+.c-modal textarea,
+.c-modal input[type="text"],
+.c-modal input[type="number"] {
+    padding: 6px 10px;
+    font-size: 0.82rem;
+    height: auto;
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg-app);
+    color: var(--text-main);
+    font-family: inherit;
+}
+
+.c-modal .c-input:focus,
+.c-modal select:focus,
+.c-modal textarea:focus,
+.c-modal input[type="text"]:focus,
+.c-modal input[type="number"]:focus {
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+/* Buttons in footer */
+.c-modal .c-modal__footer .c-btn--primary {
+    font-size: 0.78rem;
+    padding: 5px 16px;
+}
+
+.c-modal .c-modal__footer .c-btn--text {
+    font-size: 0.78rem;
+}
+
+/* Radio/checkbox labels */
+.c-modal .c-modal__radio {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+}
+
+.c-modal .c-modal__radio input {
+    margin: 0;
+    accent-color: var(--primary);
+}
