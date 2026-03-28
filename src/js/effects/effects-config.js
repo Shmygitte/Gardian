@@ -5,7 +5,8 @@
 const THEME_EFFECTS_CONFIG = {
     "unicorn": {
         "sidebar-click": ["triggerConfetti"],
-        "save-success": ["triggerConfetti"]
+        "save-success": ["triggerConfetti"],
+        "save-click": ["triggerBubbles"]
     },
     "dark": {
         "sidebar-click": ["triggerSubtlePulse"]

@@ -192,7 +192,7 @@
                                     </div>
                                 </div>
                                 <div style="flex: 1;"></div>
-                                <button class="c-btn c-btn--primary" onclick="settingsSaveProfile()" style="width: 100%; height: 44px; font-weight: 700;">Speichern</button>
+                                <button class="c-btn c-btn--primary" onclick="settingsSaveProfile(); if(typeof EffectManager!=='undefined') EffectManager.trigger('save-click',this);" style="width: 100%; height: 44px; font-weight: 700;">Speichern</button>
                             </div>
                         </div>
 
@@ -426,7 +426,7 @@
                 <button type="button" class="c-btn c-btn--text" style="font-size:0.68rem; color:var(--danger); padding:0; min-height:auto;" onclick="deletePlantFromModal()">Pflanze löschen</button>
                 <span class="c-modal__spacer"></span>
                 <button class="c-btn c-btn--text" onclick="closePlantEditModal()">Abbrechen</button>
-                <button class="c-btn c-btn--primary" onclick="savePlantEdit()">Speichern</button>
+                <button class="c-btn c-btn--primary" onclick="savePlantEdit(); if(typeof EffectManager!=='undefined') EffectManager.trigger('save-click',this);">Speichern</button>
             </div>
         </div>
     </div>
@@ -481,7 +481,7 @@
                     <button class="c-btn c-btn--secondary" onclick="cropper.rotate(90)" title="Rotate">⟳</button>
                 </div>
                 <div>
-                    <button class="c-btn c-btn--primary" onclick="saveCroppedAvatar()">Speichern</button>
+                    <button class="c-btn c-btn--primary" onclick="saveCroppedAvatar(); if(typeof EffectManager!=='undefined') EffectManager.trigger('save-click',this);">Speichern</button>
                     <button class="c-btn c-btn--text" onclick="closeCropModal()">Abbrechen</button>
                 </div>
             </div>
@@ -523,7 +523,7 @@
             </div>
             <div class="c-card__footer" style="display:flex; justify-content:flex-end; align-items:center; gap:8px;">
                 <button class="c-btn c-btn--text" onclick="closePlantCropModal()">Abbrechen</button>
-                <button class="c-btn c-btn--primary" onclick="saveCroppedPlantImage()">Speichern</button>
+                <button class="c-btn c-btn--primary" onclick="saveCroppedPlantImage(); if(typeof EffectManager!=='undefined') EffectManager.trigger('save-click',this);">Speichern</button>
             </div>
         </div>
     </div>

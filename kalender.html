@@ -168,7 +168,7 @@
         <div class="c-modal__footer">
             <span class="c-modal__spacer"></span>
             <button class="c-btn c-btn--text" onclick="closeTaskModal()">Abbrechen</button>
-            <button class="c-btn c-btn--primary" onclick="submitTaskModal()">Speichern</button>
+            <button class="c-btn c-btn--primary" onclick="submitTaskModal(); if(typeof EffectManager!=='undefined') EffectManager.trigger('save-click',this);">Speichern</button>
         </div>
     </div>
 </div>
