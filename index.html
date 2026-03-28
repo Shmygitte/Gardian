@@ -666,6 +666,7 @@
         const views = ['dashboard', 'pflanzen', 'galerie', 'einstellungen', 'admin'];
 
         function showView(name) {
+            history.replaceState(null, '', '#' + name);
             views.forEach(v => {
                 const viewEl = document.getElementById('view-' + v);
                 const navEl  = document.getElementById('nav-' + v);
