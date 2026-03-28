@@ -253,7 +253,7 @@
                 <div id="view-dashboard" style="flex-direction:column; height:100%; gap:0;">
 
                     <!-- Blütezeit-Slider -->
-                    <div id="bloom-slider" style="background:var(--bg-card); border-bottom:1px solid var(--border); padding:8px 16px 8px 8px; display:flex; align-items:center; gap:10px; white-space:nowrap; flex-shrink:0;">
+                    <div id="bloom-slider" style="background:var(--bg-card); border-bottom:1px solid var(--border); padding:8px 16px 8px 8px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; flex-shrink:0;">
                         <button id="btn-zoom-width" onclick="zoomFitWidth()" title="Auf Breite anpassen" style="display:none; padding:5px 10px; border-radius:var(--radius-sm); border:1px solid var(--border); font-size:0.8rem; cursor:pointer; background:var(--bg-app); color:var(--text-main);">↔ Breite</button>
                         <button id="btn-zoom-height" onclick="zoomFitHeight()" title="Auf Höhe anpassen" style="display:none; padding:5px 10px; border-radius:var(--radius-sm); border:1px solid var(--border); font-size:0.8rem; cursor:pointer; background:var(--bg-app); color:var(--text-main);">↕ Höhe</button>
                         <div id="zoom-btn-separator" style="display:none; width:1px; height:22px; background:var(--border); margin:0 0; flex-shrink:0;"></div>
@@ -267,6 +267,27 @@
                             <button onclick="setBloomYear(2029)" data-bloom-year="2029" class="bloom-year-btn" style="padding:5px 10px; border-radius:var(--radius-sm); border:1px solid var(--border); font-size:0.8rem; cursor:pointer; background:var(--bg-app); color:var(--text-main);">2029</button>
                             <button onclick="setBloomYear(2030)" data-bloom-year="2030" class="bloom-year-btn" style="padding:5px 10px; border-radius:var(--radius-sm); border:1px solid var(--border); font-size:0.8rem; cursor:pointer; background:var(--bg-app); color:var(--text-main);">2030</button>
                         </div>
+
+                        <div id="bloom-layer-filters" style="display:none; align-items:center; gap:3px;">
+                            <div style="width:1px; height:22px; background:var(--border); margin:0 4px; flex-shrink:0;"></div>
+                            <button onclick="toggleBloomLayer('blooming')" data-bloom-layer="blooming" style="padding:3px 8px; border-radius:20px; border:1px solid var(--border); font-size:0.75rem; font-weight:600; cursor:pointer; background:var(--primary); color:white;">Blühend</button>
+                            <button onclick="toggleBloomLayer('evergreen')" data-bloom-layer="evergreen" style="padding:3px 8px; border-radius:20px; border:1px solid var(--border); font-size:0.75rem; font-weight:600; cursor:pointer; background:var(--primary); color:white;">Immergrün</button>
+                            <button onclick="toggleBloomLayer('resting')" data-bloom-layer="resting" style="padding:3px 8px; border-radius:20px; border:1px solid var(--border); font-size:0.75rem; font-weight:600; cursor:pointer; background:var(--primary); color:white;">Ruhend</button>
+                        </div>
+
+                        <div id="bloom-month-controls" style="display:none; align-items:center; gap:8px;">
+                            <button onclick="toggleBloomAutoplay()" id="bloom-autoplay-btn" style="width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--bg-app);cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;">▶</button>
+                            <select id="bloom-speed-select" onchange="setBloomSpeed(this.value)" style="padding:3px 6px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:0.75rem;background:var(--bg-app);color:var(--text-main);">
+                                <option value="1500">Langsam</option>
+                                <option value="800" selected>Normal</option>
+                                <option value="300">Schnell</option>
+                            </select>
+                            <span style="font-size:0.75rem; color:var(--text-muted); font-weight:600; min-width:28px;" id="bloom-month-label">Jan</span>
+                            <input type="range" min="0" max="11" value="0" id="bloom-month-input"
+                                oninput="setBloomMonth(this.value)"
+                                style="width:140px; accent-color:var(--primary);">
+                        </div>
+
                         <!-- Hover-Controls -->
                         <div style="width:1px; height:22px; background:var(--border); margin:0 4px; flex-shrink:0;"></div>
                         <label style="display:flex; align-items:center; gap:5px; cursor:pointer; font-size:0.8rem; user-select:none; flex-shrink:0;">
@@ -288,19 +309,6 @@
                             <button onclick="setHoverSize('S')" data-size="S" class="hover-size-btn" style="padding:3px 8px; border-radius:20px; border:1px solid var(--border); font-size:0.75rem; font-weight:600; cursor:pointer; background:var(--bg-app); color:var(--text-main);">S</button>
                             <button onclick="setHoverSize('M')" data-size="M" class="hover-size-btn active" style="padding:3px 8px; border-radius:20px; border:1px solid var(--border); font-size:0.75rem; font-weight:600; cursor:pointer; background:var(--primary); color:white;">M</button>
                             <button onclick="setHoverSize('L')" data-size="L" class="hover-size-btn" style="padding:3px 8px; border-radius:20px; border:1px solid var(--border); font-size:0.75rem; font-weight:600; cursor:pointer; background:var(--bg-app); color:var(--text-main);">L</button>
-                        </div>
-
-                        <div id="bloom-month-controls" style="display:none; align-items:center; gap:8px;">
-                            <button onclick="toggleBloomAutoplay()" id="bloom-autoplay-btn" style="width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--bg-app);cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;">▶</button>
-                            <select id="bloom-speed-select" onchange="setBloomSpeed(this.value)" style="padding:3px 6px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:0.75rem;background:var(--bg-app);color:var(--text-main);">
-                                <option value="1500">Langsam</option>
-                                <option value="800" selected>Normal</option>
-                                <option value="300">Schnell</option>
-                            </select>
-                            <span style="font-size:0.75rem; color:var(--text-muted); font-weight:600; min-width:28px;" id="bloom-month-label">Jan</span>
-                            <input type="range" min="0" max="11" value="0" id="bloom-month-input"
-                                oninput="setBloomMonth(this.value)"
-                                style="width:140px; accent-color:var(--primary);">
                         </div>
                     </div>
 

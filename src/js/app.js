@@ -24,6 +24,7 @@ const bloomState = {
     year:  'std', // 'std' oder Jahreszahl als String
     month: 0,     // 0–11 (Bit-Index)
 };
+const bloomLayerFilter = { blooming: true, evergreen: true, resting: true };
 let bloomObservations = []; // alle Beobachtungen des Users
 
 let _saveConfigTimer = null;
@@ -205,6 +206,7 @@ let bloomAutoplaySpeed = 800;
 function setBloomAll() {
     bloomState.enabled = false;
     document.getElementById('bloom-month-controls').style.display = 'none';
+    document.getElementById('bloom-layer-filters').style.display = 'none';
     document.querySelectorAll('.bloom-year-btn').forEach(b => {
         b.style.background = 'var(--bg-app)';
         b.style.color      = 'var(--text-main)';
@@ -223,6 +225,7 @@ function setBloomYear(year) {
         b.style.color      = active ? 'white'          : 'var(--text-main)';
     });
     document.getElementById('bloom-month-controls').style.display = 'flex';
+    document.getElementById('bloom-layer-filters').style.display = 'flex';
     renderMarkers();
 }
 
@@ -239,6 +242,17 @@ function setBloomSpeed(ms) {
         stopBloomAutoplay();
         startBloomAutoplay();
     }
+}
+
+function toggleBloomLayer(layer) {
+    bloomLayerFilter[layer] = !bloomLayerFilter[layer];
+    const btn = document.querySelector(`[data-bloom-layer="${layer}"]`);
+    if (btn) {
+        btn.style.background = bloomLayerFilter[layer] ? 'var(--primary)' : 'var(--bg-app)';
+        btn.style.color      = bloomLayerFilter[layer] ? 'white'          : 'var(--text-muted)';
+        btn.style.opacity    = bloomLayerFilter[layer] ? '1'              : '0.5';
+    }
+    renderMarkers();
 }
 
 function toggleBloomAutoplay() {
@@ -378,21 +392,38 @@ function renderMarkers() {
         marker.style.cursor = 'grab';
         marker.title = '';
 
-        // Bloom-Filter: Farbe + Transparenz je nach Blühzustand
+        // Ebene bestimmen: blühend > evergreen (nicht blühend) > ruhend
+        const defaultSizeMap = { tree: 44, shrub: 34, flower: 24, s_flower: 18 };
+        const effectiveSize = pin.marker_size || defaultSizeMap[pin.type] || 30;
+        let markerLayer = 'blooming';
         let markerColor = pin.marker_color || '#4CAF50';
+
         if (bloomState.enabled) {
             const bitmask  = getBloomBitmaskForPin(pin);
-            const blooming = (bitmask >> bloomState.month) & 1;
-            if (blooming) {
+            const isBlooming = !!((bitmask >> bloomState.month) & 1);
+            if (isBlooming) {
+                markerLayer = 'blooming';
                 marker.style.opacity = '1';
             } else if (pin.evergreen == 1) {
+                markerLayer = 'evergreen';
                 marker.style.opacity = '1';
-                markerColor = '#4CAF50'; // grün außerhalb der Blütezeit
+                markerColor = '#4CAF50';
             } else {
+                markerLayer = 'resting';
                 marker.style.opacity = '0.2';
             }
             marker.style.transition = 'opacity 0.3s ease';
+
+            // Layer-Filter: ausblenden wenn Ebene deaktiviert
+            if (!bloomLayerFilter[markerLayer]) {
+                marker.style.display = 'none';
+            }
         }
+
+        // Z-Index: kleinere über größeren, höhere Ebene über niedrigerer
+        const layerZ = { blooming: 300, evergreen: 200, resting: 100 };
+        marker.style.zIndex = layerZ[markerLayer] - effectiveSize;
+        marker.dataset.layer = markerLayer;
 
         const iconContent = resolveMarkerIcon(pin.marker_icon, pin.type, pin.marker_icon_color);
         const customSize = pin.marker_size ? `width:${pin.marker_size}px;height:${pin.marker_size}px;` : '';
