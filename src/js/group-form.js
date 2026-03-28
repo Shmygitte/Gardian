@@ -60,7 +60,7 @@ function renderGroupFormNice(data = {}, formId, onSubmit) {
                     </div>
                     <button type="button" onclick="gfResetIcon('${formId}')" style="font-size:0.65rem;color:var(--text-muted);background:none;border:none;cursor:pointer;padding:0;">Zurücksetzen</button>
                 </div>
-                <div id="${formId}-icon-grid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:4px;max-height:80px;overflow-y:auto;"></div>
+                <div id="${formId}-icon-grid" style="display:grid;grid-template-columns:repeat(8,1fr);gap:4px;max-height:200px;overflow-y:auto;"></div>
             </div>
             <div>
                 <label class="c-gf__label" style="${GF_LABEL_STYLE}">Blütezeit</label>
