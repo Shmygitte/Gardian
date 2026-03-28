@@ -114,10 +114,19 @@
 
                 <!-- View: Galerie -->
                 <div id="view-galerie" style="display: none; height: 100%; overflow-y: auto; background:#0f172a;">
-                    <div style="padding:24px 28px; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center;">
+                    <div style="padding:24px 28px; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
                         <h2 style="font-size:1.5rem; font-weight:800; color:#a3e635; margin:0;">Gartengalerie</h2>
-                        <div style="display:flex; align-items:center; gap:12px;">
-                            <select id="galerie-sort" onchange="renderGalerie()" style="padding:6px 10px; border-radius:var(--radius-md); border:1px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.08); color:white; font-size:0.85rem; cursor:pointer;">
+                        <div class="galerie-filters">
+                            <select id="galerie-filter-gruppe" onchange="renderGalerie()" class="galerie-filter-select">
+                                <option value="">Alle Gruppen</option>
+                            </select>
+                            <select id="galerie-filter-pflanze" onchange="renderGalerie()" class="galerie-filter-select">
+                                <option value="">Alle Einzelpflanzen</option>
+                            </select>
+                            <button id="galerie-filter-admin" onclick="toggleAdminFilter()" class="galerie-filter-btn" title="Standardbilder anzeigen/ausblenden" style="display:none;">
+                                🖼️ Standard
+                            </button>
+                            <select id="galerie-sort" onchange="renderGalerie()" class="galerie-filter-select">
                                 <option value="name">Nach Name</option>
                                 <option value="type">Nach Kategorie</option>
                             </select>

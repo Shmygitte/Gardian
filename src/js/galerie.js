@@ -6,6 +6,7 @@ const TYPE_ICONS = { tree: '🌳', shrub: '🌿', flower: '🌸', s_flower: '�
 const TYPE_LABELS_GAL = { tree: 'Baum', shrub: 'Strauch', flower: 'Blume', s_flower: 'Blümchen' };
 
 let _galerieImages = [];
+let _adminFilterActive = false;
 
 async function loadGalerie() {
     const grid = document.getElementById('galerie-grid');
@@ -25,6 +26,58 @@ async function loadGalerie() {
     }
 
     _galerieImages = data.images;
+    populateGalerieFilters();
+
+    // Standard-Button nur zeigen, wenn default-Bilder vorhanden
+    const btn = document.getElementById('galerie-filter-admin');
+    if (btn) {
+        const hasDefaults = _galerieImages.some(img => img.type === 'default');
+        btn.style.display = hasDefaults ? '' : 'none';
+    }
+
+    renderGalerie();
+}
+
+function populateGalerieFilters() {
+    // Pflanzen-Filter
+    const selPflanze = document.getElementById('galerie-filter-pflanze');
+    if (selPflanze) {
+        const pflanzen = new Map();
+        _galerieImages.forEach(img => {
+            if (img.type === 'plant' && img.plant_id) {
+                if (!pflanzen.has(img.plant_id)) {
+                    pflanzen.set(img.plant_id, img.plant_name || img.group_name || '(Unbenannt)');
+                }
+            }
+        });
+        const sorted = [...pflanzen.entries()].sort((a, b) => a[1].localeCompare(b[1]));
+        selPflanze.innerHTML = '<option value="">Alle Einzelpflanzen</option>' +
+            sorted.map(([id, name]) => `<option value="${id}">${name}</option>`).join('');
+    }
+
+    // Gruppen-Filter (konkrete Pflanzengruppen, nicht Typ)
+    const selGruppe = document.getElementById('galerie-filter-gruppe');
+    if (selGruppe) {
+        const gruppen = new Map();
+        _galerieImages.forEach(img => {
+            const key = img.plant_user_group_id ? 'u' + img.plant_user_group_id
+                      : img.plant_group_id      ? String(img.plant_group_id)
+                      : img.group_id            ? String(img.group_id)
+                      : null;
+            if (key && !gruppen.has(key)) {
+                gruppen.set(key, img.group_name || '(Unbenannt)');
+            }
+        });
+        const sorted = [...gruppen.entries()].sort((a, b) => a[1].localeCompare(b[1]));
+        selGruppe.innerHTML = '<option value="">Alle Gruppen</option>' +
+            sorted.map(([key, name]) => `<option value="${key}">${name}</option>`).join('');
+    }
+}
+
+function toggleAdminFilter() {
+    _adminFilterActive = !_adminFilterActive;
+    const btn = document.getElementById('galerie-filter-admin');
+    if (btn) btn.classList.toggle('active', _adminFilterActive);
     renderGalerie();
 }
 
@@ -35,7 +88,29 @@ function renderGalerie() {
 
     let images = [..._galerieImages];
 
-    // Sidebar-Filter anwenden
+    // --- Galerie-eigene Filter ---
+    const gruppeFilter  = document.getElementById('galerie-filter-gruppe')?.value || '';
+    const pflanzeFilter = document.getElementById('galerie-filter-pflanze')?.value || '';
+
+    if (gruppeFilter) {
+        images = images.filter(img => {
+            const key = img.plant_user_group_id ? 'u' + img.plant_user_group_id
+                      : img.plant_group_id      ? String(img.plant_group_id)
+                      : img.group_id            ? String(img.group_id)
+                      : null;
+            return key === gruppeFilter;
+        });
+    }
+
+    if (pflanzeFilter) {
+        images = images.filter(img => img.type === 'plant' && String(img.plant_id) === pflanzeFilter);
+    }
+
+    if (_adminFilterActive) {
+        images = images.filter(img => img.type === 'default');
+    }
+
+    // --- Sidebar-Filter anwenden ---
     if (typeof filterState !== 'undefined') {
         if (filterState.types && filterState.types.length > 0) {
             images = images.filter(img => !img.group_type || filterState.types.includes(img.group_type));
@@ -44,7 +119,6 @@ function renderGalerie() {
         }
         if (filterState.groups !== null) {
             images = images.filter(img => {
-                // Schlüssel gleich wie in filter.js: group_id → String, user_group_id → 'u' + id
                 let key;
                 if (img.plant_user_group_id) key = 'u' + img.plant_user_group_id;
                 else if (img.plant_group_id)  key = String(img.plant_group_id);

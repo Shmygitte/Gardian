@@ -1023,6 +1023,7 @@ if ($action === 'getAllImages') {
                 i.user_group_id,
                 p.user_group_id AS plant_user_group_id,
                 p.group_id      AS plant_group_id,
+                p.name          AS plant_name,
                 COALESCE(ug_direct.name, ug_via_plant.name, ug_img.name, dg_via_plant.name, dg_direct.name, '(Unbenannt)') AS group_name,
                 COALESCE(ug_direct.type, ug_via_plant.type, ug_img.type, dg_via_plant.type, dg_direct.type)                AS group_type
             FROM gd_images i
