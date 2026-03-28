@@ -949,8 +949,23 @@ if ($action === 'adminDeleteGroup') {
     requireAdmin($db, $_SESSION['user_id']);
     $id = $data['id'] ?? null;
     if (!$id) { echo json_encode(['success' => false]); exit; }
-    $db->prepare("DELETE FROM gd_default_groups WHERE id = ?")->execute([$id]);
-    echo json_encode(['success' => true]);
+    try {
+        $db->beginTransaction();
+        // Bilder der Gruppe + ihrer Pflanzen löschen
+        $db->prepare("DELETE FROM gd_images WHERE group_id = ?")->execute([$id]);
+        $db->prepare("DELETE FROM gd_images WHERE plant_id IN (SELECT id FROM gd_user_plants WHERE group_id = ?)")->execute([$id]);
+        // Pflanzen der Gruppe löschen
+        $db->prepare("DELETE FROM gd_user_plants WHERE group_id = ?")->execute([$id]);
+        // User-Gruppen die auf diese Default-Gruppe verweisen
+        $db->prepare("DELETE FROM gd_user_groups WHERE group_id = ?")->execute([$id]);
+        // Gruppe selbst löschen
+        $db->prepare("DELETE FROM gd_default_groups WHERE id = ?")->execute([$id]);
+        $db->commit();
+        echo json_encode(['success' => true]);
+    } catch (Exception $e) {
+        $db->rollBack();
+        echo json_encode(['success' => false, 'error' => 'Fehler beim Löschen der Gruppe']);
+    }
     exit;
 }
 
