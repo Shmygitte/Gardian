@@ -731,7 +731,8 @@ function renderIconLibraryGrid() {
     const currentVal = document.getElementById('edit-marker-icon').value;
     grid.innerHTML = Object.entries(_iconLibraryCache).map(([id, path]) =>
         `<button type="button" onclick="selectLibraryIcon('${id}')" title="Icon #${id}"
-            style="width:100%;aspect-ratio:1;border:2px solid ${currentVal === 'lib:'+id ? 'var(--primary)' : 'var(--border)'};border-radius:var(--radius-sm);background:var(--bg-app);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:4px;">
+            style="width:100%;aspect-ratio:1;border:2px solid ${currentVal === 'lib:'+id ? 'var(--primary)' : 'var(--border)'};border-radius:var(--radius-sm);background:var(--bg-app);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:4px;transition:transform 0.15s;"
+            onmouseenter="this.style.transform='scale(1.8)';this.style.zIndex='10'" onmouseleave="this.style.transform='';this.style.zIndex=''">
             <img src="${path}" style="width:100%;height:100%;object-fit:contain;">
         </button>`
     ).join('');
@@ -747,7 +748,8 @@ function renderUserIconGrid() {
     grid.innerHTML = Object.entries(_userIconsCache).map(([id, path]) =>
         `<div style="position:relative;">
             <button type="button" onclick="selectUserIcon('${id}')" title="Eigenes Icon #${id}"
-                style="width:100%;aspect-ratio:1;border:2px solid ${currentVal === 'user:'+id ? 'var(--primary)' : 'var(--border)'};border-radius:var(--radius-sm);background:var(--bg-app);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:4px;">
+                style="width:100%;aspect-ratio:1;border:2px solid ${currentVal === 'user:'+id ? 'var(--primary)' : 'var(--border)'};border-radius:var(--radius-sm);background:var(--bg-app);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:4px;transition:transform 0.15s;"
+                onmouseenter="this.style.transform='scale(1.8)';this.style.zIndex='10'" onmouseleave="this.style.transform='';this.style.zIndex=''">
                 <img src="${path}" style="width:100%;height:100%;object-fit:contain;">
             </button>
             <button type="button" onclick="deleteUserIcon('${id}')" title="Löschen"

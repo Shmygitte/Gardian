@@ -166,7 +166,8 @@ function gfRenderIconGrid(formId) {
     grid.innerHTML = Object.entries(_iconLibraryCache).map(([id, path]) => {
         const selected = currentVal === 'lib:' + id ? 'outline:2px solid var(--primary);' : '';
         return `<button type="button" data-icon-id="${id}" onclick="gfSelectIcon('${formId}','${id}')"
-            style="width:100%;aspect-ratio:1;border:1px solid var(--border);border-radius:4px;background:var(--bg-app);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:4px;${selected}">
+            style="width:100%;aspect-ratio:1;border:1px solid var(--border);border-radius:4px;background:var(--bg-app);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:4px;transition:transform 0.15s;${selected}"
+            onmouseenter="this.style.transform='scale(1.8)';this.style.zIndex='10'" onmouseleave="this.style.transform='';this.style.zIndex=''">
             <img src="${path}" style="width:100%;height:100%;object-fit:contain;">
         </button>`;
     }).join('');
