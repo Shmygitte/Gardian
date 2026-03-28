@@ -409,6 +409,12 @@ async function adminDeleteIcon(id, name) {
 // ========================
 // NÜTZLICHE LINKS
 // ========================
+let _linkDragId = null;
+
+function _linkHostname(url) {
+    try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return url; }
+}
+
 async function loadAdminLinks() {
     const panel = document.getElementById('admin-panel-links');
     panel.innerHTML = '<p style="color:var(--text-muted)">Lade...</p>';
@@ -416,36 +422,25 @@ async function loadAdminLinks() {
     const data = await res.json();
     if (!data.success) { panel.innerHTML = '<p style="color:red">Fehler.</p>'; return; }
 
-    const items = data.links.map(l => `
-        <div id="link-row-${l.id}" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
-            <div style="flex:1;min-width:0;">
-                <span class="link-display" data-id="${l.id}">
-                    <a href="${l.url}" target="_blank" rel="noopener" style="color:var(--primary);font-weight:500;text-decoration:none;">${l.label}</a>
-                    <span style="display:block;font-size:0.75rem;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${l.url}</span>
-                </span>
-                <span class="link-edit" data-id="${l.id}" style="display:none;">
-                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                        <input type="text" class="c-input" value="${l.label.replace(/"/g, '&quot;')}" id="link-label-${l.id}" placeholder="Bezeichnung" style="flex:1;min-width:120px;">
-                        <input type="text" class="c-input" value="${l.url.replace(/"/g, '&quot;')}" id="link-url-${l.id}" placeholder="https://..." style="flex:2;min-width:180px;">
-                    </div>
-                </span>
+    const cards = data.links.map(l => `
+        <div class="link-card" draggable="true" data-id="${l.id}"
+             ondragstart="adminLinkDragStart(event,${l.id})" ondragover="adminLinkDragOver(event)" ondrop="adminLinkDrop(event,${l.id})" ondragend="adminLinkDragEnd()"
+             style="position:relative;border:1px solid var(--border);border-radius:var(--radius-md);padding:12px;background:var(--bg-app);cursor:grab;transition:box-shadow 0.15s,opacity 0.15s;">
+            <div style="display:flex;justify-content:space-between;align-items:start;gap:8px;">
+                <a href="${l.url}" target="_blank" rel="noopener" style="color:var(--primary);font-weight:600;font-size:0.9rem;text-decoration:none;line-height:1.3;word-break:break-word;" onclick="event.stopPropagation();">${l.label}</a>
+                <div style="display:flex;gap:4px;flex-shrink:0;">
+                    <button class="c-btn c-btn--text" style="font-size:0.75rem;padding:2px;" title="Bearbeiten" onclick="event.stopPropagation();adminEditLink(${l.id},'${l.label.replace(/'/g, "\\'")}','${l.url.replace(/'/g, "\\'")}')">✏️</button>
+                    <button class="c-btn c-btn--text" style="font-size:0.75rem;padding:2px;" title="Löschen" onclick="event.stopPropagation();adminDeleteLink(${l.id},'${l.label.replace(/'/g, "\\'")}')">🗑️</button>
+                </div>
             </div>
-            <div style="display:flex;gap:6px;flex-shrink:0;">
-                <span class="link-display" data-id="${l.id}">
-                    <button class="c-btn c-btn--text" style="font-size:0.85rem;padding:2px 4px;" title="Bearbeiten" onclick="adminEditLinkToggle(${l.id})">✏️</button>
-                    <button class="c-btn c-btn--text" style="font-size:0.85rem;padding:2px 4px;" title="Löschen" onclick="adminDeleteLink(${l.id},'${l.label.replace(/'/g, "\\'")}')">🗑️</button>
-                </span>
-                <span class="link-edit" data-id="${l.id}" style="display:none;">
-                    <button class="c-btn c-btn--primary" style="font-size:0.8rem;padding:4px 12px;" onclick="adminSaveLink(${l.id})">Speichern</button>
-                    <button class="c-btn c-btn--text" style="font-size:0.8rem;padding:4px 8px;" onclick="adminEditLinkToggle(${l.id})">✕</button>
-                </span>
-            </div>
+            <span style="display:block;font-size:0.7rem;color:var(--text-muted);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${_linkHostname(l.url)}</span>
         </div>`).join('');
 
     panel.innerHTML = `
-        <div style="margin-bottom:20px;">
-            ${items || '<p style="padding:12px 0;color:var(--text-muted);font-size:0.9rem;">Noch keine Links angelegt.</p>'}
+        <div id="admin-links-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:20px;">
+            ${cards || ''}
         </div>
+        ${!data.links.length ? '<p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:20px;">Noch keine Links angelegt.</p>' : ''}
         <div style="border:2px dashed var(--border);border-radius:var(--radius-md);padding:16px;">
             <p style="font-weight:600;margin-bottom:12px;">Neuen Link anlegen</p>
             <div style="display:grid;grid-template-columns:1fr 2fr auto;gap:10px;align-items:end;">
@@ -462,19 +457,46 @@ async function loadAdminLinks() {
         </div>`;
 }
 
-function adminEditLinkToggle(id) {
-    document.querySelectorAll(`.link-display[data-id="${id}"]`).forEach(el => el.style.display = el.style.display === 'none' ? '' : 'none');
-    document.querySelectorAll(`.link-edit[data-id="${id}"]`).forEach(el => el.style.display = el.style.display === 'none' ? '' : 'none');
+// Drag & Drop
+function adminLinkDragStart(e, id) {
+    _linkDragId = id;
+    e.currentTarget.style.opacity = '0.4';
+    e.dataTransfer.effectAllowed = 'move';
+}
+function adminLinkDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    const card = e.currentTarget;
+    card.style.boxShadow = '0 0 0 2px var(--primary)';
+}
+function adminLinkDragEnd() {
+    document.querySelectorAll('.link-card').forEach(c => { c.style.opacity = '1'; c.style.boxShadow = ''; });
+}
+async function adminLinkDrop(e, targetId) {
+    e.preventDefault();
+    if (_linkDragId === null || _linkDragId === targetId) { adminLinkDragEnd(); return; }
+    const grid = document.getElementById('admin-links-grid');
+    const cards = [...grid.querySelectorAll('.link-card')];
+    const ids = cards.map(c => parseInt(c.dataset.id));
+    const fromIdx = ids.indexOf(_linkDragId);
+    const toIdx = ids.indexOf(targetId);
+    ids.splice(fromIdx, 1);
+    ids.splice(toIdx, 0, _linkDragId);
+    _linkDragId = null;
+    adminLinkDragEnd();
+    await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'adminReorderLinks', order: ids }) });
+    loadAdminLinks();
 }
 
-async function adminSaveLink(id) {
-    const label = document.getElementById(`link-label-${id}`).value.trim();
-    const url   = document.getElementById(`link-url-${id}`).value.trim();
-    if (!label || !url) { alert('Bezeichnung und URL sind Pflichtfelder.'); return; }
-    const res  = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'adminUpdateLink', id, label, url }) });
-    const data = await res.json();
-    if (data.success) loadAdminLinks();
-    else alert(data.error || 'Fehler');
+function adminEditLink(id, label, url) {
+    const newLabel = prompt('Bezeichnung:', label);
+    if (newLabel === null) return;
+    const newUrl = prompt('URL:', url);
+    if (newUrl === null) return;
+    if (!newLabel.trim() || !newUrl.trim()) { alert('Bezeichnung und URL sind Pflichtfelder.'); return; }
+    fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ action:'adminUpdateLink', id, label: newLabel.trim(), url: newUrl.trim() }) })
+    .then(r => r.json()).then(d => { if (d.success) loadAdminLinks(); else alert(d.error || 'Fehler'); });
 }
 
 async function adminAddLink() {

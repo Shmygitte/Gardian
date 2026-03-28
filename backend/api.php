@@ -61,6 +61,9 @@ try { $db->exec("CREATE TABLE IF NOT EXISTS gd_user_garden_config (
 )"); } catch (PDOException $e) {}
 try { $db->exec("ALTER TABLE gd_user_garden_config ADD COLUMN effects_enabled TINYINT(1) NOT NULL DEFAULT 0"); } catch (PDOException $e) {}
 
+// Schema-Migration: sort_order für nützliche Links (einmalig)
+try { $db->exec("ALTER TABLE gd_useful_links ADD COLUMN sort_order INT UNSIGNED NOT NULL DEFAULT 0"); } catch (PDOException $e) {}
+
 // =========================
 // PROTECTION
 // =========================
@@ -1224,7 +1227,7 @@ if ($action === 'adminDeleteCareTaskType') {
 // =========================
 if ($action === 'adminGetLinks') {
     requireAdmin($db, $_SESSION['user_id']);
-    $stmt = $db->query("SELECT id, url, label, created_at FROM gd_useful_links ORDER BY created_at DESC");
+    $stmt = $db->query("SELECT id, url, label, sort_order, created_at FROM gd_useful_links ORDER BY sort_order ASC, created_at DESC");
     echo json_encode(['success' => true, 'links' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
     exit;
 }
@@ -1234,8 +1237,19 @@ if ($action === 'adminAddLink') {
     $label = trim($data['label'] ?? '');
     $url   = trim($data['url'] ?? '');
     if (!$label || !$url) { echo json_encode(['success' => false, 'error' => 'Bezeichnung und URL sind Pflichtfelder']); exit; }
-    $db->prepare("INSERT INTO gd_useful_links (url, label) VALUES (?,?)")->execute([$url, $label]);
+    $maxOrder = $db->query("SELECT COALESCE(MAX(sort_order),0) FROM gd_useful_links")->fetchColumn();
+    $db->prepare("INSERT INTO gd_useful_links (url, label, sort_order) VALUES (?,?,?)")->execute([$url, $label, $maxOrder + 1]);
     echo json_encode(['success' => true, 'id' => $db->lastInsertId()]);
+    exit;
+}
+
+if ($action === 'adminReorderLinks') {
+    requireAdmin($db, $_SESSION['user_id']);
+    $order = $data['order'] ?? [];
+    if (!is_array($order)) { echo json_encode(['success' => false]); exit; }
+    $stmt = $db->prepare("UPDATE gd_useful_links SET sort_order=? WHERE id=?");
+    foreach ($order as $i => $id) { $stmt->execute([$i, $id]); }
+    echo json_encode(['success' => true]);
     exit;
 }
 
