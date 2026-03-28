@@ -48,9 +48,9 @@
                         <!-- Typ Dropdown -->
                         <div class="filter-accordion">
                             <button class="c-btn c-btn--text" style="justify-content:space-between; width:100%;" onclick="toggleFilterAccordion(this)">
-                                Typ <span class="filter-accordion__arrow">▾</span>
+                                Typ <span class="filter-accordion__arrow">▸</span>
                             </button>
-                            <div class="filter-accordion__body" id="filter-types" style="display:flex; flex-direction:column; gap:0; padding:2px 0 4px 12px;">
+                            <div class="filter-accordion__body" id="filter-types" style="display:none; flex-direction:column; gap:0; padding:2px 0 4px 12px;">
                                 <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;cursor:pointer;padding:3px 0;border-bottom:1px solid var(--border);margin-bottom:2px;font-weight:600;"><input type="checkbox" id="filter-types-all" checked onchange="toggleAllTypes(this)"> Alle</label>
                                 <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;cursor:pointer;padding:3px 0;"><input type="checkbox" checked onchange="syncAllTypes();applyFilter()" data-type="tree"> Baum</label>
                                 <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;cursor:pointer;padding:3px 0;"><input type="checkbox" checked onchange="syncAllTypes();applyFilter()" data-type="shrub"> Strauch</label>
@@ -61,9 +61,9 @@
                         <!-- Aufgaben Filter -->
                         <div class="filter-accordion">
                             <button class="c-btn c-btn--text" style="justify-content:space-between; width:100%;" onclick="toggleFilterAccordion(this)">
-                                Aufgaben <span class="filter-accordion__arrow">▾</span>
+                                Aufgaben <span class="filter-accordion__arrow">▸</span>
                             </button>
-                            <div class="filter-accordion__body" style="display:flex; flex-direction:column; gap:6px; padding:4px 0 6px 12px;">
+                            <div class="filter-accordion__body" style="display:none; flex-direction:column; gap:6px; padding:4px 0 6px 12px;">
                                 <!-- Monatsauswahl (Multi-Toggle) -->
                                 <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:3px;" id="sidebar-care-months">
                                     <button id="sidebar-care-all-btn" onclick="setAllCareMonths()" style="grid-column:1/-1;padding:4px 2px;border-radius:6px;border:1px solid var(--primary);font-size:0.72rem;font-weight:700;cursor:pointer;background:var(--primary);color:white;font-family:inherit;text-align:center;">Alle</button>
@@ -90,9 +90,9 @@
                         <!-- Gruppen Dropdown -->
                         <div class="filter-accordion">
                             <button class="c-btn c-btn--text" style="justify-content:space-between; width:100%;" onclick="toggleFilterAccordion(this)">
-                                Pflanzengruppen <span class="filter-accordion__arrow">▾</span>
+                                Pflanzengruppen <span class="filter-accordion__arrow">▸</span>
                             </button>
-                            <div class="filter-accordion__body" id="filter-groups" style="display:flex; flex-direction:column; gap:0; padding:2px 0 4px 12px;"></div>
+                            <div class="filter-accordion__body" id="filter-groups" style="display:none; flex-direction:column; gap:0; padding:2px 0 4px 12px;"></div>
                         </div>
                     </nav>
                 </div>
@@ -640,6 +640,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            _restoreAccordionState();
             loadAvatar();
             // Verwaiste Bilder still im Hintergrund bereinigen
             fetch('backend/api.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'cleanupImages' }) });

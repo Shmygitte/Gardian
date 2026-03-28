@@ -64,6 +64,29 @@ function toggleFilterAccordion(btn) {
     const isOpen = body.style.display !== 'none';
     body.style.display = isOpen ? 'none' : 'flex';
     arrow.textContent = isOpen ? '▸' : '▾';
+    _saveAccordionState();
+}
+
+function _saveAccordionState() {
+    const state = {};
+    document.querySelectorAll('.filter-accordion').forEach((acc, i) => {
+        const body = acc.querySelector('.filter-accordion__body');
+        if (body) state[i] = body.style.display !== 'none';
+    });
+    sessionStorage.setItem('filterAccordionState', JSON.stringify(state));
+}
+
+function _restoreAccordionState() {
+    const raw = sessionStorage.getItem('filterAccordionState');
+    if (!raw) return;
+    const state = JSON.parse(raw);
+    document.querySelectorAll('.filter-accordion').forEach((acc, i) => {
+        if (state[i] === undefined) return;
+        const body = acc.querySelector('.filter-accordion__body');
+        const arrow = acc.querySelector('.filter-accordion__arrow');
+        if (body) body.style.display = state[i] ? 'flex' : 'none';
+        if (arrow) arrow.textContent = state[i] ? '▾' : '▸';
+    });
 }
 
 function toggleFilterPill(el) {
