@@ -229,11 +229,27 @@ async function loadAdminCareTypes() {
 
     const rows = data.types.map(t => `
         <tr style="border-bottom:1px solid var(--border);">
-            <td style="padding:8px;">${t.icon || '—'}</td>
-            <td style="padding:8px; font-weight:600;">${t.name}</td>
             <td style="padding:8px;">
-                <button class="c-btn c-btn--text" style="font-size:0.8rem;" onclick="adminEditCareType(${t.id},'${t.name}','${t.icon||''}')">Bearbeiten</button>
-                <button class="c-btn c-btn--text" style="font-size:0.8rem;color:var(--danger);" onclick="adminDeleteCareType(${t.id},'${t.name}')">Löschen</button>
+                <span class="ct-display" data-id="${t.id}">${t.icon || '—'}</span>
+                <span class="ct-edit" data-id="${t.id}" style="display:none;">
+                    <input type="text" class="c-input" id="ct-icon-${t.id}" value="${(t.icon||'').replace(/"/g,'&quot;')}" style="width:48px;padding:4px 6px;font-size:0.9rem;text-align:center;">
+                </span>
+            </td>
+            <td style="padding:8px;font-weight:600;">
+                <span class="ct-display" data-id="${t.id}">${t.name}</span>
+                <span class="ct-edit" data-id="${t.id}" style="display:none;">
+                    <input type="text" class="c-input" id="ct-name-${t.id}" value="${t.name.replace(/"/g,'&quot;')}" style="width:100%;padding:4px 6px;font-size:0.9rem;box-sizing:border-box;">
+                </span>
+            </td>
+            <td style="padding:8px;white-space:nowrap;">
+                <span class="ct-display" data-id="${t.id}">
+                    <button class="c-btn c-btn--text" style="font-size:0.85rem;padding:2px 4px;" title="Bearbeiten" onclick="adminEditCareTypeToggle(${t.id})">✏️</button>
+                    <button class="c-btn c-btn--text" style="font-size:0.85rem;padding:2px 4px;" title="Löschen" onclick="adminDeleteCareType(${t.id},'${t.name.replace(/'/g,"\\'")}')">🗑️</button>
+                </span>
+                <span class="ct-edit" data-id="${t.id}" style="display:none;">
+                    <button class="c-btn c-btn--primary" style="font-size:0.8rem;padding:4px 10px;" onclick="adminSaveCareType(${t.id})">OK</button>
+                    <button class="c-btn c-btn--text" style="font-size:0.8rem;padding:4px 6px;" onclick="adminEditCareTypeToggle(${t.id})">✕</button>
+                </span>
             </td>
         </tr>`).join('');
 
@@ -264,14 +280,20 @@ async function loadAdminCareTypes() {
         </div>`;
 }
 
-function adminEditCareType(id, name, icon) {
-    const newName = prompt('Name:', name);
-    if (newName === null) return;
-    const newIcon = prompt('Icon (Emoji):', icon);
-    if (newIcon === null) return;
-    fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ action:'adminSaveCareTaskType', id, name: newName.trim(), icon: newIcon.trim() }) })
-    .then(() => loadAdminCareTypes());
+function adminEditCareTypeToggle(id) {
+    document.querySelectorAll(`.ct-display[data-id="${id}"]`).forEach(el => el.style.display = el.style.display === 'none' ? '' : 'none');
+    document.querySelectorAll(`.ct-edit[data-id="${id}"]`).forEach(el => el.style.display = el.style.display === 'none' ? '' : 'none');
+}
+
+async function adminSaveCareType(id) {
+    const name = document.getElementById(`ct-name-${id}`).value.trim();
+    const icon = document.getElementById(`ct-icon-${id}`).value.trim();
+    if (!name) { alert('Name darf nicht leer sein.'); return; }
+    const res = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ action:'adminSaveCareTaskType', id, name, icon }) });
+    const data = await res.json();
+    if (data.success) loadAdminCareTypes();
+    else alert(data.error || 'Fehler');
 }
 
 async function adminAddCareType() {
@@ -315,12 +337,20 @@ async function loadAdminIcons() {
                 <p style="font-size:0.75rem;font-weight:700;color:var(--primary);letter-spacing:0.06em;margin-bottom:8px;">${cat.toUpperCase()}</p>
                 <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(80px, 1fr));gap:8px;">
                     ${catIcons.map(icon => `
-                        <div style="position:relative;border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px;display:flex;flex-direction:column;align-items:center;gap:4px;background:var(--bg-app);">
+                        <div id="icon-card-${icon.id}" style="position:relative;border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px;display:flex;flex-direction:column;align-items:center;gap:4px;background:var(--bg-app);">
                             <img src="${icon.file_path}" style="width:40px;height:40px;object-fit:contain;" alt="${icon.name}">
-                            <span style="font-size:0.7rem;color:var(--text-muted);text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;">${icon.name}</span>
-                            <div style="display:flex;gap:6px;">
-                                <button class="c-btn c-btn--text" style="font-size:0.75rem;padding:2px 4px;" title="Bearbeiten" onclick="adminEditIcon(${icon.id},'${icon.name.replace(/'/g, "\\'")}','${(icon.category||'').replace(/'/g, "\\'")}')">✏️</button>
+                            <span class="icon-display" data-id="${icon.id}" style="font-size:0.7rem;color:var(--text-muted);text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;">${icon.name}</span>
+                            <div class="icon-display" data-id="${icon.id}" style="display:flex;gap:6px;">
+                                <button class="c-btn c-btn--text" style="font-size:0.75rem;padding:2px 4px;" title="Bearbeiten" onclick="adminEditIconToggle(${icon.id})">✏️</button>
                                 <button class="c-btn c-btn--text" style="font-size:0.75rem;padding:2px 4px;" title="Löschen" onclick="adminDeleteIcon(${icon.id}, '${icon.name.replace(/'/g, "\\'")}')">🗑️</button>
+                            </div>
+                            <div class="icon-edit" data-id="${icon.id}" style="display:none;width:100%;text-align:center;">
+                                <input type="text" class="c-input" id="icon-name-${icon.id}" value="${icon.name.replace(/"/g, '&quot;')}" placeholder="Name" style="width:100%;box-sizing:border-box;font-size:0.7rem;padding:4px 6px;margin-bottom:4px;">
+                                <input type="text" class="c-input" id="icon-cat-${icon.id}" value="${(icon.category||'').replace(/"/g, '&quot;')}" placeholder="Kategorie" style="width:100%;box-sizing:border-box;font-size:0.7rem;padding:4px 6px;margin-bottom:4px;">
+                                <div style="display:flex;gap:4px;justify-content:center;">
+                                    <button class="c-btn c-btn--primary" style="font-size:0.65rem;padding:3px 8px;" onclick="adminSaveIcon(${icon.id})">OK</button>
+                                    <button class="c-btn c-btn--text" style="font-size:0.65rem;padding:3px 6px;" onclick="adminEditIconToggle(${icon.id})">✕</button>
+                                </div>
                             </div>
                         </div>
                     `).join('')}
@@ -340,7 +370,12 @@ async function loadAdminIcons() {
                 </div>
                 <div style="min-width:120px;">
                     <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:4px;">Kategorie (optional)</label>
-                    <input type="text" id="admin-icon-category" class="c-input" placeholder="z.B. Blumen">
+                    <select id="admin-icon-category" class="c-input" onchange="adminIconCatChanged(this)">
+                        <option value="">— Keine —</option>
+                        ${categories.map(c => `<option value="${c}">${c}</option>`).join('')}
+                        <option value="__new__">+ Neue Kategorie…</option>
+                    </select>
+                    <input type="text" id="admin-icon-category-new" class="c-input" placeholder="Neue Kategorie" style="display:none;margin-top:4px;">
                 </div>
                 <div>
                     <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:4px;">SVG-Datei</label>
@@ -351,10 +386,17 @@ async function loadAdminIcons() {
         </div>`;
 }
 
+function adminIconCatChanged(sel) {
+    const newInput = document.getElementById('admin-icon-category-new');
+    newInput.style.display = sel.value === '__new__' ? '' : 'none';
+    if (sel.value === '__new__') newInput.focus();
+}
+
 async function adminUploadIcon() {
     const fileInput = document.getElementById('admin-icon-file');
     const name      = document.getElementById('admin-icon-name').value.trim();
-    const category  = document.getElementById('admin-icon-category').value.trim();
+    const catSelect = document.getElementById('admin-icon-category').value;
+    const category  = catSelect === '__new__' ? document.getElementById('admin-icon-category-new').value.trim() : catSelect;
     const file      = fileInput.files[0];
 
     if (!file) { alert('Bitte eine SVG-Datei auswählen.'); return; }
@@ -381,15 +423,20 @@ async function adminUploadIcon() {
     }
 }
 
-function adminEditIcon(id, name, category) {
-    const newName = prompt('Name:', name);
-    if (newName === null) return;
-    const newCategory = prompt('Kategorie:', category);
-    if (newCategory === null) return;
-    fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ action:'adminUpdateIcon', id, name: newName.trim(), category: newCategory.trim() }) })
-    .then(r => r.json())
-    .then(d => { if (d.success) loadAdminIcons(); else alert(d.error || 'Fehler'); });
+function adminEditIconToggle(id) {
+    document.querySelectorAll(`.icon-display[data-id="${id}"]`).forEach(el => el.style.display = el.style.display === 'none' ? '' : 'none');
+    document.querySelectorAll(`.icon-edit[data-id="${id}"]`).forEach(el => el.style.display = el.style.display === 'none' ? '' : 'none');
+}
+
+async function adminSaveIcon(id) {
+    const name = document.getElementById(`icon-name-${id}`).value.trim();
+    const category = document.getElementById(`icon-cat-${id}`).value.trim();
+    if (!name) { alert('Name darf nicht leer sein.'); return; }
+    const res = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ action:'adminUpdateIcon', id, name, category }) });
+    const data = await res.json();
+    if (data.success) loadAdminIcons();
+    else alert(data.error || 'Fehler');
 }
 
 async function adminDeleteIcon(id, name) {
@@ -426,14 +473,24 @@ async function loadAdminLinks() {
         <div class="link-card" draggable="true" data-id="${l.id}"
              ondragstart="adminLinkDragStart(event,${l.id})" ondragover="adminLinkDragOver(event)" ondrop="adminLinkDrop(event,${l.id})" ondragend="adminLinkDragEnd()"
              style="position:relative;border:1px solid var(--border);border-radius:var(--radius-md);padding:12px;background:var(--bg-app);cursor:grab;transition:box-shadow 0.15s,opacity 0.15s;">
-            <div style="display:flex;justify-content:space-between;align-items:start;gap:8px;">
-                <a href="${l.url}" target="_blank" rel="noopener" style="color:var(--primary);font-weight:600;font-size:0.9rem;text-decoration:none;line-height:1.3;word-break:break-word;" onclick="event.stopPropagation();">${l.label}</a>
-                <div style="display:flex;gap:4px;flex-shrink:0;">
-                    <button class="c-btn c-btn--text" style="font-size:0.75rem;padding:2px;" title="Bearbeiten" onclick="event.stopPropagation();adminEditLink(${l.id},'${l.label.replace(/'/g, "\\'")}','${l.url.replace(/'/g, "\\'")}')">✏️</button>
-                    <button class="c-btn c-btn--text" style="font-size:0.75rem;padding:2px;" title="Löschen" onclick="event.stopPropagation();adminDeleteLink(${l.id},'${l.label.replace(/'/g, "\\'")}')">🗑️</button>
+            <div class="link-display" data-id="${l.id}">
+                <div style="display:flex;justify-content:space-between;align-items:start;gap:8px;">
+                    <a href="${l.url}" target="_blank" rel="noopener" style="color:var(--primary);font-weight:600;font-size:0.9rem;text-decoration:none;line-height:1.3;word-break:break-word;" onclick="event.stopPropagation();">${l.label}</a>
+                    <div style="display:flex;gap:4px;flex-shrink:0;">
+                        <button class="c-btn c-btn--text" style="font-size:0.75rem;padding:2px;" title="Bearbeiten" onclick="event.stopPropagation();adminEditLinkToggle(${l.id})">✏️</button>
+                        <button class="c-btn c-btn--text" style="font-size:0.75rem;padding:2px;" title="Löschen" onclick="event.stopPropagation();adminDeleteLink(${l.id},'${l.label.replace(/'/g, "\\'")}')">🗑️</button>
+                    </div>
+                </div>
+                <span style="display:block;font-size:0.7rem;color:var(--text-muted);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${_linkHostname(l.url)}</span>
+            </div>
+            <div class="link-edit" data-id="${l.id}" style="display:none;">
+                <input type="text" class="c-input" id="link-label-${l.id}" value="${l.label.replace(/"/g,'&quot;')}" placeholder="Bezeichnung" style="width:100%;box-sizing:border-box;font-size:0.8rem;padding:6px 8px;margin-bottom:6px;">
+                <input type="text" class="c-input" id="link-url-${l.id}" value="${l.url.replace(/"/g,'&quot;')}" placeholder="https://..." style="width:100%;box-sizing:border-box;font-size:0.8rem;padding:6px 8px;margin-bottom:6px;">
+                <div style="display:flex;gap:4px;">
+                    <button class="c-btn c-btn--primary" style="font-size:0.75rem;padding:4px 10px;flex:1;" onclick="event.stopPropagation();adminSaveLink(${l.id})">OK</button>
+                    <button class="c-btn c-btn--text" style="font-size:0.75rem;padding:4px 6px;" onclick="event.stopPropagation();adminEditLinkToggle(${l.id})">✕</button>
                 </div>
             </div>
-            <span style="display:block;font-size:0.7rem;color:var(--text-muted);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${_linkHostname(l.url)}</span>
         </div>`).join('');
 
     panel.innerHTML = `
@@ -488,15 +545,20 @@ async function adminLinkDrop(e, targetId) {
     loadAdminLinks();
 }
 
-function adminEditLink(id, label, url) {
-    const newLabel = prompt('Bezeichnung:', label);
-    if (newLabel === null) return;
-    const newUrl = prompt('URL:', url);
-    if (newUrl === null) return;
-    if (!newLabel.trim() || !newUrl.trim()) { alert('Bezeichnung und URL sind Pflichtfelder.'); return; }
-    fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ action:'adminUpdateLink', id, label: newLabel.trim(), url: newUrl.trim() }) })
-    .then(r => r.json()).then(d => { if (d.success) loadAdminLinks(); else alert(d.error || 'Fehler'); });
+function adminEditLinkToggle(id) {
+    document.querySelectorAll(`.link-display[data-id="${id}"]`).forEach(el => el.style.display = el.style.display === 'none' ? '' : 'none');
+    document.querySelectorAll(`.link-edit[data-id="${id}"]`).forEach(el => el.style.display = el.style.display === 'none' ? '' : 'none');
+}
+
+async function adminSaveLink(id) {
+    const label = document.getElementById(`link-label-${id}`).value.trim();
+    const url   = document.getElementById(`link-url-${id}`).value.trim();
+    if (!label || !url) { alert('Bezeichnung und URL sind Pflichtfelder.'); return; }
+    const res = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ action:'adminUpdateLink', id, label, url }) });
+    const data = await res.json();
+    if (data.success) loadAdminLinks();
+    else alert(data.error || 'Fehler');
 }
 
 async function adminAddLink() {
