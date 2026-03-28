@@ -7,6 +7,35 @@
     align-items: start;
 }
 
+/* Layout Utilities for Modals */
+.c-modal-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.c-modal-row .c-form-group {
+    margin-bottom: 0;
+}
+
+.c-modal-section-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+    display: block;
+}
+
+/* Compact Inputs for better relation to text size */
+.c-input--compact {
+    padding: 8px 12px !important;
+    font-size: 0.9rem !important;
+    height: 36px !important;
+}
+
 /* Compact Card Overrides for Settings */
 .view-einstellungen .c-card {
     margin-bottom: 0;
@@ -107,9 +136,3 @@
     box-shadow: 0 0 10px rgba(217,70,239,0.3);
 }
 
-/* Compact Inputs for Settings */
-.view-einstellungen .c-input {
-    height: 36px;
-    padding: 6px 12px;
-    font-size: 0.875rem;
-}
