@@ -121,7 +121,7 @@ function renderPflanzenListe(data) {
                 return `
                 <div style="margin:10px 0; padding:10px 14px; border-left:5px solid var(--primary); background:var(--bg-app); border-radius:0 var(--radius-sm) var(--radius-sm) 0; box-shadow:inset 0 0 0 1px var(--border), 0 2px 6px rgba(0,0,0,0.1);">
                     <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 0;">
-                        <span id="plant-label-${plant.id}" onclick="toggleAccordion('${plantId}'); ensureBloomLoaded('plant', ${plant.id}, ${group.bloom_months_resolved || 0}); loadImages('plant', null, ${plant.id}, 'images-plant-${plant.id}')" ondblclick="event.stopPropagation(); startPlantRename(${plant.id})" style="cursor:pointer; font-size:0.9rem; font-weight:600; flex:1;" title="Doppelklick zum Umbenennen">${plant.plant_name || 'Pflanze #' + plant.id}</span>
+                        <span id="plant-label-${plant.id}" onclick="handlePlantClick(event, '${plantId}', ${plant.id}, ${group.bloom_months_resolved || 0})" ondblclick="handlePlantDblClick(event, ${plant.id})" style="cursor:pointer; font-size:0.9rem; font-weight:600; flex:1;" title="Doppelklick zum Umbenennen">${plant.plant_name || 'Pflanze #' + plant.id}</span>
                         <div style="display:flex; align-items:center; gap:6px;">
                             <button class="c-btn c-btn--text" style="font-size:0.75rem; color:var(--danger); padding:2px 6px;" onclick="deletePlant(${plant.id})">Löschen</button>
                             <span onclick="toggleAccordion('${plantId}'); ensureBloomLoaded('plant', ${plant.id}, ${group.bloom_months_resolved || 0})" id="${plantId}-icon" style="font-size:0.8rem; color:var(--text-muted); cursor:pointer;">▶</span>
@@ -251,6 +251,27 @@ function toggleRemovedReason(plantId, dateValue) {
     const sel = document.getElementById(`removed-reason-${plantId}`);
     if (sel) sel.style.display = dateValue ? 'block' : 'none';
     if (!dateValue && sel) { sel.value = ''; savePlantField(plantId, 'removed_reason', null); }
+}
+
+// Verzögerter Klick auf Pflanzenlabel: Doppelklick zum Umbenennen hat Vorrang
+const _plantClickTimers = {};
+function handlePlantClick(event, plantId, plantDbId, bloomBitmask) {
+    if (_plantClickTimers[plantId]) return;          // zweiter Klick – ignorieren
+    _plantClickTimers[plantId] = setTimeout(() => {
+        delete _plantClickTimers[plantId];
+        toggleAccordion(plantId);
+        ensureBloomLoaded('plant', plantDbId, bloomBitmask);
+        loadImages('plant', null, plantDbId, 'images-plant-' + plantDbId);
+    }, 250);
+}
+function handlePlantDblClick(event, plantDbId) {
+    event.stopPropagation();
+    // Timer vom ersten Klick abbrechen → kein Toggle
+    for (const key in _plantClickTimers) {
+        clearTimeout(_plantClickTimers[key]);
+        delete _plantClickTimers[key];
+    }
+    startPlantRename(plantDbId);
 }
 
 function toggleAccordion(id) {
