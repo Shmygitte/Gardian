@@ -416,57 +416,48 @@ async function loadAdminLinks() {
     const data = await res.json();
     if (!data.success) { panel.innerHTML = '<p style="color:red">Fehler.</p>'; return; }
 
-    const rows = data.links.map(l => `
-        <tr id="link-row-${l.id}" style="border-bottom:1px solid var(--border);">
-            <td style="padding:8px;">
+    const items = data.links.map(l => `
+        <div id="link-row-${l.id}" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
+            <div style="flex:1;min-width:0;">
                 <span class="link-display" data-id="${l.id}">
-                    <a href="${l.url}" target="_blank" rel="noopener" style="color:var(--primary);">${l.label}</a>
+                    <a href="${l.url}" target="_blank" rel="noopener" style="color:var(--primary);font-weight:500;text-decoration:none;">${l.label}</a>
+                    <span style="display:block;font-size:0.75rem;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${l.url}</span>
                 </span>
                 <span class="link-edit" data-id="${l.id}" style="display:none;">
-                    <input type="text" class="c-input" value="${l.label.replace(/"/g, '&quot;')}" id="link-label-${l.id}" style="width:100%;">
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                        <input type="text" class="c-input" value="${l.label.replace(/"/g, '&quot;')}" id="link-label-${l.id}" placeholder="Bezeichnung" style="flex:1;min-width:120px;">
+                        <input type="text" class="c-input" value="${l.url.replace(/"/g, '&quot;')}" id="link-url-${l.id}" placeholder="https://..." style="flex:2;min-width:180px;">
+                    </div>
                 </span>
-            </td>
-            <td style="padding:8px;color:var(--text-muted);font-size:0.85rem;">
-                <span class="link-display" data-id="${l.id}">${l.url}</span>
-                <span class="link-edit" data-id="${l.id}" style="display:none;">
-                    <input type="text" class="c-input" value="${l.url.replace(/"/g, '&quot;')}" id="link-url-${l.id}" style="width:100%;">
-                </span>
-            </td>
-            <td style="padding:8px;white-space:nowrap;">
+            </div>
+            <div style="display:flex;gap:6px;flex-shrink:0;">
                 <span class="link-display" data-id="${l.id}">
-                    <button class="c-btn c-btn--text" style="font-size:0.8rem;" onclick="adminEditLinkToggle(${l.id})">Bearbeiten</button>
-                    <button class="c-btn c-btn--text" style="font-size:0.8rem;color:var(--danger);" onclick="adminDeleteLink(${l.id},'${l.label.replace(/'/g, "\\'")}')">Löschen</button>
+                    <button class="c-btn c-btn--text" style="font-size:0.85rem;padding:2px 4px;" title="Bearbeiten" onclick="adminEditLinkToggle(${l.id})">✏️</button>
+                    <button class="c-btn c-btn--text" style="font-size:0.85rem;padding:2px 4px;" title="Löschen" onclick="adminDeleteLink(${l.id},'${l.label.replace(/'/g, "\\'")}')">🗑️</button>
                 </span>
                 <span class="link-edit" data-id="${l.id}" style="display:none;">
-                    <button class="c-btn c-btn--primary" style="font-size:0.8rem;" onclick="adminSaveLink(${l.id})">Speichern</button>
-                    <button class="c-btn c-btn--text" style="font-size:0.8rem;" onclick="adminEditLinkToggle(${l.id})">Abbrechen</button>
+                    <button class="c-btn c-btn--primary" style="font-size:0.8rem;padding:4px 12px;" onclick="adminSaveLink(${l.id})">Speichern</button>
+                    <button class="c-btn c-btn--text" style="font-size:0.8rem;padding:4px 8px;" onclick="adminEditLinkToggle(${l.id})">✕</button>
                 </span>
-            </td>
-        </tr>`).join('');
+            </div>
+        </div>`).join('');
 
     panel.innerHTML = `
-        <table style="width:100%;border-collapse:collapse;font-size:0.9rem;margin-bottom:20px;">
-            <thead>
-                <tr style="border-bottom:2px solid var(--border);">
-                    <th style="text-align:left;padding:8px;">Bezeichnung</th>
-                    <th style="text-align:left;padding:8px;">URL</th>
-                    <th style="padding:8px;width:180px;"></th>
-                </tr>
-            </thead>
-            <tbody>${rows || '<tr><td colspan="3" style="padding:12px;color:var(--text-muted);">Noch keine Links angelegt.</td></tr>'}</tbody>
-        </table>
+        <div style="margin-bottom:20px;">
+            ${items || '<p style="padding:12px 0;color:var(--text-muted);font-size:0.9rem;">Noch keine Links angelegt.</p>'}
+        </div>
         <div style="border:2px dashed var(--border);border-radius:var(--radius-md);padding:16px;">
             <p style="font-weight:600;margin-bottom:12px;">Neuen Link anlegen</p>
-            <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">
-                <div style="flex:1;min-width:160px;">
-                    <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:4px;">Bezeichnung *</label>
-                    <input type="text" id="link-new-label" class="c-input" placeholder="z.B. Pflanzendatenbank">
+            <div style="display:grid;grid-template-columns:1fr 2fr auto;gap:10px;align-items:end;">
+                <div>
+                    <label class="c-label" style="font-size:0.8rem;color:var(--text-muted);margin-bottom:4px;">Bezeichnung *</label>
+                    <input type="text" id="link-new-label" class="c-input" placeholder="z.B. Pflanzendatenbank" style="width:100%;box-sizing:border-box;">
                 </div>
-                <div style="flex:1;min-width:200px;">
-                    <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:4px;">URL *</label>
-                    <input type="text" id="link-new-url" class="c-input" placeholder="https://...">
+                <div>
+                    <label class="c-label" style="font-size:0.8rem;color:var(--text-muted);margin-bottom:4px;">URL *</label>
+                    <input type="text" id="link-new-url" class="c-input" placeholder="https://..." style="width:100%;box-sizing:border-box;">
                 </div>
-                <button class="c-btn c-btn--primary" onclick="adminAddLink()">Hinzufügen</button>
+                <button class="c-btn c-btn--primary" style="height:fit-content;" onclick="adminAddLink()">Hinzufügen</button>
             </div>
         </div>`;
 }
