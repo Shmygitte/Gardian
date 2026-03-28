@@ -442,7 +442,9 @@ function openPlantEditModal(pin) {
     document.getElementById('edit-marker-size').value = p.marker_size || '';
     document.getElementById('edit-marker-size').dataset.defaultSize = defaultSize;
     document.getElementById('edit-marker-size').dataset.pinType = p.type || 'flower';
-    document.getElementById('edit-marker-icon-color').value = p.marker_icon_color || '#333333';
+    const iconColorEl = document.getElementById('edit-marker-icon-color');
+    iconColorEl.value = p.marker_icon_color || '#ffffff';
+    iconColorEl.dataset.original = p.marker_icon_color || '';
 
     // 3. Icon-Picker
     const iconVal = p.marker_icon || '';
@@ -582,7 +584,13 @@ async function savePlantEdit() {
         marker_color: document.getElementById('edit-marker-color').value,
         marker_size:  document.getElementById('edit-marker-size').value  || null,
         marker_icon:  iconVal,
-        marker_icon_color: isSvgIcon ? document.getElementById('edit-marker-icon-color').value : null,
+        marker_icon_color: isSvgIcon ? (function() {
+            const el = document.getElementById('edit-marker-icon-color');
+            const orig = el.dataset.original || '';
+            // Nur speichern wenn User die Farbe tatsächlich geändert hat
+            if (!orig && el.value === '#ffffff') return null;
+            return el.value;
+        })() : null,
     };
     const res  = await fetch('backend/api.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     const data = await res.json();

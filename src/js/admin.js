@@ -121,11 +121,11 @@ async function loadAdminGroups() {
         </div>`).join('');
 
     panel.innerHTML = `
-        ${groupsHtml}
-        <div style="margin-top:16px; border:2px dashed var(--border); border-radius:var(--radius-md); padding:16px;">
+        <div style="margin-bottom:16px; border:2px dashed var(--border); border-radius:var(--radius-md); padding:16px;">
             <p style="font-weight:600; margin-bottom:12px;">Neue Gruppe anlegen</p>
             ${renderGroupFormNice({}, 'gform-new', 'adminAddGroup()')}
-        </div>`;
+        </div>
+        ${groupsHtml}`;
 
     // Fotos für jede bestehende Gruppe laden
     data.groups.forEach(g => gfLoadPhotos('gform-' + g.id, g.id));
