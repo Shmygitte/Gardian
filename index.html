@@ -139,11 +139,13 @@
                                 <button id="admin-tab-groups"     class="c-btn c-btn--text"      onclick="switchAdminTab('groups')">Pflanzengruppen</button>
                                 <button id="admin-tab-care-types" class="c-btn c-btn--text"      onclick="switchAdminTab('care-types')">Aufgaben-Typen</button>
                                 <button id="admin-tab-icons"      class="c-btn c-btn--text"      onclick="switchAdminTab('icons')">Icon-Bibliothek</button>
+                                <button id="admin-tab-links"      class="c-btn c-btn--text"      onclick="switchAdminTab('links')">Nützliche Links</button>
                             </div>
                             <div id="admin-panel-users"></div>
                             <div id="admin-panel-groups"     style="display:none;"></div>
                             <div id="admin-panel-care-types" style="display:none;"></div>
                             <div id="admin-panel-icons"      style="display:none;"></div>
+                            <div id="admin-panel-links"      style="display:none;"></div>
                         </div>
                     </div>
                 </div>
@@ -343,8 +345,10 @@
                 <input type="text" id="edit-plant-name" class="c-input" placeholder="Einzelpflanzenname (optional)">
 
                 <!-- Fotos -->
-                <div id="edit-plant-photos" style="display:none; margin-top:8px;">
-                    <div id="edit-plant-photos-grid" style="display:flex; flex-wrap:wrap; gap:4px;"></div>
+                <div id="edit-plant-photos" style="margin-top:8px;">
+                    <div id="edit-plant-photos-grid" style="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:6px;"></div>
+                    <input type="file" id="edit-plant-photo-file" accept="image/*" style="position:absolute;opacity:0;width:0;height:0;" onchange="uploadPlantPhotoFromModal(this)">
+                    <button class="c-btn c-btn--text" style="font-size:0.8rem;" onclick="document.getElementById('edit-plant-photo-file').click()">+ Foto hochladen</button>
                 </div>
             </div>
 

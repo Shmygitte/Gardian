@@ -473,10 +473,8 @@ function closePlantEditModal() {
 }
 
 async function loadPlantEditPhotos(plantId) {
-    const container = document.getElementById('edit-plant-photos');
     const grid = document.getElementById('edit-plant-photos-grid');
     grid.innerHTML = '';
-    container.style.display = 'none';
     try {
         const res = await fetch('backend/api.php', {
             method: 'POST',
@@ -486,11 +484,33 @@ async function loadPlantEditPhotos(plantId) {
         const data = await res.json();
         if (data.success && data.images.length) {
             grid.innerHTML = data.images.map(img =>
-                `<img src="${img.file_path}" style="width:48px;height:48px;object-fit:cover;border-radius:4px;border:1px solid var(--border);cursor:pointer;" onclick="showFullImage('${img.file_path_gallery || img.file_path}')">`
+                `<div style="position:relative;">
+                    <img src="${img.file_path}" style="width:48px;height:48px;object-fit:cover;border-radius:4px;border:1px solid var(--border);cursor:pointer;" onclick="showFullImage('${img.file_path_gallery || img.file_path}')">
+                    <button onclick="deletePlantPhotoFromModal(${img.id})" style="position:absolute;top:-4px;right:-4px;width:16px;height:16px;border-radius:50%;background:var(--danger);color:white;border:none;font-size:0.6rem;cursor:pointer;line-height:1;padding:0;">✕</button>
+                </div>`
             ).join('');
-            container.style.display = 'block';
         }
     } catch (e) {}
+}
+
+function uploadPlantPhotoFromModal(input) {
+    const plantId = document.getElementById('edit-plant-id').value;
+    if (!plantId) return;
+    uploadImage(input, 'plant', null, plantId, 'edit-plant-photos-grid');
+}
+
+async function deletePlantPhotoFromModal(imageId) {
+    if (!confirm('Foto löschen?')) return;
+    const res = await fetch('backend/api.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'deleteImage', id: imageId })
+    });
+    const data = await res.json();
+    if (data.success) {
+        const plantId = document.getElementById('edit-plant-id').value;
+        loadPlantEditPhotos(plantId);
+    }
 }
 
 async function deletePlantFromModal() {

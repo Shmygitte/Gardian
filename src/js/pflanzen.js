@@ -571,7 +571,11 @@ async function saveCroppedPlantImage() {
     const res  = await fetch('backend/api.php', { method: 'POST', body: formData });
     const data = await res.json();
     if (data.success) {
-        loadImages(type, groupId, plantId, containerId, userGroupId);
+        if (containerId === 'edit-plant-photos-grid' && typeof loadPlantEditPhotos === 'function') {
+            loadPlantEditPhotos(plantId);
+        } else {
+            loadImages(type, groupId, plantId, containerId, userGroupId);
+        }
     } else {
         alert(data.error || 'Upload fehlgeschlagen');
     }
