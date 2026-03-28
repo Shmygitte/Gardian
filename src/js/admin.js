@@ -318,7 +318,10 @@ async function loadAdminIcons() {
                         <div style="position:relative;border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px;display:flex;flex-direction:column;align-items:center;gap:4px;background:var(--bg-app);">
                             <img src="${icon.file_path}" style="width:40px;height:40px;object-fit:contain;" alt="${icon.name}">
                             <span style="font-size:0.7rem;color:var(--text-muted);text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;">${icon.name}</span>
-                            <button class="c-btn c-btn--text" style="font-size:0.7rem;color:var(--danger);padding:2px 4px;" onclick="adminDeleteIcon(${icon.id}, '${icon.name.replace(/'/g, "\\'")}')">Löschen</button>
+                            <div style="display:flex;gap:2px;">
+                                <button class="c-btn c-btn--text" style="font-size:0.7rem;padding:2px 4px;" onclick="adminEditIcon(${icon.id},'${icon.name.replace(/'/g, "\\'")}','${(icon.category||'').replace(/'/g, "\\'")}')">Bearbeiten</button>
+                                <button class="c-btn c-btn--text" style="font-size:0.7rem;color:var(--danger);padding:2px 4px;" onclick="adminDeleteIcon(${icon.id}, '${icon.name.replace(/'/g, "\\'")}')">Löschen</button>
+                            </div>
                         </div>
                     `).join('')}
                 </div>
@@ -376,6 +379,17 @@ async function adminUploadIcon() {
     } else {
         alert(data.error || 'Upload fehlgeschlagen');
     }
+}
+
+function adminEditIcon(id, name, category) {
+    const newName = prompt('Name:', name);
+    if (newName === null) return;
+    const newCategory = prompt('Kategorie:', category);
+    if (newCategory === null) return;
+    fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ action:'adminUpdateIcon', id, name: newName.trim(), category: newCategory.trim() }) })
+    .then(r => r.json())
+    .then(d => { if (d.success) loadAdminIcons(); else alert(d.error || 'Fehler'); });
 }
 
 async function adminDeleteIcon(id, name) {

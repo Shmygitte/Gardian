@@ -1343,6 +1343,17 @@ if ($action === 'uploadIcon') {
 // =========================
 // DELETE ICON
 // =========================
+if ($action === 'adminUpdateIcon') {
+    requireAdmin($db, $_SESSION['user_id']);
+    $id       = $data['id'] ?? null;
+    $name     = trim($data['name'] ?? '');
+    $category = trim($data['category'] ?? '');
+    if (!$id || !$name) { echo json_encode(['success' => false, 'error' => 'Name fehlt']); exit; }
+    $db->prepare("UPDATE gd_icon_library SET name=?, category=? WHERE id=?")->execute([$name, $category ?: null, $id]);
+    echo json_encode(['success' => true]);
+    exit;
+}
+
 if ($action === 'deleteIcon') {
     $target = $data['target'] ?? null; // 'library' oder 'user'
     $id     = $data['id']     ?? null;
