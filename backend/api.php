@@ -1004,9 +1004,11 @@ if ($action === 'cleanupImages') {
 // =========================
 if ($action === 'getAllImages') {
     try {
+        // 1. Alle User-eigenen Bilder (Pflanzen + Gruppen)
         $stmt = $db->prepare("
             SELECT
                 i.id, i.file_path, i.file_path_gallery, i.type, i.plant_id, i.group_id,
+                i.user_group_id,
                 p.user_group_id AS plant_user_group_id,
                 p.group_id      AS plant_group_id,
                 COALESCE(ug_direct.name, ug_via_plant.name, ug_img.name, dg_via_plant.name, dg_direct.name, '(Unbenannt)') AS group_name,
@@ -1027,7 +1029,52 @@ if ($action === 'getAllImages') {
             ORDER BY group_name, i.id
         ");
         $stmt->execute([$_SESSION['user_id']]);
-        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $userImages = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // 2. Gruppen-IDs ermitteln, für die der User EIGENE Gruppenbilder hat
+        $userGroupIdsWithPhotos = [];
+        foreach ($userImages as $img) {
+            if ($img['type'] === 'group' && $img['user_group_id']) {
+                // user_group_id → group_id (default) ermitteln
+                $ugStmt = $db->prepare("SELECT group_id FROM gd_user_groups WHERE id = ?");
+                $ugStmt->execute([$img['user_group_id']]);
+                $ug = $ugStmt->fetch(PDO::FETCH_ASSOC);
+                if ($ug && $ug['group_id']) $userGroupIdsWithPhotos[] = $ug['group_id'];
+            }
+        }
+
+        // 3. Admin-Default-Bilder als Fallback für Gruppen OHNE eigene User-Bilder
+        $defaultImages = [];
+        $stmtDefaults = $db->prepare("
+            SELECT
+                i.id, i.file_path, i.file_path_gallery, i.type, i.plant_id, i.group_id,
+                i.user_group_id,
+                NULL AS plant_user_group_id,
+                NULL AS plant_group_id,
+                dg.name AS group_name,
+                dg.type AS group_type
+            FROM gd_images i
+            JOIN gd_default_groups dg ON i.group_id = dg.id
+            WHERE i.type = 'default'
+              AND i.group_id IN (
+                  SELECT DISTINCT ug.group_id FROM gd_user_groups ug WHERE ug.user_id = ? AND ug.group_id IS NOT NULL
+              )
+            ORDER BY dg.name, i.id
+        ");
+        $stmtDefaults->execute([$_SESSION['user_id']]);
+        $allDefaults = $stmtDefaults->fetchAll(PDO::FETCH_ASSOC);
+
+        // Nur Default-Bilder für Gruppen wo User KEINE eigenen hat
+        foreach ($allDefaults as $def) {
+            if (!in_array($def['group_id'], $userGroupIdsWithPhotos)) {
+                $defaultImages[] = $def;
+            }
+        }
+
+        $rows = array_merge($userImages, $defaultImages);
+        usort($rows, function($a, $b) {
+            return strcmp($a['group_name'] ?? '', $b['group_name'] ?? '') ?: ($a['id'] - $b['id']);
+        });
         echo json_encode(['success' => true, 'images' => $rows]);
     } catch (PDOException $e) {
         echo json_encode(['success' => false, 'error' => $e->getMessage()]);

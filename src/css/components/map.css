@@ -73,6 +73,11 @@
     color: white;
 }
 
+.galerie-badge--default {
+    background: rgba(156, 163, 175, 0.85);
+    color: white;
+}
+
 .galerie-card__type {
     font-size: 0.7rem;
     color: rgba(255,255,255,0.65);

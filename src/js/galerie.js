@@ -69,9 +69,12 @@ function renderGalerie() {
     grid.innerHTML = images.map(img => {
         const icon    = TYPE_ICONS[img.group_type]  || '🌿';
         const label   = TYPE_LABELS_GAL[img.group_type] || img.group_type || '';
-        const isPlant = img.type === 'plant';
-        const badge   = isPlant
+        const isPlant   = img.type === 'plant';
+        const isDefault = img.type === 'default';
+        const badge     = isPlant
             ? '<span class="galerie-badge galerie-badge--plant">Pflanze</span>'
+            : isDefault
+            ? '<span class="galerie-badge galerie-badge--default">Standard</span>'
             : '<span class="galerie-badge galerie-badge--group">Gruppe</span>';
         return `
         <div class="galerie-card" onclick="showFullImage('${img.file_path_gallery || img.file_path}')">
