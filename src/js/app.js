@@ -155,7 +155,7 @@ async function handleMapUpload(e) {
         if (data.success) {
             updateMapBackground(data.url);
         } else {
-            alert("Upload fehlgeschlagen: " + data.message);
+            customAlert("Upload fehlgeschlagen: " + data.message);
         }
     } catch (err) {
         console.error("Upload error", err);
@@ -500,7 +500,7 @@ function uploadPlantPhotoFromModal(input) {
 }
 
 async function deletePlantPhotoFromModal(imageId) {
-    if (!confirm('Foto löschen?')) return;
+    if (!await customConfirm('Foto löschen?', { confirmLabel: 'Löschen', danger: true })) return;
     const res = await fetch('backend/api.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -516,7 +516,7 @@ async function deletePlantPhotoFromModal(imageId) {
 async function deletePlantFromModal() {
     const id = document.getElementById('edit-plant-id').value;
     if (!id) return;
-    if (!confirm('Pflanze wirklich löschen? Alle zugehörigen Fotos und Daten werden entfernt.')) return;
+    if (!await customConfirm('Pflanze wirklich löschen? Alle zugehörigen Fotos und Daten werden entfernt.', { confirmLabel: 'Löschen', danger: true })) return;
     try {
         const res = await fetch('backend/api.php', {
             method: 'POST',
@@ -528,10 +528,10 @@ async function deletePlantFromModal() {
             closePlantEditModal();
             await loadPins();
         } else {
-            alert(data.error || 'Fehler beim Löschen');
+            customAlert(data.error || 'Fehler beim Löschen');
         }
     } catch (e) {
-        alert('Fehler beim Löschen');
+        customAlert('Fehler beim Löschen');
     }
 }
 
@@ -590,7 +590,7 @@ async function savePlantEdit() {
         closePlantEditModal();
         await loadPins();
     } else {
-        alert(data.error || 'Fehler beim Speichern');
+        customAlert(data.error || 'Fehler beim Speichern');
     }
 }
 
@@ -761,8 +761,8 @@ function renderUserIconGrid() {
 async function uploadUserIcon(input) {
     const file = input.files[0];
     if (!file) return;
-    if (!file.name.toLowerCase().endsWith('.svg')) { alert('Nur SVG-Dateien erlaubt.'); return; }
-    if (file.size > 51200) { alert('Datei zu groß (max. 50KB).'); return; }
+    if (!file.name.toLowerCase().endsWith('.svg')) { customAlert('Nur SVG-Dateien erlaubt.'); return; }
+    if (file.size > 51200) { customAlert('Datei zu groß (max. 50KB).'); return; }
 
     const formData = new FormData();
     formData.append('action', 'uploadIcon');
@@ -777,13 +777,13 @@ async function uploadUserIcon(input) {
         selectUserIcon(String(data.id));
         renderUserIconGrid();
     } else {
-        alert(data.error || 'Upload fehlgeschlagen');
+        customAlert(data.error || 'Upload fehlgeschlagen');
     }
     input.value = '';
 }
 
 async function deleteUserIcon(id) {
-    if (!confirm('Icon wirklich löschen?')) return;
+    if (!await customConfirm('Icon wirklich löschen?', { confirmLabel: 'Löschen', danger: true })) return;
     const res  = await fetch('backend/api.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'deleteIcon', target: 'user', id }) });
     const data = await res.json();
     if (data.success) {
@@ -1054,7 +1054,7 @@ function closeNeueGruppeModal() {
 
 async function saveNeueGruppe() {
     const groupData = getGroupFormNiceData('form-neue-gruppe');
-    if (!groupData.name) { alert('Bitte einen Gruppennamen eingeben.'); return; }
+    if (!groupData.name) { customAlert('Bitte einen Gruppennamen eingeben.'); return; }
 
     const res  = await fetch('backend/api.php', {
         method: 'POST',
@@ -1062,7 +1062,7 @@ async function saveNeueGruppe() {
         body: JSON.stringify({ action: 'createUserGroup', ...groupData })
     });
     const data = await res.json();
-    if (!data.success) { alert(data.error || 'Fehler beim Anlegen der Gruppe'); return; }
+    if (!data.success) { customAlert(data.error || 'Fehler beim Anlegen der Gruppe'); return; }
 
     closeNeueGruppeModal();
 
@@ -1078,7 +1078,7 @@ async function saveNeueGruppe() {
             await loadFilterGroups();
             await loadPins();
         } else {
-            alert(plantData.error || 'Pflanze konnte nicht angelegt werden');
+            customAlert(plantData.error || 'Pflanze konnte nicht angelegt werden');
         }
     } else {
         await loadFilterGroups();
@@ -1098,7 +1098,7 @@ async function confirmAddPlant() {
     // Neue Gruppe anlegen
     if (selectVal === '__new__') {
         const groupData = getNewGroupFormData();
-        if (!groupData.name) { alert('Bitte einen Gruppennamen eingeben.'); return; }
+        if (!groupData.name) { customAlert('Bitte einen Gruppennamen eingeben.'); return; }
 
         const res  = await fetch('backend/api.php', {
             method: 'POST',
@@ -1106,7 +1106,7 @@ async function confirmAddPlant() {
             body: JSON.stringify({ action: 'createUserGroup', ...groupData })
         });
         const data = await res.json();
-        if (!data.success) { alert(data.error || 'Fehler beim Anlegen der Gruppe'); return; }
+        if (!data.success) { customAlert(data.error || 'Fehler beim Anlegen der Gruppe'); return; }
 
         // Pflanze in neuer Gruppe platzieren (group_id = null, da reine User-Gruppe)
         const plantRes  = await fetch('backend/api.php', {

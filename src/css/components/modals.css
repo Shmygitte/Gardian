@@ -188,3 +188,52 @@
     border-radius: 4px;
     background: var(--bg-app);
 }
+
+/* =========================
+   Custom Dialog (alert / confirm replacement)
+   ========================= */
+.c-dialog {
+    animation: dialogFadeIn 0.15s ease;
+}
+
+.c-dialog > .c-card {
+    width: min(90vw, 340px);
+    animation: dialogSlideIn 0.15s ease;
+}
+
+.c-dialog--closing {
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.c-dialog__body {
+    font-size: 0.88rem;
+    line-height: 1.5;
+    color: var(--text-main);
+    padding: 16px 18px 12px;
+    word-break: break-word;
+}
+
+.c-dialog .c-modal__footer {
+    padding: 8px 14px 12px;
+    border-top: 1px solid var(--border);
+}
+
+.c-dialog .c-btn--danger {
+    background: var(--danger);
+    color: white;
+}
+
+.c-dialog .c-btn--danger:hover {
+    filter: brightness(1.1);
+}
+
+@keyframes dialogFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes dialogSlideIn {
+    from { transform: translateY(-12px) scale(0.97); opacity: 0; }
+    to   { transform: translateY(0) scale(1); opacity: 1; }
+}

@@ -223,7 +223,7 @@ function gfUploadPhoto(input, formId) {
     const container = document.getElementById(formId + '-photo-container');
     const groupId = container?.dataset?.groupId;
     if (!groupId) {
-        alert('Bitte speichere die Gruppe zuerst, bevor du ein Foto hochlädst.');
+        customAlert('Bitte speichere die Gruppe zuerst, bevor du ein Foto hochlädst.');
         input.value = '';
         return;
     }
@@ -233,7 +233,7 @@ function gfUploadPhoto(input, formId) {
 
 /** Löscht ein Gruppen-Foto */
 async function gfDeletePhoto(imageId, formId, groupId) {
-    if (!confirm('Foto löschen?')) return;
+    if (!await customConfirm('Foto löschen?', { confirmLabel: 'Löschen', danger: true })) return;
     const res = await fetch('backend/api.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

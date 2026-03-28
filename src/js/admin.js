@@ -89,11 +89,11 @@ async function adminUpdateRole(id, role) {
 }
 
 async function adminDeleteUser(id, username) {
-    if (!confirm(`User "${username}" wirklich löschen?`)) return;
+    if (!await customConfirm(`User "${username}" wirklich löschen?`, { confirmLabel: 'Löschen', danger: true })) return;
     const res  = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'adminDeleteUser', id }) });
     const data = await res.json();
     if (data.success) loadAdminUsers();
-    else alert(data.error || 'Fehler beim Löschen');
+    else customAlert(data.error || 'Fehler beim Löschen');
 }
 
 // ========================
@@ -209,15 +209,15 @@ async function adminAddGroup() {
     const res  = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(formData) });
     const data = await res.json();
     if (data.success) loadAdminGroups();
-    else alert(data.error || 'Fehler');
+    else customAlert(data.error || 'Fehler');
 }
 
 async function adminDeleteGroup(id, name) {
-    if (!confirm(`Gruppe "${name}" wirklich löschen?`)) return;
+    if (!await customConfirm(`Gruppe "${name}" wirklich löschen?`, { confirmLabel: 'Löschen', danger: true })) return;
     const res  = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'adminDeleteGroup', id }) });
     const data = await res.json();
     if (data.success) loadAdminGroups();
-    else alert(data.error || 'Fehler');
+    else customAlert(data.error || 'Fehler');
 }
 
 // ========================
@@ -291,30 +291,30 @@ function adminEditCareTypeToggle(id) {
 async function adminSaveCareType(id) {
     const name = document.getElementById(`ct-name-${id}`).value.trim();
     const icon = document.getElementById(`ct-icon-${id}`).value.trim();
-    if (!name) { alert('Name darf nicht leer sein.'); return; }
+    if (!name) { customAlert('Name darf nicht leer sein.'); return; }
     const res = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ action:'adminSaveCareTaskType', id, name, icon }) });
     const data = await res.json();
     if (data.success) loadAdminCareTypes();
-    else alert(data.error || 'Fehler');
+    else customAlert(data.error || 'Fehler');
 }
 
 async function adminAddCareType() {
     const name = document.getElementById('ct-new-name').value.trim();
     const icon = document.getElementById('ct-new-icon').value.trim();
-    if (!name) { alert('Bitte einen Namen eingeben.'); return; }
+    if (!name) { customAlert('Bitte einen Namen eingeben.'); return; }
     const res  = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'adminSaveCareTaskType', name, icon }) });
     const data = await res.json();
     if (data.success) loadAdminCareTypes();
-    else alert(data.error || 'Fehler');
+    else customAlert(data.error || 'Fehler');
 }
 
 async function adminDeleteCareType(id, name) {
-    if (!confirm(`Typ "${name}" löschen? Bestehende Aufgaben dieses Typs behalten ihren Namen.`)) return;
+    if (!await customConfirm(`Typ "${name}" löschen? Bestehende Aufgaben dieses Typs behalten ihren Namen.`, { confirmLabel: 'Löschen', danger: true })) return;
     const res  = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'adminDeleteCareTaskType', id }) });
     const data = await res.json();
     if (data.success) loadAdminCareTypes();
-    else alert(data.error || 'Fehler');
+    else customAlert(data.error || 'Fehler');
 }
 
 // ========================
@@ -402,9 +402,9 @@ async function adminUploadIcon() {
     const category  = catSelect === '__new__' ? document.getElementById('admin-icon-category-new').value.trim() : catSelect;
     const file      = fileInput.files[0];
 
-    if (!file) { alert('Bitte eine SVG-Datei auswählen.'); return; }
-    if (!file.name.toLowerCase().endsWith('.svg')) { alert('Nur SVG-Dateien erlaubt.'); return; }
-    if (file.size > 51200) { alert('Datei zu groß (max. 50KB).'); return; }
+    if (!file) { customAlert('Bitte eine SVG-Datei auswählen.'); return; }
+    if (!file.name.toLowerCase().endsWith('.svg')) { customAlert('Nur SVG-Dateien erlaubt.'); return; }
+    if (file.size > 51200) { customAlert('Datei zu groß (max. 50KB).'); return; }
 
     const formData = new FormData();
     formData.append('action', 'uploadIcon');
@@ -422,7 +422,7 @@ async function adminUploadIcon() {
         }
         loadAdminIcons();
     } else {
-        alert(data.error || 'Upload fehlgeschlagen');
+        customAlert(data.error || 'Upload fehlgeschlagen');
     }
 }
 
@@ -434,16 +434,16 @@ function adminEditIconToggle(id) {
 async function adminSaveIcon(id) {
     const name = document.getElementById(`icon-name-${id}`).value.trim();
     const category = document.getElementById(`icon-cat-${id}`).value.trim();
-    if (!name) { alert('Name darf nicht leer sein.'); return; }
+    if (!name) { customAlert('Name darf nicht leer sein.'); return; }
     const res = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ action:'adminUpdateIcon', id, name, category }) });
     const data = await res.json();
     if (data.success) loadAdminIcons();
-    else alert(data.error || 'Fehler');
+    else customAlert(data.error || 'Fehler');
 }
 
 async function adminDeleteIcon(id, name) {
-    if (!confirm(`Icon "${name}" wirklich löschen?`)) return;
+    if (!await customConfirm(`Icon "${name}" wirklich löschen?`, { confirmLabel: 'Löschen', danger: true })) return;
     const res  = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'deleteIcon', target:'library', id }) });
     const data = await res.json();
     if (data.success) {
@@ -452,7 +452,7 @@ async function adminDeleteIcon(id, name) {
         }
         loadAdminIcons();
     } else {
-        alert(data.error || 'Fehler beim Löschen');
+        customAlert(data.error || 'Fehler beim Löschen');
     }
 }
 
@@ -556,28 +556,28 @@ function adminEditLinkToggle(id) {
 async function adminSaveLink(id) {
     const label = document.getElementById(`link-label-${id}`).value.trim();
     const url   = document.getElementById(`link-url-${id}`).value.trim();
-    if (!label || !url) { alert('Bezeichnung und URL sind Pflichtfelder.'); return; }
+    if (!label || !url) { customAlert('Bezeichnung und URL sind Pflichtfelder.'); return; }
     const res = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ action:'adminUpdateLink', id, label, url }) });
     const data = await res.json();
     if (data.success) loadAdminLinks();
-    else alert(data.error || 'Fehler');
+    else customAlert(data.error || 'Fehler');
 }
 
 async function adminAddLink() {
     const label = document.getElementById('link-new-label').value.trim();
     const url   = document.getElementById('link-new-url').value.trim();
-    if (!label || !url) { alert('Bitte Bezeichnung und URL eingeben.'); return; }
+    if (!label || !url) { customAlert('Bitte Bezeichnung und URL eingeben.'); return; }
     const res  = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'adminAddLink', label, url }) });
     const data = await res.json();
     if (data.success) loadAdminLinks();
-    else alert(data.error || 'Fehler');
+    else customAlert(data.error || 'Fehler');
 }
 
 async function adminDeleteLink(id, label) {
-    if (!confirm(`Link "${label}" wirklich löschen?`)) return;
+    if (!await customConfirm(`Link "${label}" wirklich löschen?`, { confirmLabel: 'Löschen', danger: true })) return;
     const res  = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'adminDeleteLink', id }) });
     const data = await res.json();
     if (data.success) loadAdminLinks();
-    else alert(data.error || 'Fehler');
+    else customAlert(data.error || 'Fehler');
 }

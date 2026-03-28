@@ -420,7 +420,7 @@ async function addBloomYear(type, id) {
 // PFLANZE LÖSCHEN
 // ========================
 async function deletePlant(plantId) {
-    if (!confirm('Pflanze wirklich löschen? Alle Fotos und Beobachtungen werden entfernt.')) return;
+    if (!await customConfirm('Pflanze wirklich löschen? Alle Fotos und Beobachtungen werden entfernt.', { confirmLabel: 'Löschen', danger: true })) return;
     const res  = await fetch('backend/api.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -431,7 +431,7 @@ async function deletePlant(plantId) {
         await loadPflanzenListe();
         if (typeof loadPins === 'function') await loadPins();
     } else {
-        alert(data.error || 'Fehler beim Löschen');
+        customAlert(data.error || 'Fehler beim Löschen');
     }
 }
 
@@ -442,7 +442,7 @@ async function deleteUserGroup(groupId, plantCount) {
     const warnung = plantCount > 0
         ? `Gruppe und alle ${plantCount} Pflanze(n) inkl. Fotos und Beobachtungen löschen?`
         : 'Gruppe wirklich löschen?';
-    if (!confirm(warnung)) return;
+    if (!await customConfirm(warnung, { confirmLabel: 'Löschen', danger: true })) return;
     const res  = await fetch('backend/api.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -454,7 +454,7 @@ async function deleteUserGroup(groupId, plantCount) {
         if (typeof loadPins === 'function') await loadPins();
         if (typeof loadFilterGroups === 'function') await loadFilterGroups();
     } else {
-        alert(data.error || 'Fehler beim Löschen');
+        customAlert(data.error || 'Fehler beim Löschen');
     }
 }
 
@@ -474,7 +474,7 @@ function openGruppeBearbeitenModal(groupId) {
 
 async function saveGruppeBearbeiten(groupId, formId) {
     const formData = getGroupFormNiceData(formId);
-    if (!formData.name) { alert('Bitte einen Namen eingeben.'); return; }
+    if (!formData.name) { customAlert('Bitte einen Namen eingeben.'); return; }
 
     const res  = await fetch('backend/api.php', {
         method: 'POST',
@@ -487,7 +487,7 @@ async function saveGruppeBearbeiten(groupId, formId) {
         await loadPflanzenListe();
         if (typeof loadPins === 'function') await loadPins();
     } else {
-        alert(data.error || 'Fehler beim Speichern');
+        customAlert(data.error || 'Fehler beim Speichern');
     }
 }
 
@@ -581,7 +581,7 @@ async function saveCroppedPlantImage() {
             loadImages(type, groupId, plantId, containerId, userGroupId);
         }
     } else {
-        alert(data.error || 'Upload fehlgeschlagen');
+        customAlert(data.error || 'Upload fehlgeschlagen');
     }
     closePlantCropModal();
 }
@@ -620,7 +620,7 @@ async function loadImages(type, groupId, plantId, containerId, userGroupId) {
 }
 
 async function deleteImage(id, type, groupId, plantId, containerId, userGroupId) {
-    if (!confirm('Foto löschen?')) return;
+    if (!await customConfirm('Foto löschen?', { confirmLabel: 'Löschen', danger: true })) return;
     const res  = await fetch('backend/api.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
