@@ -179,6 +179,16 @@ CREATE TABLE IF NOT EXISTS gd_images (
 );
  
 -- ------------------------------------------------------------
+-- USEFUL LINKS (Admin-defined)
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS gd_useful_links (
+    id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    url           VARCHAR(500)  NOT NULL,
+    label         VARCHAR(255)  NOT NULL,
+    created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ------------------------------------------------------------
 -- USER GARDEN CONFIG (one row per user)
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS gd_user_garden_config (

@@ -26,11 +26,12 @@ let adminCurrentTab = 'users';
 
 function switchAdminTab(tab) {
     adminCurrentTab = tab;
-    ['users','groups','care-types','icons'].forEach(t => {
+    ['users','groups','care-types','icons','links'].forEach(t => {
         document.getElementById(`admin-panel-${t}`).style.display = tab === t ? 'block' : 'none';
         document.getElementById(`admin-tab-${t}`).className = 'c-btn ' + (tab === t ? 'c-btn--secondary' : 'c-btn--text');
     });
     if (tab === 'icons') loadAdminIcons();
+    if (tab === 'links') loadAdminLinks();
 }
 
 async function loadAdminView() {
@@ -389,4 +390,102 @@ async function adminDeleteIcon(id, name) {
     } else {
         alert(data.error || 'Fehler beim Löschen');
     }
+}
+
+// ========================
+// NÜTZLICHE LINKS
+// ========================
+async function loadAdminLinks() {
+    const panel = document.getElementById('admin-panel-links');
+    panel.innerHTML = '<p style="color:var(--text-muted)">Lade...</p>';
+    const res  = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'adminGetLinks' }) });
+    const data = await res.json();
+    if (!data.success) { panel.innerHTML = '<p style="color:red">Fehler.</p>'; return; }
+
+    const rows = data.links.map(l => `
+        <tr id="link-row-${l.id}" style="border-bottom:1px solid var(--border);">
+            <td style="padding:8px;">
+                <span class="link-display" data-id="${l.id}">
+                    <a href="${l.url}" target="_blank" rel="noopener" style="color:var(--primary);">${l.label}</a>
+                </span>
+                <span class="link-edit" data-id="${l.id}" style="display:none;">
+                    <input type="text" class="c-input" value="${l.label.replace(/"/g, '&quot;')}" id="link-label-${l.id}" style="width:100%;">
+                </span>
+            </td>
+            <td style="padding:8px;color:var(--text-muted);font-size:0.85rem;">
+                <span class="link-display" data-id="${l.id}">${l.url}</span>
+                <span class="link-edit" data-id="${l.id}" style="display:none;">
+                    <input type="text" class="c-input" value="${l.url.replace(/"/g, '&quot;')}" id="link-url-${l.id}" style="width:100%;">
+                </span>
+            </td>
+            <td style="padding:8px;white-space:nowrap;">
+                <span class="link-display" data-id="${l.id}">
+                    <button class="c-btn c-btn--text" style="font-size:0.8rem;" onclick="adminEditLinkToggle(${l.id})">Bearbeiten</button>
+                    <button class="c-btn c-btn--text" style="font-size:0.8rem;color:var(--danger);" onclick="adminDeleteLink(${l.id},'${l.label.replace(/'/g, "\\'")}')">Löschen</button>
+                </span>
+                <span class="link-edit" data-id="${l.id}" style="display:none;">
+                    <button class="c-btn c-btn--primary" style="font-size:0.8rem;" onclick="adminSaveLink(${l.id})">Speichern</button>
+                    <button class="c-btn c-btn--text" style="font-size:0.8rem;" onclick="adminEditLinkToggle(${l.id})">Abbrechen</button>
+                </span>
+            </td>
+        </tr>`).join('');
+
+    panel.innerHTML = `
+        <table style="width:100%;border-collapse:collapse;font-size:0.9rem;margin-bottom:20px;">
+            <thead>
+                <tr style="border-bottom:2px solid var(--border);">
+                    <th style="text-align:left;padding:8px;">Bezeichnung</th>
+                    <th style="text-align:left;padding:8px;">URL</th>
+                    <th style="padding:8px;width:180px;"></th>
+                </tr>
+            </thead>
+            <tbody>${rows || '<tr><td colspan="3" style="padding:12px;color:var(--text-muted);">Noch keine Links angelegt.</td></tr>'}</tbody>
+        </table>
+        <div style="border:2px dashed var(--border);border-radius:var(--radius-md);padding:16px;">
+            <p style="font-weight:600;margin-bottom:12px;">Neuen Link anlegen</p>
+            <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">
+                <div style="flex:1;min-width:160px;">
+                    <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:4px;">Bezeichnung *</label>
+                    <input type="text" id="link-new-label" class="c-input" placeholder="z.B. Pflanzendatenbank">
+                </div>
+                <div style="flex:1;min-width:200px;">
+                    <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:4px;">URL *</label>
+                    <input type="text" id="link-new-url" class="c-input" placeholder="https://...">
+                </div>
+                <button class="c-btn c-btn--primary" onclick="adminAddLink()">Hinzufügen</button>
+            </div>
+        </div>`;
+}
+
+function adminEditLinkToggle(id) {
+    document.querySelectorAll(`.link-display[data-id="${id}"]`).forEach(el => el.style.display = el.style.display === 'none' ? '' : 'none');
+    document.querySelectorAll(`.link-edit[data-id="${id}"]`).forEach(el => el.style.display = el.style.display === 'none' ? '' : 'none');
+}
+
+async function adminSaveLink(id) {
+    const label = document.getElementById(`link-label-${id}`).value.trim();
+    const url   = document.getElementById(`link-url-${id}`).value.trim();
+    if (!label || !url) { alert('Bezeichnung und URL sind Pflichtfelder.'); return; }
+    const res  = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'adminUpdateLink', id, label, url }) });
+    const data = await res.json();
+    if (data.success) loadAdminLinks();
+    else alert(data.error || 'Fehler');
+}
+
+async function adminAddLink() {
+    const label = document.getElementById('link-new-label').value.trim();
+    const url   = document.getElementById('link-new-url').value.trim();
+    if (!label || !url) { alert('Bitte Bezeichnung und URL eingeben.'); return; }
+    const res  = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'adminAddLink', label, url }) });
+    const data = await res.json();
+    if (data.success) loadAdminLinks();
+    else alert(data.error || 'Fehler');
+}
+
+async function adminDeleteLink(id, label) {
+    if (!confirm(`Link "${label}" wirklich löschen?`)) return;
+    const res  = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'adminDeleteLink', id }) });
+    const data = await res.json();
+    if (data.success) loadAdminLinks();
+    else alert(data.error || 'Fehler');
 }

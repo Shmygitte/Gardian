@@ -1220,6 +1220,46 @@ if ($action === 'adminDeleteCareTaskType') {
 }
 
 // =========================
+// NÜTZLICHE LINKS (Admin)
+// =========================
+if ($action === 'adminGetLinks') {
+    requireAdmin($db, $_SESSION['user_id']);
+    $stmt = $db->query("SELECT id, url, label, created_at FROM gd_useful_links ORDER BY created_at DESC");
+    echo json_encode(['success' => true, 'links' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+    exit;
+}
+
+if ($action === 'adminAddLink') {
+    requireAdmin($db, $_SESSION['user_id']);
+    $label = trim($data['label'] ?? '');
+    $url   = trim($data['url'] ?? '');
+    if (!$label || !$url) { echo json_encode(['success' => false, 'error' => 'Bezeichnung und URL sind Pflichtfelder']); exit; }
+    $db->prepare("INSERT INTO gd_useful_links (url, label) VALUES (?,?)")->execute([$url, $label]);
+    echo json_encode(['success' => true, 'id' => $db->lastInsertId()]);
+    exit;
+}
+
+if ($action === 'adminUpdateLink') {
+    requireAdmin($db, $_SESSION['user_id']);
+    $id    = $data['id'] ?? null;
+    $label = trim($data['label'] ?? '');
+    $url   = trim($data['url'] ?? '');
+    if (!$id || !$label || !$url) { echo json_encode(['success' => false, 'error' => 'Felder fehlen']); exit; }
+    $db->prepare("UPDATE gd_useful_links SET url=?, label=? WHERE id=?")->execute([$url, $label, $id]);
+    echo json_encode(['success' => true]);
+    exit;
+}
+
+if ($action === 'adminDeleteLink') {
+    requireAdmin($db, $_SESSION['user_id']);
+    $id = $data['id'] ?? null;
+    if (!$id) { echo json_encode(['success' => false]); exit; }
+    $db->prepare("DELETE FROM gd_useful_links WHERE id=?")->execute([$id]);
+    echo json_encode(['success' => true]);
+    exit;
+}
+
+// =========================
 // ICON LIBRARY (alle User)
 // =========================
 if ($action === 'getIconLibrary') {
