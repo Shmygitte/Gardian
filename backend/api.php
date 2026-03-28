@@ -949,8 +949,20 @@ if ($action === 'adminDeleteGroup') {
     requireAdmin($db, $_SESSION['user_id']);
     $id = $data['id'] ?? null;
     if (!$id) { echo json_encode(['success' => false]); exit; }
-    $db->prepare("DELETE FROM gd_default_groups WHERE id = ?")->execute([$id]);
-    echo json_encode(['success' => true]);
+    try {
+        $db->beginTransaction();
+        // Referenzen lösen – User-Pflanzen und -Gruppen bleiben erhalten
+        $db->prepare("UPDATE gd_user_plants SET group_id = NULL WHERE group_id = ?")->execute([$id]);
+        $db->prepare("UPDATE gd_user_groups SET group_id = NULL WHERE group_id = ?")->execute([$id]);
+        $db->prepare("UPDATE gd_images SET group_id = NULL WHERE group_id = ?")->execute([$id]);
+        // Admin-Gruppe selbst löschen
+        $db->prepare("DELETE FROM gd_default_groups WHERE id = ?")->execute([$id]);
+        $db->commit();
+        echo json_encode(['success' => true]);
+    } catch (Exception $e) {
+        $db->rollBack();
+        echo json_encode(['success' => false, 'error' => 'Fehler beim Löschen der Gruppe']);
+    }
     exit;
 }
 
