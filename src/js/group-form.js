@@ -71,6 +71,16 @@ function renderGroupFormNice(data = {}, formId, onSubmit) {
                     style="width:15px;height:15px;cursor:pointer;accent-color:var(--primary);">
                 🌿 Immergrün <span style="color:var(--text-muted);font-size:0.75rem;">(außerhalb der Blütezeit sichtbar)</span>
             </label>
+            <div>
+                <label class="c-gf__label" style="${GF_LABEL_STYLE}">📷 Foto</label>
+                <div id="${formId}-photo-container" style="margin-bottom:6px;"></div>
+                <label style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1px dashed var(--border);border-radius:4px;cursor:pointer;font-size:0.78rem;color:var(--text-muted);transition:border-color 0.2s;"
+                    onmouseenter="this.style.borderColor='var(--primary)'" onmouseleave="this.style.borderColor='var(--border)'">
+                    📎 Foto hochladen
+                    <input type="file" accept="image/*" style="display:none;"
+                        onchange="gfUploadPhoto(this, '${formId}')">
+                </label>
+            </div>
         </div>`;
 
     // Rechte Spalte: Steckbrief
@@ -171,4 +181,64 @@ function gfRenderIconGrid(formId) {
             <img src="${path}" style="width:100%;height:100%;object-fit:contain;">
         </button>`;
     }).join('');
+}
+
+// ========================
+// Gruppen-Foto Upload/Anzeige
+// ========================
+
+/** Lädt und zeigt Fotos für eine Gruppe im Formular an */
+function gfLoadPhotos(formId, groupId) {
+    const container = document.getElementById(formId + '-photo-container');
+    if (!container || !groupId) return;
+    // Speichere groupId am Container für spätere Uploads
+    container.dataset.groupId = groupId;
+
+    fetch('backend/api.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'getImages', type: 'default', group_id: groupId })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (!data.success || !data.images || !data.images.length) {
+            container.innerHTML = '<p style="font-size:0.75rem;color:var(--text-muted);">Noch keine Fotos.</p>';
+            return;
+        }
+        container.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:6px;">
+            ${data.images.map(img => `
+                <div style="position:relative;">
+                    <img src="${img.file_path}" style="width:80px;height:60px;object-fit:cover;border-radius:6px;border:1px solid var(--border);">
+                    <button type="button" onclick="gfDeletePhoto(${img.id}, '${formId}', ${groupId})"
+                        style="position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:var(--danger);color:white;border:none;font-size:0.65rem;cursor:pointer;line-height:1;">✕</button>
+                </div>`).join('')}
+        </div>`;
+    });
+}
+
+/** Upload-Handler für Gruppen-Fotos (nutzt bestehenden Crop-Dialog) */
+function gfUploadPhoto(input, formId) {
+    const file = input.files[0];
+    if (!file) return;
+    const container = document.getElementById(formId + '-photo-container');
+    const groupId = container?.dataset?.groupId;
+    if (!groupId) {
+        alert('Bitte speichere die Gruppe zuerst, bevor du ein Foto hochlädst.');
+        input.value = '';
+        return;
+    }
+    // Nutze bestehenden Crop-Dialog aus pflanzen.js
+    uploadImage(input, 'default', groupId, null, formId + '-photo-container', null);
+}
+
+/** Löscht ein Gruppen-Foto */
+async function gfDeletePhoto(imageId, formId, groupId) {
+    if (!confirm('Foto löschen?')) return;
+    const res = await fetch('backend/api.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'deleteImage', id: imageId })
+    });
+    const data = await res.json();
+    if (data.success) gfLoadPhotos(formId, groupId);
 }

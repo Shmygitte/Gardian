@@ -573,6 +573,10 @@ async function saveCroppedPlantImage() {
     if (data.success) {
         if (containerId === 'edit-plant-photos-grid' && typeof loadPlantEditPhotos === 'function') {
             loadPlantEditPhotos(plantId);
+        } else if (containerId.endsWith('-photo-container') && type === 'default' && typeof gfLoadPhotos === 'function') {
+            // Admin-Gruppenfotos: eigenen Renderer nutzen
+            const formId = containerId.replace('-photo-container', '');
+            gfLoadPhotos(formId, groupId);
         } else {
             loadImages(type, groupId, plantId, containerId, userGroupId);
         }
@@ -600,14 +604,16 @@ async function loadImages(type, groupId, plantId, containerId, userGroupId) {
     const sorted = [...data.images].sort((a, b) => (a.type === 'plant' ? 0 : 1) - (b.type === 'plant' ? 0 : 1));
     container.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px;">
         ${sorted.map(img => {
-            const badgeColor = img.type === 'plant' ? 'rgba(34,197,94,0.9)' : 'rgba(99,102,241,0.9)';
-            const badgeText  = img.type === 'plant' ? 'Pflanze' : 'Gruppe';
+            const isDefault = img.type === 'default';
+            const badgeColor = img.type === 'plant' ? 'rgba(34,197,94,0.9)' : isDefault ? 'rgba(156,163,175,0.9)' : 'rgba(99,102,241,0.9)';
+            const badgeText  = img.type === 'plant' ? 'Pflanze' : isDefault ? 'Standard' : 'Gruppe';
+            const deleteBtn = isDefault ? '' : `<button onclick="deleteImage(${img.id}, '${type}', ${groupId||'null'}, ${plantId||'null'}, '${containerId}', ${userGroupId||'null'})"
+                    style="position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:var(--danger);color:white;border:none;font-size:0.65rem;cursor:pointer;line-height:1;">✕</button>`;
             return `
             <div style="position:relative;">
                 <img src="${img.file_path}" style="width:80px;height:60px;object-fit:cover;border-radius:6px;border:1px solid var(--border);">
                 <span style="position:absolute;bottom:3px;left:3px;background:${badgeColor};color:white;font-size:0.5rem;font-weight:700;padding:1px 5px;border-radius:10px;text-transform:uppercase;letter-spacing:0.03em;">${badgeText}</span>
-                <button onclick="deleteImage(${img.id}, '${type}', ${groupId||'null'}, ${plantId||'null'}, '${containerId}', ${userGroupId||'null'})"
-                    style="position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:var(--danger);color:white;border:none;font-size:0.65rem;cursor:pointer;line-height:1;">✕</button>
+                ${deleteBtn}
             </div>`;
         }).join('')}
     </div>`;

@@ -1273,9 +1273,8 @@ async function showHoverGallery(e, pin) {
             ${hasImages ? `
             <div style="display:grid;grid-template-columns:repeat(2,${w}px);gap:2px;">
                 ${data.images.slice(0, 6).map(img => {
-                    const isPlant = img.src === 'plant';
-                    const badgeColor = isPlant ? 'rgba(34,197,94,0.9)' : 'rgba(99,102,241,0.9)';
-                    const badgeText  = isPlant ? 'Pflanze' : 'Gruppe';
+                    const badgeColor = img.src === 'plant' ? 'rgba(34,197,94,0.9)' : img.src === 'default' ? 'rgba(156,163,175,0.9)' : 'rgba(99,102,241,0.9)';
+                    const badgeText  = img.src === 'plant' ? 'Pflanze' : img.src === 'default' ? 'Standard' : 'Gruppe';
                     return `<div style="position:relative;">
                         <img src="${img.file_path}" style="width:${w}px;height:${h}px;object-fit:cover;border-radius:2px;display:block;">
                         <span style="position:absolute;bottom:2px;left:2px;background:${badgeColor};color:white;font-size:0.5rem;font-weight:700;padding:1px 4px;border-radius:4px;text-transform:uppercase;letter-spacing:0.03em;">${badgeText}</span>
@@ -1350,7 +1349,7 @@ async function openGalleryModal(pin) {
 
     const images = [
         ...(dataPlant.success ? dataPlant.images.map(i => ({ ...i, _src: 'plant' })) : []),
-        ...(dataGroup.success ? dataGroup.images.map(i => ({ ...i, _src: 'group' })) : [])
+        ...(dataGroup.success ? dataGroup.images.map(i => ({ ...i, _src: i.type === 'default' ? 'default' : 'group' })) : [])
     ];
 
     if (!images.length) {
@@ -1359,9 +1358,8 @@ async function openGalleryModal(pin) {
     }
 
     grid.innerHTML = images.map(img => {
-        const isPlant    = img._src === 'plant';
-        const badgeColor = isPlant ? 'rgba(34,197,94,0.9)' : 'rgba(99,102,241,0.9)';
-        const badgeText  = isPlant ? 'Pflanze' : 'Gruppe';
+        const badgeColor = img._src === 'plant' ? 'rgba(34,197,94,0.9)' : img._src === 'default' ? 'rgba(156,163,175,0.9)' : 'rgba(99,102,241,0.9)';
+        const badgeText  = img._src === 'plant' ? 'Pflanze' : img._src === 'default' ? 'Standard' : 'Gruppe';
         return `
         <div class="gallery-image-item" onclick="showFullImage('${img.file_path}')">
             <img src="${img.file_path}" alt="">

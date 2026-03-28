@@ -126,6 +126,9 @@ async function loadAdminGroups() {
             <p style="font-weight:600; margin-bottom:12px;">Neue Gruppe anlegen</p>
             ${renderGroupFormNice({}, 'gform-new', 'adminAddGroup()')}
         </div>`;
+
+    // Fotos für jede bestehende Gruppe laden
+    data.groups.forEach(g => gfLoadPhotos('gform-' + g.id, g.id));
 }
 
 function renderGroupForm(data, onsubmit) {

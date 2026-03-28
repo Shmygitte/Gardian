@@ -16,6 +16,8 @@ try { $db->exec("ALTER TABLE gd_images ADD COLUMN file_path_gallery VARCHAR(500)
 try { $db->exec("ALTER TABLE gd_user_plants ADD COLUMN marker_icon_color VARCHAR(7) NULL DEFAULT NULL"); } catch (PDOException $e) {}
 try { $db->exec("ALTER TABLE gd_default_groups ADD COLUMN marker_icon_color VARCHAR(7) NULL DEFAULT NULL"); } catch (PDOException $e) {}
 try { $db->exec("ALTER TABLE gd_user_groups ADD COLUMN marker_icon_color VARCHAR(7) NULL DEFAULT NULL"); } catch (PDOException $e) {}
+// Fix: Admin-Standardbilder sollen user_id=NULL haben
+try { $db->exec("UPDATE gd_images SET user_id = NULL WHERE type = 'default'"); } catch (PDOException $e) {}
 // Schema-Migration: Aufgaben-Typen (einmalig)
 try { $db->exec("CREATE TABLE IF NOT EXISTS gd_care_task_types (
     id   INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -734,9 +736,11 @@ if ($action === 'uploadImage') {
     }
 
     try {
+        // Admin-Standardbilder (type=default) → user_id = NULL
+        $userId = ($type === 'default') ? null : $_SESSION['user_id'];
         $db->prepare("INSERT INTO gd_images (type, group_id, plant_id, user_group_id, user_id, file_path, file_path_gallery, is_primary)
                       VALUES (?, ?, ?, ?, ?, ?, ?, 0)")
-           ->execute([$type, $groupId ?: null, $plantId ?: null, $userGroupId ?: null, $_SESSION['user_id'], $dbPathThumb, $dbPathGallery]);
+           ->execute([$type, $groupId ?: null, $plantId ?: null, $userGroupId ?: null, $userId, $dbPathThumb, $dbPathGallery]);
         echo json_encode(['success' => true, 'path' => $dbPathThumb, 'id' => $db->lastInsertId()]);
     } catch (PDOException $e) {
         echo json_encode(['success' => false, 'error' => $e->getMessage()]);
@@ -756,10 +760,25 @@ if ($action === 'getImages') {
         if ($type === 'plant' && $plantId) {
             $stmt = $db->prepare("SELECT * FROM gd_images WHERE type='plant' AND plant_id=? ORDER BY is_primary DESC, uploaded_at DESC");
             $stmt->execute([$plantId]);
-        } elseif ($type === 'group' && $userGroupId) {
-            // User-Gruppe Fotos + Default-Fotos der Library-Gruppe
-            $stmt = $db->prepare("SELECT * FROM gd_images WHERE (type='group' AND user_group_id=? AND user_id=?) OR (type='default' AND group_id=?) ORDER BY type ASC, is_primary DESC, uploaded_at DESC");
-            $stmt->execute([$userGroupId, $_SESSION['user_id'], $groupId]);
+        } elseif ($type === 'group' && ($userGroupId || $groupId)) {
+            // User-Bilder haben Vorrang: wenn vorhanden, nur diese zeigen
+            $userImages = [];
+            if ($userGroupId) {
+                $stmtUser = $db->prepare("SELECT * FROM gd_images WHERE type='group' AND user_group_id=? AND user_id=? ORDER BY is_primary DESC, uploaded_at DESC");
+                $stmtUser->execute([$userGroupId, $_SESSION['user_id']]);
+                $userImages = $stmtUser->fetchAll(PDO::FETCH_ASSOC);
+            }
+            if (count($userImages) > 0) {
+                echo json_encode(['success' => true, 'images' => $userImages]);
+                exit;
+            }
+            // Fallback: Admin-Standardbilder der Gruppe
+            if ($groupId) {
+                $stmt = $db->prepare("SELECT * FROM gd_images WHERE type='default' AND group_id=? ORDER BY is_primary DESC, uploaded_at DESC");
+                $stmt->execute([$groupId]);
+            } else {
+                echo json_encode(['success' => true, 'images' => []]); exit;
+            }
         } elseif ($type === 'default' && $groupId) {
             $stmt = $db->prepare("SELECT * FROM gd_images WHERE type='default' AND group_id=? ORDER BY is_primary DESC, uploaded_at DESC");
             $stmt->execute([$groupId]);
@@ -784,8 +803,8 @@ if ($action === 'deleteImage') {
         $stmt->execute([$id]);
         $img = $stmt->fetch(PDO::FETCH_ASSOC);
         if (!$img) { echo json_encode(['success' => false, 'error' => 'Nicht gefunden']); exit; }
-        // Nur eigene Bilder oder Admin
-        if ($img['user_id'] != $_SESSION['user_id']) requireAdmin($db, $_SESSION['user_id']);
+        // Nur eigene Bilder oder Admin (default-Bilder haben user_id=NULL → nur Admin)
+        if ($img['user_id'] === null || $img['user_id'] != $_SESSION['user_id']) requireAdmin($db, $_SESSION['user_id']);
         $db->prepare("DELETE FROM gd_images WHERE id=?")->execute([$id]);
         $filePath = __DIR__ . '/../' . $img['file_path'];
         if (file_exists($filePath)) unlink($filePath);
@@ -809,18 +828,27 @@ if ($action === 'getImagesForPin') {
     $userGroupId = $data['user_group_id'] ?? null;
     if (!$plantId) { echo json_encode(['success' => false, 'error' => 'Parameter fehlen']); exit; }
     try {
-        // Pflanze zuerst, dann User-Gruppe, dann Default
-        $stmt = $db->prepare("
-            (SELECT file_path, is_primary, 'plant' as src FROM gd_images WHERE type='plant' AND plant_id=? AND user_id=?)
-            UNION ALL
-            (SELECT file_path, is_primary, 'group' as src FROM gd_images WHERE type='group' AND user_group_id=? AND user_id=?)
-            UNION ALL
-            (SELECT file_path, is_primary, 'default' as src FROM gd_images WHERE type='default' AND group_id=?)
-            ORDER BY FIELD(src,'plant','group','default'), is_primary DESC
-            LIMIT 5
-        ");
-        $stmt->execute([$plantId, $_SESSION['user_id'], $userGroupId, $_SESSION['user_id'], $groupId]);
-        echo json_encode(['success' => true, 'images' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+        // Pflanze-Bilder immer laden
+        $stmtPlant = $db->prepare("SELECT file_path, is_primary, 'plant' as src FROM gd_images WHERE type='plant' AND plant_id=? AND user_id=? ORDER BY is_primary DESC");
+        $stmtPlant->execute([$plantId, $_SESSION['user_id']]);
+        $plantImages = $stmtPlant->fetchAll(PDO::FETCH_ASSOC);
+
+        // Gruppen-Bilder: User-Bilder haben Vorrang vor Admin-Default
+        $groupImages = [];
+        if ($userGroupId) {
+            $stmtUG = $db->prepare("SELECT file_path, is_primary, 'group' as src FROM gd_images WHERE type='group' AND user_group_id=? AND user_id=? ORDER BY is_primary DESC");
+            $stmtUG->execute([$userGroupId, $_SESSION['user_id']]);
+            $groupImages = $stmtUG->fetchAll(PDO::FETCH_ASSOC);
+        }
+        if (empty($groupImages) && $groupId) {
+            $stmtDG = $db->prepare("SELECT file_path, is_primary, 'default' as src FROM gd_images WHERE type='default' AND group_id=? ORDER BY is_primary DESC");
+            $stmtDG->execute([$groupId]);
+            $groupImages = $stmtDG->fetchAll(PDO::FETCH_ASSOC);
+        }
+
+        $all = array_merge($plantImages, $groupImages);
+        $all = array_slice($all, 0, 5);
+        echo json_encode(['success' => true, 'images' => $all]);
     } catch (PDOException $e) {
         echo json_encode(['success' => false, 'error' => $e->getMessage()]);
     }
