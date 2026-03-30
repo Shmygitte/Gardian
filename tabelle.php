@@ -1,16 +1,9 @@
-<!DOCTYPE html>
-<html lang="de" data-theme="light">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gardian – Tabelle</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="src/css/main.css">
-    <style>
+<?php
+$pageId = 'tabelle';
+$pageTitle = 'Gardian – Tabelle';
+$headerRightExtra = '<span id="save-status" style="font-size:0.8rem;color:var(--text-muted);min-width:90px;text-align:right;"></span>';
+$extraHeadStyles = '
         .tbl-scroll { overflow: auto; flex: 1; padding: 0 24px 24px; }
-        /* table-layout:fixed verhindert Breiten-Verschiebung beim Editieren */
         .tbl { border-collapse: collapse; table-layout: fixed; font-size: 0.84rem; }
         .tbl th {
             position: sticky; top: 0; z-index: 10;
@@ -32,7 +25,6 @@
         .badge { display: inline-block; padding: 1px 8px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; }
         .b-yes { background: rgba(76,175,80,0.15); color: var(--primary-dark); }
         .b-no  { background: rgba(0,0,0,0.07); color: var(--text-muted); }
-        /* Inputs füllen die Zelle – keine Breiten-Verschiebung mehr */
         .c-inp { border: none; border-bottom: 2px solid var(--primary); background: transparent; font: inherit; color: var(--text-main); outline: none; width: 100%; box-sizing: border-box; }
         .c-sel { border: none; border-bottom: 2px solid var(--primary); background: var(--bg-app); font: inherit; color: var(--text-main); outline: none; width: 100%; box-sizing: border-box; }
         #bloom-pop {
@@ -43,42 +35,14 @@
         #bloom-pop .mb {
             width: 34px; height: 34px; border-radius: 6px; border: 1px solid var(--border);
             font-size: 0.72rem; font-weight: 600; cursor: pointer; margin: 2px;
-        }
-    </style>
-</head>
-<body>
-<div class="l-app-shell">
+        }';
 
-    <header class="l-header">
-        <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.5);backdrop-filter:blur(4px);padding:4px 14px 4px 4px;border-radius:999px;border:1px solid rgba(0,0,0,0.06);">
-            <img id="user-avatar" src="assets/logo.png" alt="" style="height:34px;width:34px;border-radius:50%;object-fit:cover;border:2px solid var(--primary-light);box-shadow:0 0 0 1px rgba(0,0,0,0.05);">
-            <span id="user-name" style="font-size:0.82rem;font-weight:600;color:var(--text-main);"></span>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px;display:flex;align-items:center;">
-            <img src="assets/logo.png" alt="Gardian" style="height:38px;width:38px;border-radius:50%;object-fit:cover;">
-            <h1 style="font-size:1.5rem;color:var(--primary-dark);">Gardian</h1>
-        </div>
-        <div style="display:flex;align-items:center;gap:12px;">
-            <span id="save-status" style="font-size:0.8rem;color:var(--text-muted);min-width:90px;text-align:right;"></span>
-            <button class="c-btn c-btn--text" onclick="doLogout()" style="font-size:0.8rem;">Abmelden</button>
-        </div>
-    </header>
+include 'src/layout/head.php';
+include 'src/layout/header.php';
+?>
 
     <div class="l-app-body">
-        <aside class="l-sidebar">
-            <div class="c-form-group">
-                <label class="c-label">Menü</label>
-                <nav style="display: flex; flex-direction: column; gap: 4px;">
-                    <button id="nav-dashboard" class="c-btn c-btn--text" style="justify-content: flex-start;" onclick="location.href='index.html?fx=nav-dashboard#dashboard'">Gartenkarte</button>
-                    <button id="nav-pflanzen" class="c-btn c-btn--text" style="justify-content: flex-start;" onclick="location.href='index.html?fx=nav-pflanzen#pflanzen'">Pflanzen</button>
-                    <button id="nav-galerie" class="c-btn c-btn--text" style="justify-content: flex-start;" onclick="location.href='index.html?fx=nav-galerie#galerie'">Galerie</button>
-                    <button id="nav-tabelle" class="c-btn c-btn--secondary" style="justify-content: flex-start;">Tabelle</button>
-                    <button id="nav-kalender" class="c-btn c-btn--text" style="justify-content: flex-start;" onclick="location.href='kalender.html?fx=nav-kalender'">Gartenkalender</button>
-                    <button id="nav-einstellungen" class="c-btn c-btn--text" style="justify-content: flex-start;" onclick="location.href='index.html?fx=nav-einstellungen#einstellungen'">Einstellungen</button>
-                    <button id="nav-admin" class="c-btn c-btn--text" style="justify-content: flex-start; display:none; color: var(--danger);" onclick="location.href='index.html?fx=nav-admin#admin'">Admin</button>
-                </nav>
-            </div>
-        </aside>
+<?php include 'src/layout/sidebar.php'; ?>
 
         <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;background:var(--bg-app);">
         <div style="padding:16px 24px 8px;display:flex;align-items:center;justify-content:space-between;">
@@ -123,10 +87,7 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
-<script src="src/js/effects/effects-library.js"></script>
-<script src="src/js/effects/effects-config.js"></script>
-<script src="src/js/effects/effects-manager.js"></script>
+<?php include 'src/layout/footer.php'; ?>
 <div id="bloom-pop" style="display:none;"></div>
 
 <script>
@@ -142,7 +103,6 @@ const OPTS = {
 };
 const BOOL_FIELDS   = new Set(['hardy','scented','cutflower','evergreen']);
 const SELECT_FIELDS = new Set(Object.keys(OPTS));
-// Felder die von der Gruppe vererbt werden können
 const INHERIT_FIELDS = new Set(['height','location','spacing','care','water','hardy','scented',
     'cutflower','lifespan','features','evergreen','marker_icon','marker_color','marker_size','bloom_months']);
 
@@ -173,7 +133,6 @@ async function init() {
             window.effectsEnabled = parseInt(c.effects_enabled) !== 0;
         }
     } catch(e) {}
-    // NEU: Animation-Trigger aus URL prüfen
     if (typeof EffectManager !== 'undefined') EffectManager.initFromUrl();
     await loadData();
 }
@@ -253,7 +212,6 @@ function removedReasonDisp(v) {
     return REMOVED_REASON_OPTS.find(o => o.v === v)?.l ?? v;
 }
 
-// Rendert einen Feldwert anhand seines Typs
 function fieldDisp(field, v) {
     if (BOOL_FIELDS.has(field))                                    return boolBadge(v);
     if (field === 'bloom_months')                                  return bloomDisp(v);
@@ -265,7 +223,6 @@ function fieldDisp(field, v) {
     return dash(v);
 }
 
-// Rendert eine Pflanzenzelle – mit Vererbungs-Fallback von der Gruppe
 function plantCellDisp(p, g, field) {
     const own = p[field];
     const hasOwn = own !== null && own !== undefined && own !== '';
@@ -357,7 +314,6 @@ function getPlantGroup(plantId) {
     return null;
 }
 
-// Eigener Wert der Pflanze/Gruppe (nicht vererbt)
 function getOwnVal(rt, id, field) {
     if (rt === 'g') {
         const g = tblData.groups.find(g => String(g.id) === String(id));
@@ -370,7 +326,6 @@ function getOwnVal(rt, id, field) {
     return '';
 }
 
-// Effektiver Wert (eigener oder vererbter) – für Editoren als Startwert
 function getEffective(rt, id, field) {
     const own = getOwnVal(rt, id, field);
     if (rt === 'p' && (own === null || own === undefined || own === '') && INHERIT_FIELDS.has(field)) {
@@ -453,7 +408,7 @@ function doMonth(cell, rt, id, field, cur) {
     inp.addEventListener('blur', save);
 }
 
-// ---- Edit: removed_reason (select, nur wenn removed_month_year gesetzt) ----
+// ---- Edit: removed_reason ----
 function doRemovedReason(cell, rt, id, cur) {
     const sel = document.createElement('select');
     sel.className = 'c-sel';
@@ -575,7 +530,6 @@ async function doSave(cell, rt, id, field, value) {
     }
     setVal(rt, id, field, value);
     refreshCell(cell, rt, id, field);
-    // Gruppen-Änderung: vererbte Pflanzenzellen sofort aktualisieren
     if (rt === 'g' && INHERIT_FIELDS.has(field)) refreshInheritedCells(id, field);
     showStatus('Gespeichert ✓');
 }
@@ -595,7 +549,6 @@ function refreshCell(cell, rt, id, field) {
             return;
         }
     }
-    // Gruppe
     const v = getOwnVal(rt, id, field);
     if (field === 'name') {
         const g = tblData.groups.find(g => String(g.id) === String(id));
@@ -612,7 +565,6 @@ function refreshInheritedCells(groupId, field) {
     document.querySelectorAll(`tr.row-p[data-gid="${groupId}"]`).forEach(row => {
         const p = g.plants.find(p => String(p.id) === String(row.dataset.pid));
         if (!p) return;
-        // Nur Zellen ohne eigenen Wert neu zeichnen
         const own = p[field];
         const hasOwn = own !== null && own !== undefined && own !== '';
         if (!hasOwn) {
@@ -635,6 +587,3 @@ async function doLogout() {
     location.href = 'login.html';
 }
 </script>
-</div><!-- /l-app-body -->
-</body>
-</html>

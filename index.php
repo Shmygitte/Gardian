@@ -1,103 +1,76 @@
-<!DOCTYPE html>
-<html lang="de" data-theme="light">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gardian - Dashboard</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="src/css/main.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
-</head>
-<body>
-    <div class="l-app-shell">
-        <header class="l-header">
-            <div style="display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.5); backdrop-filter:blur(4px); padding:4px 14px 4px 4px; border-radius:999px; border:1px solid rgba(0,0,0,0.06);">
-                <label style="cursor:pointer; display:flex;" title="Profilbild ändern">
-                    <img id="user-avatar" src="assets/logo.png" alt="Profilbild" style="height:34px; width:34px; border-radius:50%; object-fit:cover; border:2px solid var(--primary-light); box-shadow:0 0 0 1px rgba(0,0,0,0.05);">
-                    <input type="file" id="avatar-upload" accept="image/*" style="display:none;">
-                </label>
-                <span id="user-name" style="font-size:0.82rem; font-weight:600; color:var(--text-main);"></span>
+<?php
+$pageId = 'dashboard';
+$pageTitle = 'Gardian - Dashboard';
+$extraHeadHtml = '    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">';
+$hasAvatarUpload = true;
+
+// Sidebar-Filter (nur auf Dashboard)
+ob_start();
+?>
+            <div class="c-form-group">
+                <label class="c-label">Filter</label>
+                <nav style="display:flex; flex-direction:column; gap:4px;">
+                    <!-- Typ Dropdown -->
+                    <div class="filter-accordion">
+                        <button class="c-btn c-btn--text" style="justify-content:space-between; width:100%;" onclick="toggleFilterAccordion(this)">
+                            Typ <span class="filter-accordion__arrow">▸</span>
+                        </button>
+                        <div class="filter-accordion__body" id="filter-types" style="display:none; flex-direction:column; gap:0; padding:2px 0 4px 12px;">
+                            <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;cursor:pointer;padding:3px 0;border-bottom:1px solid var(--border);margin-bottom:2px;font-weight:600;"><input type="checkbox" id="filter-types-all" checked onchange="toggleAllTypes(this)"> Alle</label>
+                            <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;cursor:pointer;padding:3px 0;"><input type="checkbox" checked onchange="syncAllTypes();applyFilter()" data-type="tree"> Baum</label>
+                            <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;cursor:pointer;padding:3px 0;"><input type="checkbox" checked onchange="syncAllTypes();applyFilter()" data-type="shrub"> Strauch</label>
+                            <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;cursor:pointer;padding:3px 0;"><input type="checkbox" checked onchange="syncAllTypes();applyFilter()" data-type="flower"> Blume</label>
+                            <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;cursor:pointer;padding:3px 0;"><input type="checkbox" checked onchange="syncAllTypes();applyFilter()" data-type="climber"> Kletterpflanze</label>
+                            <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;cursor:pointer;padding:3px 0;"><input type="checkbox" checked onchange="syncAllTypes();applyFilter()" data-type="s_flower"> Blümchen</label>
+                        </div>
+                    </div>
+                    <!-- Aufgaben Filter -->
+                    <div class="filter-accordion">
+                        <button class="c-btn c-btn--text" style="justify-content:space-between; width:100%;" onclick="toggleFilterAccordion(this)">
+                            Aufgaben <span class="filter-accordion__arrow">▸</span>
+                        </button>
+                        <div class="filter-accordion__body" style="display:none; flex-direction:column; gap:6px; padding:4px 0 6px 12px;">
+                            <!-- Monatsauswahl (Multi-Toggle) -->
+                            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:3px;" id="sidebar-care-months">
+                                <button id="sidebar-care-all-btn" onclick="setAllCareMonths()" style="grid-column:1/-1;padding:4px 2px;border-radius:6px;border:1px solid var(--primary);font-size:0.72rem;font-weight:700;cursor:pointer;background:var(--primary);color:white;font-family:inherit;text-align:center;">Alle</button>
+                                <button class="sidebar-care-month-btn" data-month="0"  onclick="toggleCareMonth(0)"  style="padding:4px 2px;border-radius:6px;border:1px solid var(--border);font-size:0.72rem;cursor:pointer;background:var(--bg-app);color:var(--text-main);font-family:inherit;text-align:center;">Jan</button>
+                                <button class="sidebar-care-month-btn" data-month="1"  onclick="toggleCareMonth(1)"  style="padding:4px 2px;border-radius:6px;border:1px solid var(--border);font-size:0.72rem;cursor:pointer;background:var(--bg-app);color:var(--text-main);font-family:inherit;text-align:center;">Feb</button>
+                                <button class="sidebar-care-month-btn" data-month="2"  onclick="toggleCareMonth(2)"  style="padding:4px 2px;border-radius:6px;border:1px solid var(--border);font-size:0.72rem;cursor:pointer;background:var(--bg-app);color:var(--text-main);font-family:inherit;text-align:center;">Mär</button>
+                                <button class="sidebar-care-month-btn" data-month="3"  onclick="toggleCareMonth(3)"  style="padding:4px 2px;border-radius:6px;border:1px solid var(--border);font-size:0.72rem;cursor:pointer;background:var(--bg-app);color:var(--text-main);font-family:inherit;text-align:center;">Apr</button>
+                                <button class="sidebar-care-month-btn" data-month="4"  onclick="toggleCareMonth(4)"  style="padding:4px 2px;border-radius:6px;border:1px solid var(--border);font-size:0.72rem;cursor:pointer;background:var(--bg-app);color:var(--text-main);font-family:inherit;text-align:center;">Mai</button>
+                                <button class="sidebar-care-month-btn" data-month="5"  onclick="toggleCareMonth(5)"  style="padding:4px 2px;border-radius:6px;border:1px solid var(--border);font-size:0.72rem;cursor:pointer;background:var(--bg-app);color:var(--text-main);font-family:inherit;text-align:center;">Jun</button>
+                                <button class="sidebar-care-month-btn" data-month="6"  onclick="toggleCareMonth(6)"  style="padding:4px 2px;border-radius:6px;border:1px solid var(--border);font-size:0.72rem;cursor:pointer;background:var(--bg-app);color:var(--text-main);font-family:inherit;text-align:center;">Jul</button>
+                                <button class="sidebar-care-month-btn" data-month="7"  onclick="toggleCareMonth(7)"  style="padding:4px 2px;border-radius:6px;border:1px solid var(--border);font-size:0.72rem;cursor:pointer;background:var(--bg-app);color:var(--text-main);font-family:inherit;text-align:center;">Aug</button>
+                                <button class="sidebar-care-month-btn" data-month="8"  onclick="toggleCareMonth(8)"  style="padding:4px 2px;border-radius:6px;border:1px solid var(--border);font-size:0.72rem;cursor:pointer;background:var(--bg-app);color:var(--text-main);font-family:inherit;text-align:center;">Sep</button>
+                                <button class="sidebar-care-month-btn" data-month="9"  onclick="toggleCareMonth(9)"  style="padding:4px 2px;border-radius:6px;border:1px solid var(--border);font-size:0.72rem;cursor:pointer;background:var(--bg-app);color:var(--text-main);font-family:inherit;text-align:center;">Okt</button>
+                                <button class="sidebar-care-month-btn" data-month="10" onclick="toggleCareMonth(10)" style="padding:4px 2px;border-radius:6px;border:1px solid var(--border);font-size:0.72rem;cursor:pointer;background:var(--bg-app);color:var(--text-main);font-family:inherit;text-align:center;">Nov</button>
+                                <button class="sidebar-care-month-btn" data-month="11" onclick="toggleCareMonth(11)" style="padding:4px 2px;border-radius:6px;border:1px solid var(--border);font-size:0.72rem;cursor:pointer;background:var(--bg-app);color:var(--text-main);font-family:inherit;text-align:center;">Dez</button>
+                            </div>
+                            <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;cursor:pointer;padding:3px 0;">
+                                <input type="checkbox" id="filter-care-active" onchange="setCareFilterActive(this.checked)" style="accent-color:var(--primary);">
+                                Pflanzen ohne Aufgaben ausblenden
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Gruppen Dropdown -->
+                    <div class="filter-accordion">
+                        <button class="c-btn c-btn--text" style="justify-content:space-between; width:100%;" onclick="toggleFilterAccordion(this)">
+                            Pflanzengruppen <span class="filter-accordion__arrow">▸</span>
+                        </button>
+                        <div class="filter-accordion__body" id="filter-groups" style="display:none; flex-direction:column; gap:0; padding:2px 0 4px 12px;"></div>
+                    </div>
+                </nav>
             </div>
-            <div style="display:flex; align-items:center; gap:10px; display:flex; align-items:center;">
-                <img src="assets/logo.png" alt="Gardian" style="height:38px; width:38px; border-radius:50%; object-fit:cover;">
-                <h1 style="font-size:1.5rem; color:var(--primary-dark);">Gardian</h1>
-            </div>
-            <button class="c-btn c-btn--text" onclick="logout()" style="font-size:0.8rem;">Abmelden</button>
-        </header>
+<?php
+$sidebarExtra = ob_get_clean();
+
+include 'src/layout/head.php';
+include 'src/layout/header.php';
+?>
 
         <div class="l-app-body">
-            <aside class="l-sidebar">
-                <div class="c-form-group">
-                    <label class="c-label">Menü</label>
-                    <nav style="display: flex; flex-direction: column; gap: 4px;">
-                        <button id="nav-dashboard" class="c-btn c-btn--secondary" style="justify-content: flex-start;" onclick="showView('dashboard')">Gartenkarte</button>
-                        <button id="nav-pflanzen" class="c-btn c-btn--text" style="justify-content: flex-start;" onclick="showView('pflanzen')">Pflanzen</button>
-                        <button id="nav-galerie" class="c-btn c-btn--text" style="justify-content: flex-start;" onclick="showView('galerie')">Galerie</button>
-                        <a id="nav-tabelle" href="tabelle.html?fx=nav-tabelle" class="c-btn c-btn--text" style="justify-content: flex-start; text-decoration:none;">Tabelle</a>
-                        <a id="nav-kalender" href="kalender.html?fx=nav-kalender" class="c-btn c-btn--text" style="justify-content: flex-start; text-decoration:none;">Gartenkalender</a>
-                        <button id="nav-einstellungen" class="c-btn c-btn--text" style="justify-content: flex-start;" onclick="showView('einstellungen')">Einstellungen</button>
-                        <button id="nav-admin" class="c-btn c-btn--text" style="justify-content: flex-start; display:none; color: var(--danger);" onclick="showView('admin')">Admin</button>
-                    </nav>
-                </div>
-                <hr style="border:none; border-top:1px solid var(--border); margin:8px 0;">
-                <div class="c-form-group">
-                    <label class="c-label">Filter</label>
-                    <nav style="display:flex; flex-direction:column; gap:4px;">
-                        <!-- Typ Dropdown -->
-                        <div class="filter-accordion">
-                            <button class="c-btn c-btn--text" style="justify-content:space-between; width:100%;" onclick="toggleFilterAccordion(this)">
-                                Typ <span class="filter-accordion__arrow">▸</span>
-                            </button>
-                            <div class="filter-accordion__body" id="filter-types" style="display:none; flex-direction:column; gap:0; padding:2px 0 4px 12px;">
-                                <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;cursor:pointer;padding:3px 0;border-bottom:1px solid var(--border);margin-bottom:2px;font-weight:600;"><input type="checkbox" id="filter-types-all" checked onchange="toggleAllTypes(this)"> Alle</label>
-                                <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;cursor:pointer;padding:3px 0;"><input type="checkbox" checked onchange="syncAllTypes();applyFilter()" data-type="tree"> Baum</label>
-                                <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;cursor:pointer;padding:3px 0;"><input type="checkbox" checked onchange="syncAllTypes();applyFilter()" data-type="shrub"> Strauch</label>
-                                <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;cursor:pointer;padding:3px 0;"><input type="checkbox" checked onchange="syncAllTypes();applyFilter()" data-type="flower"> Blume</label>
-                                <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;cursor:pointer;padding:3px 0;"><input type="checkbox" checked onchange="syncAllTypes();applyFilter()" data-type="climber"> Kletterpflanze</label>
-                                <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;cursor:pointer;padding:3px 0;"><input type="checkbox" checked onchange="syncAllTypes();applyFilter()" data-type="s_flower"> Blümchen</label>
-                            </div>
-                        </div>
-                        <!-- Aufgaben Filter -->
-                        <div class="filter-accordion">
-                            <button class="c-btn c-btn--text" style="justify-content:space-between; width:100%;" onclick="toggleFilterAccordion(this)">
-                                Aufgaben <span class="filter-accordion__arrow">▸</span>
-                            </button>
-                            <div class="filter-accordion__body" style="display:none; flex-direction:column; gap:6px; padding:4px 0 6px 12px;">
-                                <!-- Monatsauswahl (Multi-Toggle) -->
-                                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:3px;" id="sidebar-care-months">
-                                    <button id="sidebar-care-all-btn" onclick="setAllCareMonths()" style="grid-column:1/-1;padding:4px 2px;border-radius:6px;border:1px solid var(--primary);font-size:0.72rem;font-weight:700;cursor:pointer;background:var(--primary);color:white;font-family:inherit;text-align:center;">Alle</button>
-                                    <button class="sidebar-care-month-btn" data-month="0"  onclick="toggleCareMonth(0)"  style="padding:4px 2px;border-radius:6px;border:1px solid var(--border);font-size:0.72rem;cursor:pointer;background:var(--bg-app);color:var(--text-main);font-family:inherit;text-align:center;">Jan</button>
-                                    <button class="sidebar-care-month-btn" data-month="1"  onclick="toggleCareMonth(1)"  style="padding:4px 2px;border-radius:6px;border:1px solid var(--border);font-size:0.72rem;cursor:pointer;background:var(--bg-app);color:var(--text-main);font-family:inherit;text-align:center;">Feb</button>
-                                    <button class="sidebar-care-month-btn" data-month="2"  onclick="toggleCareMonth(2)"  style="padding:4px 2px;border-radius:6px;border:1px solid var(--border);font-size:0.72rem;cursor:pointer;background:var(--bg-app);color:var(--text-main);font-family:inherit;text-align:center;">Mär</button>
-                                    <button class="sidebar-care-month-btn" data-month="3"  onclick="toggleCareMonth(3)"  style="padding:4px 2px;border-radius:6px;border:1px solid var(--border);font-size:0.72rem;cursor:pointer;background:var(--bg-app);color:var(--text-main);font-family:inherit;text-align:center;">Apr</button>
-                                    <button class="sidebar-care-month-btn" data-month="4"  onclick="toggleCareMonth(4)"  style="padding:4px 2px;border-radius:6px;border:1px solid var(--border);font-size:0.72rem;cursor:pointer;background:var(--bg-app);color:var(--text-main);font-family:inherit;text-align:center;">Mai</button>
-                                    <button class="sidebar-care-month-btn" data-month="5"  onclick="toggleCareMonth(5)"  style="padding:4px 2px;border-radius:6px;border:1px solid var(--border);font-size:0.72rem;cursor:pointer;background:var(--bg-app);color:var(--text-main);font-family:inherit;text-align:center;">Jun</button>
-                                    <button class="sidebar-care-month-btn" data-month="6"  onclick="toggleCareMonth(6)"  style="padding:4px 2px;border-radius:6px;border:1px solid var(--border);font-size:0.72rem;cursor:pointer;background:var(--bg-app);color:var(--text-main);font-family:inherit;text-align:center;">Jul</button>
-                                    <button class="sidebar-care-month-btn" data-month="7"  onclick="toggleCareMonth(7)"  style="padding:4px 2px;border-radius:6px;border:1px solid var(--border);font-size:0.72rem;cursor:pointer;background:var(--bg-app);color:var(--text-main);font-family:inherit;text-align:center;">Aug</button>
-                                    <button class="sidebar-care-month-btn" data-month="8"  onclick="toggleCareMonth(8)"  style="padding:4px 2px;border-radius:6px;border:1px solid var(--border);font-size:0.72rem;cursor:pointer;background:var(--bg-app);color:var(--text-main);font-family:inherit;text-align:center;">Sep</button>
-                                    <button class="sidebar-care-month-btn" data-month="9"  onclick="toggleCareMonth(9)"  style="padding:4px 2px;border-radius:6px;border:1px solid var(--border);font-size:0.72rem;cursor:pointer;background:var(--bg-app);color:var(--text-main);font-family:inherit;text-align:center;">Okt</button>
-                                    <button class="sidebar-care-month-btn" data-month="10" onclick="toggleCareMonth(10)" style="padding:4px 2px;border-radius:6px;border:1px solid var(--border);font-size:0.72rem;cursor:pointer;background:var(--bg-app);color:var(--text-main);font-family:inherit;text-align:center;">Nov</button>
-                                    <button class="sidebar-care-month-btn" data-month="11" onclick="toggleCareMonth(11)" style="padding:4px 2px;border-radius:6px;border:1px solid var(--border);font-size:0.72rem;cursor:pointer;background:var(--bg-app);color:var(--text-main);font-family:inherit;text-align:center;">Dez</button>
-                                </div>
-                                <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;cursor:pointer;padding:3px 0;">
-                                    <input type="checkbox" id="filter-care-active" onchange="setCareFilterActive(this.checked)" style="accent-color:var(--primary);">
-                                    Pflanzen ohne Aufgaben ausblenden
-                                </label>
-                            </div>
-                        </div>
-
-                        <!-- Gruppen Dropdown -->
-                        <div class="filter-accordion">
-                            <button class="c-btn c-btn--text" style="justify-content:space-between; width:100%;" onclick="toggleFilterAccordion(this)">
-                                Pflanzengruppen <span class="filter-accordion__arrow">▸</span>
-                            </button>
-                            <div class="filter-accordion__body" id="filter-groups" style="display:none; flex-direction:column; gap:0; padding:2px 0 4px 12px;"></div>
-                        </div>
-                    </nav>
-                </div>
-            </aside>
+<?php include 'src/layout/sidebar.php'; ?>
 
             <main class="l-main-content">
 
@@ -175,7 +148,7 @@
                 <!-- View: Einstellungen -->
                 <div id="view-einstellungen" style="display: none; padding: 24px; overflow-y: auto;" class="view-einstellungen">
                     <div class="settings-grid" style="max-width: 900px; display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));">
-                        
+
                         <!-- Profil (Links) -->
                         <div class="c-card">
                             <div class="c-card__header">
@@ -242,7 +215,7 @@
                                         <div class="c-theme-tile__label">Unicorn</div>
                                     </div>
                                 </div>
-                                
+
                                 <div style="flex: 1;"></div>
                                 <div style="padding-top:20px; border-top:1px solid var(--border);">
                                     <label class="c-switch">
@@ -550,19 +523,19 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
+<?php
+$extraScripts = '
     <script src="src/js/dialogs.js"></script>
-    <script src="src/js/effects/effects-library.js"></script>
-    <script src="src/js/effects/effects-config.js"></script>
-    <script src="src/js/effects/effects-manager.js"></script>
     <script src="src/js/galerie.js"></script>
     <script src="src/js/admin.js"></script>
     <script src="src/js/group-form.js"></script>
     <script src="src/js/app.js"></script>
     <script src="src/js/filter.js"></script>
     <script src="src/js/pflanzen.js"></script>
-    <script src="src/js/pflege.js"></script>
+    <script src="src/js/pflege.js"></script>';
+include 'src/layout/footer.php';
+?>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const m = new Date().getMonth();
@@ -589,7 +562,7 @@
                 document.getElementById('nav-admin').style.display = 'flex';
             }
 
-            // NEU: Konfiguration (Theme + Effekte) beim Start laden
+            // Konfiguration (Theme + Effekte) beim Start laden
             const configRes = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'getGardenConfig' }) });
             const configData = await configRes.json();
             if (configData.success && configData.config) {
@@ -598,8 +571,8 @@
                 const effectsToggle = document.getElementById('settings-effects-toggle');
                 if (effectsToggle) effectsToggle.checked = parseInt(c.effects_enabled) !== 0;
                 updateSettingsThemeBtn();
-                
-                // NEU: Animation-Trigger aus URL prüfen
+
+                // Animation-Trigger aus URL prüfen
                 if (typeof EffectManager !== 'undefined') EffectManager.initFromUrl();
             }
         }
@@ -665,7 +638,7 @@
             loadAvatar();
             // Verwaiste Bilder still im Hintergrund bereinigen
             fetch('backend/api.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'cleanupImages' }) });
-            // View aus URL-Hash laden (z.B. index.html#einstellungen)
+            // View aus URL-Hash laden (z.B. index.php#einstellungen)
             const hash = location.hash.replace('#', '');
             if (hash && views.includes(hash)) showView(hash);
 
@@ -734,7 +707,7 @@
             if (name === 'einstellungen') loadEinstellungen();
         }
 
-        async function logout() {
+        async function doLogout() {
             await fetch('backend/api.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -751,7 +724,7 @@
             document.getElementById('settings-username').textContent = u.username || '';
             document.getElementById('settings-email').textContent    = u.email    || '';
             if (u.avatar_path) document.getElementById('settings-avatar').src = u.avatar_path + '?t=' + Date.now();
-            
+
             updateSettingsThemeBtn();
         }
 
@@ -766,12 +739,12 @@
         async function settingsSaveProfile() {
             const email    = document.getElementById('settings-new-email').value.trim();
             const password = document.getElementById('settings-new-password').value.trim();
-            
+
             if (!email && !password) {
-                alert('Gespeichert.'); // Provide feedback even if only avatar was changed visually
+                alert('Gespeichert.');
                 return;
             }
-            
+
             const res  = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'updateUser', email: email||null, password: password||null }) });
             const data = await res.json();
             if (data.success) {
@@ -806,5 +779,3 @@
             setTheme(current === 'light' ? 'dark' : 'light');
         }
     </script>
-</body>
-</html>
