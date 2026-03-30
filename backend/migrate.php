@@ -171,10 +171,18 @@ if ($method === 'POST') {
             $ins->execute([$migration['name'], $username, $username]);
             $results[] = ['name' => $migration['name'], 'status' => 'success'];
         } catch (Exception $e) {
-            $ins = $db->prepare("INSERT INTO gd_migrations (name, executed_by, status, error_message) VALUES (?, ?, 'error', ?)
-                                 ON DUPLICATE KEY UPDATE status = 'error', error_message = ?, executed_by = ?, executed_at = NOW()");
-            $ins->execute([$migration['name'], $username, $e->getMessage(), $e->getMessage(), $username]);
-            $results[] = ['name' => $migration['name'], 'status' => 'error', 'error' => $e->getMessage()];
+            // "Column already exists" / "Duplicate column" = Spalte war schon da → als Erfolg werten
+            if (str_contains($e->getMessage(), 'Duplicate column') || str_contains($e->getMessage(), 'already exists')) {
+                $ins = $db->prepare("INSERT INTO gd_migrations (name, executed_by, status) VALUES (?, ?, 'success')
+                                     ON DUPLICATE KEY UPDATE status = 'success', error_message = NULL, executed_by = ?, executed_at = NOW()");
+                $ins->execute([$migration['name'], $username, $username]);
+                $results[] = ['name' => $migration['name'], 'status' => 'success'];
+            } else {
+                $ins = $db->prepare("INSERT INTO gd_migrations (name, executed_by, status, error_message) VALUES (?, ?, 'error', ?)
+                                     ON DUPLICATE KEY UPDATE status = 'error', error_message = ?, executed_by = ?, executed_at = NOW()");
+                $ins->execute([$migration['name'], $username, $e->getMessage(), $e->getMessage(), $username]);
+                $results[] = ['name' => $migration['name'], 'status' => 'error', 'error' => $e->getMessage()];
+            }
         }
     }
     echo json_encode(['success' => true, 'results' => $results]);
