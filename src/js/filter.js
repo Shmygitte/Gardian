@@ -1,22 +1,15 @@
 /**
  * Gardian – Globaler Filter
- * filterState wird von app.js (Karte) und pflanzen.js (Liste) genutzt.
+ * filterState wird von markers.js (Karte), pflanzen.js (Liste) und galerie.js genutzt.
  */
+import { api } from './core/api.js';
+import { filterState } from './core/state.js';
 
-const filterState = {
-    types:      ['tree', 'shrub', 'flower', 'climber', 's_flower'],
-    groups:     null, // null = alle; sonst Set mit aktiven group_ids
-    careFilter: false,
-    careMonths: new Set() // leer = alle Monate
-};
-
-function applyFilter() {
-    // Typen aus Checkboxen (ohne "Alle"-Checkbox)
+export function applyFilter() {
     filterState.types = Array.from(
         document.querySelectorAll('#filter-types input[type="checkbox"]:checked')
     ).map(el => el.dataset.type).filter(Boolean);
 
-    // Gruppen aus Checkboxen (ohne "Alle"-Checkbox)
     const groupBoxes = document.querySelectorAll('#filter-groups input[type="checkbox"]:not(#filter-groups-all)');
     if (groupBoxes.length > 0) {
         filterState.groups = new Set(
@@ -24,17 +17,17 @@ function applyFilter() {
         );
     }
 
-    if (typeof renderMarkers === 'function') renderMarkers();
-    if (typeof renderPflanzenListeFiltered === 'function') renderPflanzenListeFiltered();
-    if (typeof renderGalerie === 'function') renderGalerie();
+    if (typeof window.renderMarkers === 'function') window.renderMarkers();
+    if (typeof window.renderPflanzenListeFiltered === 'function') window.renderPflanzenListeFiltered();
+    if (typeof window.renderGalerie === 'function') window.renderGalerie();
 }
 
-function toggleAllTypes(cb) {
+export function toggleAllTypes(cb) {
     document.querySelectorAll('#filter-types input[type="checkbox"]:not(#filter-types-all)').forEach(el => el.checked = cb.checked);
     applyFilter();
 }
 
-function syncAllTypes() {
+export function syncAllTypes() {
     const boxes = Array.from(document.querySelectorAll('#filter-types input[type="checkbox"]:not(#filter-types-all)'));
     const all = document.getElementById('filter-types-all');
     const count = boxes.filter(el => el.checked).length;
@@ -43,12 +36,12 @@ function syncAllTypes() {
     else { all.indeterminate = true; }
 }
 
-function toggleAllGroups(cb) {
+export function toggleAllGroups(cb) {
     document.querySelectorAll('#filter-groups input[type="checkbox"]:not(#filter-groups-all)').forEach(el => el.checked = cb.checked);
     applyFilter();
 }
 
-function syncAllGroups() {
+export function syncAllGroups() {
     const boxes = Array.from(document.querySelectorAll('#filter-groups input[type="checkbox"]:not(#filter-groups-all)'));
     const all = document.getElementById('filter-groups-all');
     if (!all) return;
@@ -58,7 +51,7 @@ function syncAllGroups() {
     else { all.indeterminate = true; }
 }
 
-function toggleFilterAccordion(btn) {
+export function toggleFilterAccordion(btn) {
     const body = btn.nextElementSibling;
     const arrow = btn.querySelector('.filter-accordion__arrow');
     const isOpen = body.style.display !== 'none';
@@ -68,89 +61,95 @@ function toggleFilterAccordion(btn) {
 }
 
 function _saveAccordionState() {
-    const state = {};
+    const st = {};
     document.querySelectorAll('.filter-accordion').forEach((acc, i) => {
         const body = acc.querySelector('.filter-accordion__body');
-        if (body) state[i] = body.style.display !== 'none';
+        if (body) st[i] = body.style.display !== 'none';
     });
-    sessionStorage.setItem('filterAccordionState', JSON.stringify(state));
+    sessionStorage.setItem('filterAccordionState', JSON.stringify(st));
 }
 
-function _restoreAccordionState() {
+export function _restoreAccordionState() {
     const raw = sessionStorage.getItem('filterAccordionState');
     if (!raw) return;
-    const state = JSON.parse(raw);
+    const st = JSON.parse(raw);
     document.querySelectorAll('.filter-accordion').forEach((acc, i) => {
-        if (state[i] === undefined) return;
+        if (st[i] === undefined) return;
         const body = acc.querySelector('.filter-accordion__body');
         const arrow = acc.querySelector('.filter-accordion__arrow');
-        if (body) body.style.display = state[i] ? 'flex' : 'none';
-        if (arrow) arrow.textContent = state[i] ? '▾' : '▸';
+        if (body) body.style.display = st[i] ? 'flex' : 'none';
+        if (arrow) arrow.textContent = st[i] ? '▾' : '▸';
     });
 }
 
-function toggleFilterPill(el) {
+export function toggleFilterPill(el) {
     el.classList.toggle('active');
     applyFilter();
 }
 
-function setCareFilterActive(active) {
+export function setCareFilterActive(active) {
     filterState.careFilter = active;
-    if (active && typeof ensureCareTasksLoaded === 'function') {
-        ensureCareTasksLoaded().then(() => {
-            if (typeof renderMarkers === 'function') renderMarkers();
-            if (typeof renderCareBadges === 'function' && _careOverlayActive) renderCareBadges();
+    if (active && typeof window.ensureCareTasksLoaded === 'function') {
+        window.ensureCareTasksLoaded().then(() => {
+            if (typeof window.renderMarkers === 'function') window.renderMarkers();
+            if (typeof window.renderCareBadges === 'function' && window._careOverlayActive) window.renderCareBadges();
         });
     } else {
-        if (typeof renderMarkers === 'function') renderMarkers();
+        if (typeof window.renderMarkers === 'function') window.renderMarkers();
     }
 }
 
-function toggleCareMonth(month) {
-    if (filterState.careMonths.has(month)) {
-        filterState.careMonths.delete(month);
-    } else {
-        filterState.careMonths.add(month);
-    }
+export function toggleCareMonth(month) {
+    if (filterState.careMonths.has(month)) filterState.careMonths.delete(month);
+    else filterState.careMonths.add(month);
     _updateCareMonthButtons();
     _onCareMonthsChanged();
 }
 
-function setAllCareMonths() {
+export function setAllCareMonths() {
     filterState.careMonths.clear();
     _updateCareMonthButtons();
     _onCareMonthsChanged();
+}
+
+export function setCareOverlayMonth(month) {
+    filterState.careMonths.clear();
+    filterState.careMonths.add(month);
+    _updateCareMonthButtons();
+}
+
+export function setCareFilterMonth(month) {
+    // Sidebar-Monats-Buttons initial setzen
+    filterState.careMonths.clear();
+    filterState.careMonths.add(month);
+    _updateCareMonthButtons();
 }
 
 function _updateCareMonthButtons() {
     const allActive = filterState.careMonths.size === 0;
     const allBtn = document.getElementById('sidebar-care-all-btn');
     if (allBtn) {
-        allBtn.style.background  = allActive ? 'var(--primary)' : 'var(--bg-app)';
-        allBtn.style.color       = allActive ? 'white'          : 'var(--text-main)';
+        allBtn.style.background = allActive ? 'var(--primary)' : 'var(--bg-app)';
+        allBtn.style.color = allActive ? 'white' : 'var(--text-main)';
         allBtn.style.borderColor = allActive ? 'var(--primary)' : 'var(--border)';
     }
     document.querySelectorAll('.sidebar-care-month-btn').forEach(btn => {
         const active = !allActive && filterState.careMonths.has(parseInt(btn.dataset.month));
-        btn.style.background  = active ? 'var(--primary)' : 'var(--bg-app)';
-        btn.style.color       = active ? 'white'          : 'var(--text-main)';
+        btn.style.background = active ? 'var(--primary)' : 'var(--bg-app)';
+        btn.style.color = active ? 'white' : 'var(--text-main)';
         btn.style.borderColor = active ? 'var(--primary)' : 'var(--border)';
     });
 }
 
 function _onCareMonthsChanged() {
-    if (filterState.careFilter && typeof renderMarkers === 'function') renderMarkers();
-    if (typeof _careOverlayActive !== 'undefined' && _careOverlayActive && typeof renderCareBadges === 'function') renderCareBadges();
+    if (filterState.careFilter && typeof window.renderMarkers === 'function') window.renderMarkers();
+    if (window._careOverlayActive && typeof window.renderCareBadges === 'function') window.renderCareBadges();
 }
 
-async function loadFilterGroups() {
+export async function loadFilterGroups() {
     const container = document.getElementById('filter-groups');
-    const res  = await fetch('backend/api.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'getPlantsList' })
-    });
-    const data = await res.json();
+    if (!container) return;
+    const data = await api('getPlantsList');
     if (!data.success || !data.groups.length) {
         container.innerHTML = '<p style="font-size:0.8rem;color:var(--text-muted);">Keine Gruppen.</p>';
         return;
@@ -170,3 +169,19 @@ async function loadFilterGroups() {
 
     filterState.groups = new Set(data.groups.map(g => g.group_id ? String(g.group_id) : 'u' + g.id));
 }
+
+// Bridge
+window.applyFilter = applyFilter;
+window.toggleAllTypes = toggleAllTypes;
+window.syncAllTypes = syncAllTypes;
+window.toggleAllGroups = toggleAllGroups;
+window.syncAllGroups = syncAllGroups;
+window.toggleFilterAccordion = toggleFilterAccordion;
+window._restoreAccordionState = _restoreAccordionState;
+window.toggleFilterPill = toggleFilterPill;
+window.setCareFilterActive = setCareFilterActive;
+window.toggleCareMonth = toggleCareMonth;
+window.setAllCareMonths = setAllCareMonths;
+window.setCareOverlayMonth = setCareOverlayMonth;
+window.setCareFilterMonth = setCareFilterMonth;
+window.loadFilterGroups = loadFilterGroups;

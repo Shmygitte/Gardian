@@ -1,6 +1,7 @@
 /**
  * Gardian – Admin-Bereich
  */
+// ES Module – fetch-Aufrufe werden schrittweise auf api() migriert
 
 const GROUP_FIELDS_ADMIN = [
     { key: 'name',         label: 'Name',             type: 'text',   required: true },
@@ -838,3 +839,34 @@ async function runMigrations() {
         resultsDiv.innerHTML = '<p style="color:var(--danger);">Fehler: ' + e.message + '</p>';
     }
 }
+
+// Bridge
+window.switchAdminTab = switchAdminTab;
+window.loadAdminView = loadAdminView;
+window.switchSystemSub = switchSystemSub;
+window.adminUpdateRole = adminUpdateRole;
+window.adminDeleteUser = adminDeleteUser;
+window.toggleAdminGroupEdit = toggleAdminGroupEdit;
+window.adminSaveGroup = adminSaveGroup;
+window.adminAddGroup = adminAddGroup;
+window.adminDeleteGroup = adminDeleteGroup;
+window.renderBloomToggle = renderBloomToggle;
+window.toggleBloomMonth = toggleBloomMonth;
+window.adminEditCareTypeToggle = adminEditCareTypeToggle;
+window.adminSaveCareType = adminSaveCareType;
+window.adminAddCareType = adminAddCareType;
+window.adminDeleteCareType = adminDeleteCareType;
+window.adminIconCatChanged = adminIconCatChanged;
+window.adminUploadIcon = adminUploadIcon;
+window.adminEditIconToggle = adminEditIconToggle;
+window.adminSaveIcon = adminSaveIcon;
+window.adminDeleteIcon = adminDeleteIcon;
+window.adminLinkDragStart = adminLinkDragStart;
+window.adminLinkDragOver = adminLinkDragOver;
+window.adminLinkDragEnd = adminLinkDragEnd;
+window.adminLinkDrop = adminLinkDrop;
+window.adminEditLinkToggle = adminEditLinkToggle;
+window.adminSaveLink = adminSaveLink;
+window.adminAddLink = adminAddLink;
+window.adminDeleteLink = adminDeleteLink;
+window.runMigrations = runMigrations;

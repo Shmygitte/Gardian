@@ -526,24 +526,24 @@ include 'src/layout/header.php';
 
 <?php
 $extraScripts = '
-    <script src="src/js/dialogs.js"></script>
-    <script src="src/js/galerie.js"></script>
+    <script type="module" src="src/js/dialogs.js"></script>
+    <script type="module" src="src/js/galerie.js"></script>
+    <script type="module" src="src/js/group-form.js"></script>
+    <script type="module" src="src/js/filter.js"></script>
+    <script type="module" src="src/js/pflege.js"></script>
+    <script type="module" src="src/js/app.js"></script>
     <script src="src/js/admin.js"></script>
-    <script src="src/js/group-form.js"></script>
-    <script src="src/js/app.js"></script>
-    <script src="src/js/filter.js"></script>
-    <script src="src/js/pflanzen.js"></script>
-    <script src="src/js/pflege.js"></script>';
+    <script src="src/js/pflanzen.js"></script>';
 include 'src/layout/footer.php';
 ?>
-    <script>
+    <script type="module">
         document.addEventListener('DOMContentLoaded', () => {
             const m = new Date().getMonth();
             setCareOverlayMonth(m);  // Overlay-Leiste
             setCareFilterMonth(m);   // Sidebar
         });
     </script>
-    <script>
+    <script type="module">
         // Avatar + Rolle laden
         async function loadAvatar() {
             const res = await fetch('backend/api.php', {
@@ -778,4 +778,15 @@ include 'src/layout/footer.php';
             const current = document.documentElement.getAttribute('data-theme') || 'light';
             setTheme(current === 'light' ? 'dark' : 'light');
         }
+
+        // Bridge: Inline-Funktionen für onclick-Handler
+        window.showView = showView;
+        window.doLogout = doLogout;
+        window.setTheme = setTheme;
+        window.setEffectsEnabled = setEffectsEnabled;
+        window.toggleTheme = toggleTheme;
+        window.settingsSaveProfile = settingsSaveProfile;
+        window.openCropModal = openCropModal;
+        window.closeCropModal = closeCropModal;
+        window.saveCroppedAvatar = saveCroppedAvatar;
     </script>

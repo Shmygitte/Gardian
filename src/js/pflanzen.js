@@ -1,6 +1,7 @@
 /**
  * Gardian – Pflanzen-Liste
  */
+// ES Module – fetch-Aufrufe werden schrittweise auf api() migriert
 
 const FIELD_LABELS = {
     type:               'Typ',
@@ -650,3 +651,25 @@ async function deleteImage(id, type, groupId, plantId, containerId, userGroupId)
     const data = await res.json();
     if (data.success) loadImages(type, groupId, plantId, containerId, userGroupId);
 }
+
+// Bridge
+window.renderPflanzenListeFiltered = renderPflanzenListeFiltered;
+window.loadPflanzenListe = loadPflanzenListe;
+window.startPlantRename = startPlantRename;
+window.savePlantField = savePlantField;
+window.toggleRemovedReason = toggleRemovedReason;
+window.handlePlantClick = handlePlantClick;
+window.handlePlantDblClick = handlePlantDblClick;
+window.toggleAccordion = toggleAccordion;
+window.switchBloomTab = switchBloomTab;
+window.bloomToggleMonth = bloomToggleMonth;
+window.addBloomYear = addBloomYear;
+window.deletePlant = deletePlant;
+window.deleteUserGroup = deleteUserGroup;
+window.openGruppeBearbeitenModal = openGruppeBearbeitenModal;
+window.saveGruppeBearbeiten = saveGruppeBearbeiten;
+window.uploadImage = uploadImage;
+window.closePlantCropModal = closePlantCropModal;
+window.saveCroppedPlantImage = saveCroppedPlantImage;
+window.loadImages = loadImages;
+window.deleteImage = deleteImage;

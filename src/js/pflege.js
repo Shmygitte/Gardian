@@ -1,36 +1,29 @@
 /**
  * Gardian – Gartenkalender Overlay (Karte)
  */
+import { api } from './core/api.js';
+import { state, filterState } from './core/state.js';
 
 let _careOverlayActive = false;
-let _careOverlayYear   = new Date().getFullYear();
-let _careOverlayTasks  = null;
+let _careOverlayYear = new Date().getFullYear();
+let _careOverlayTasks = null;
 
-// ========================
-// HILFSFUNKTIONEN (auch für Filter)
-// ========================
-async function ensureCareTasksLoaded() {
+export async function ensureCareTasksLoaded() {
     if (_careOverlayTasks) return;
-    const res  = await fetch('backend/api.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'getCareTasksList', year: _careOverlayYear })
-    });
-    const data = await res.json();
+    const data = await api('getCareTasksList', { year: _careOverlayYear });
     if (data.success) _careOverlayTasks = data.tasks;
 }
 
-function getPinsWithCareTasks(careMonths) {
+export function getPinsWithCareTasks(careMonths) {
     const result = new Set();
     if (!_careOverlayTasks) return result;
-    // careMonths: Set (leer = alle), sonst Set mit 0-indexed Monatsnummern
     let mask = 0;
     if (!careMonths || careMonths.size === 0) {
-        mask = (1 << 12) - 1; // alle Monate
+        mask = (1 << 12) - 1;
     } else {
         careMonths.forEach(m => { mask |= (1 << m); });
     }
-    const pins = (typeof state !== 'undefined' ? state.pins : []) || [];
+    const pins = state.pins || [];
 
     for (const task of _careOverlayTasks) {
         if (!(task.months & mask)) continue;
@@ -49,27 +42,18 @@ function getPinsWithCareTasks(careMonths) {
     return result;
 }
 
-// ========================
-// TOGGLE
-// ========================
-function toggleCareOverlay(checked) {
+export function toggleCareOverlay(checked) {
     _careOverlayActive = checked;
-    if (_careOverlayActive) {
-        loadAndRenderCareOverlay();
-    } else {
-        clearCareBadges();
-    }
+    if (_careOverlayActive) loadAndRenderCareOverlay();
+    else clearCareBadges();
 }
 
-// ========================
-// LOAD & RENDER
-// ========================
 async function loadAndRenderCareOverlay() {
     await ensureCareTasksLoaded();
     renderCareBadges();
 }
 
-function renderCareBadges() {
+export function renderCareBadges() {
     clearCareBadges();
     if (!_careOverlayTasks || !_careOverlayActive) return;
 
@@ -78,18 +62,17 @@ function renderCareBadges() {
     const overlay = canvas.querySelector('.map__markers-overlay');
     if (!overlay) return;
 
-    const pins        = (typeof state !== 'undefined' ? state.pins : []) || [];
-    const careMonths  = (typeof filterState !== 'undefined') ? filterState.careMonths : new Set();
+    const pins = state.pins || [];
+    const careMonths = filterState.careMonths;
     const activeMonths = careMonths.size === 0
-        ? [0,1,2,3,4,5,6,7,8,9,10,11]
+        ? [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
         : Array.from(careMonths);
 
-    // Aufgaben je Plant-ID sammeln: {pending, done, icons}
     const byPlant = {};
     const addTo = (plantId, isPending, icon) => {
         if (!byPlant[plantId]) byPlant[plantId] = { pending: 0, done: 0, icons: [] };
         if (isPending) byPlant[plantId].pending++;
-        else           byPlant[plantId].done++;
+        else byPlant[plantId].done++;
         if (icon && byPlant[plantId].icons.length < 3 && !byPlant[plantId].icons.includes(icon))
             byPlant[plantId].icons.push(icon);
     };
@@ -97,7 +80,7 @@ function renderCareBadges() {
     for (const task of _careOverlayTasks) {
         for (const m of activeMonths) {
             if (!(task.months & (1 << m))) continue;
-            const month1   = m + 1;
+            const month1 = m + 1;
             const isPending = !task.done_months.includes(month1);
 
             if (task.plant_id) {
@@ -120,14 +103,14 @@ function renderCareBadges() {
 
         const allDone = stats.pending === 0;
         const iconStr = stats.icons.join('');
-        const label   = allDone
+        const label = allDone
             ? (iconStr ? iconStr + ' ✓' : '✓')
             : (iconStr ? iconStr + (stats.pending > 1 ? ` ${stats.pending}` : '') : `${stats.pending} offen`);
 
         const badge = document.createElement('div');
-        badge.className       = 'care-badge';
+        badge.className = 'care-badge';
         badge.dataset.plantId = pin.id;
-        badge.style.cssText   = `
+        badge.style.cssText = `
             position:absolute; left:${pin.pos_x}%; top:${pin.pos_y}%;
             transform:translate(8px,-22px);
             background:${allDone ? '#22c55e' : '#f97316'};
@@ -145,3 +128,14 @@ function clearCareBadges() {
     document.querySelectorAll('.care-badge').forEach(b => b.remove());
 }
 
+// Bridge
+window._careOverlayActive = _careOverlayActive;
+window.ensureCareTasksLoaded = ensureCareTasksLoaded;
+window.getPinsWithCareTasks = getPinsWithCareTasks;
+window.toggleCareOverlay = toggleCareOverlay;
+window.renderCareBadges = renderCareBadges;
+// _careOverlayActive ist ein Primitive – Getter für aktuellen Wert
+Object.defineProperty(window, '_careOverlayActive', {
+    get() { return _careOverlayActive; },
+    configurable: true
+});

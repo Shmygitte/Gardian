@@ -2,6 +2,8 @@
  * Gardian – Gemeinsamer Renderer für Pflanzengruppen-Formulare
  * Wird von admin.js und app.js genutzt
  */
+import { api } from './core/api.js';
+import { iconLibraryCache } from './core/state.js';
 
 const GF_TYPE_OPTIONS = [
     { v: 'tree',     l: '🌳 Baum' },
@@ -142,7 +144,7 @@ function getGroupFormNiceData(formId) {
 // Icon-Picker Funktionen für Gruppenformular
 function _gfResolveIcon(val) {
     if (!val) return '<span style="color:var(--text-muted);font-size:0.7rem;">—</span>';
-    if (val.startsWith('lib:') && typeof _iconLibraryCache !== 'undefined' && _iconLibraryCache) {
+    if (val.startsWith('lib:') && iconLibraryCache) {
         const path = _iconLibraryCache[val.substring(4)];
         if (path) return `<img src="${path}" style="width:20px;height:20px;object-fit:contain;">`;
     }
@@ -174,12 +176,12 @@ function gfResetIcon(formId) {
 
 function gfRenderIconGrid(formId) {
     const grid = document.getElementById(formId + '-icon-grid');
-    if (!grid || typeof _iconLibraryCache === 'undefined' || !_iconLibraryCache) {
+    if (!grid || !iconLibraryCache) {
         if (grid) grid.innerHTML = '<span style="color:var(--text-muted);font-size:0.7rem;grid-column:1/-1;">Keine Icons</span>';
         return;
     }
     const currentVal = document.getElementById(formId)?.querySelector('[name="marker_icon"]')?.value || '';
-    grid.innerHTML = Object.entries(_iconLibraryCache).map(([id, path]) => {
+    grid.innerHTML = Object.entries(iconLibraryCache).map(([id, path]) => {
         const selected = currentVal === 'lib:' + id ? 'outline:2px solid var(--primary);' : '';
         return `<button type="button" data-icon-id="${id}" onclick="gfSelectIcon('${formId}','${id}')"
             style="width:100%;aspect-ratio:1;border:1px solid var(--border);border-radius:4px;background:var(--bg-app);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:4px;transition:transform 0.15s;${selected}"
@@ -200,12 +202,7 @@ function gfLoadPhotos(formId, groupId) {
     // Speichere groupId am Container für spätere Uploads
     container.dataset.groupId = groupId;
 
-    fetch('backend/api.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'getImages', type: 'default', group_id: groupId })
-    })
-    .then(r => r.json())
+    api('getImages', { type: 'default', group_id: groupId })
     .then(data => {
         if (!data.success || !data.images || !data.images.length) {
             container.innerHTML = '<p style="font-size:0.75rem;color:var(--text-muted);">Noch keine Fotos.</p>';
@@ -229,22 +226,27 @@ function gfUploadPhoto(input, formId) {
     const container = document.getElementById(formId + '-photo-container');
     const groupId = container?.dataset?.groupId;
     if (!groupId) {
-        customAlert('Bitte speichere die Gruppe zuerst, bevor du ein Foto hochlädst.');
+        window.customAlert('Bitte speichere die Gruppe zuerst, bevor du ein Foto hochlädst.');
         input.value = '';
         return;
     }
     // Nutze bestehenden Crop-Dialog aus pflanzen.js
-    uploadImage(input, 'default', groupId, null, formId + '-photo-container', null);
+    window.uploadImage(input, 'default', groupId, null, formId + '-photo-container', null);
 }
 
 /** Löscht ein Gruppen-Foto */
 async function gfDeletePhoto(imageId, formId, groupId) {
-    if (!await customConfirm('Foto löschen?', { confirmLabel: 'Löschen', danger: true })) return;
-    const res = await fetch('backend/api.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'deleteImage', id: imageId })
-    });
-    const data = await res.json();
+    if (!await window.customConfirm('Foto löschen?', { confirmLabel: 'Löschen', danger: true })) return;
+    const data = await api('deleteImage', { id: imageId });
     if (data.success) gfLoadPhotos(formId, groupId);
 }
+
+// Bridge
+window.renderGroupFormNice = renderGroupFormNice;
+window.getGroupFormNiceData = getGroupFormNiceData;
+window.gfSelectIcon = gfSelectIcon;
+window.gfResetIcon = gfResetIcon;
+window.gfRenderIconGrid = gfRenderIconGrid;
+window.gfLoadPhotos = gfLoadPhotos;
+window.gfUploadPhoto = gfUploadPhoto;
+window.gfDeletePhoto = gfDeletePhoto;

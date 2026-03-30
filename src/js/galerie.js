@@ -1,6 +1,8 @@
 /**
  * Gardian – Gartengalerie
  */
+import { api } from './core/api.js';
+import { filterState } from './core/state.js';
 
 const TYPE_ICONS = { tree: '🌳', shrub: '🌿', flower: '🌸', climber: '🌱', s_flower: '🌼' };
 const TYPE_LABELS_GAL = { tree: 'Baum', shrub: 'Strauch', flower: 'Blume', climber: 'Kletterpflanze', s_flower: 'Blümchen' };
@@ -8,17 +10,12 @@ const TYPE_LABELS_GAL = { tree: 'Baum', shrub: 'Strauch', flower: 'Blume', climb
 let _galerieImages = [];
 let _adminFilterActive = false;
 
-async function loadGalerie() {
+export async function loadGalerie() {
     const grid = document.getElementById('galerie-grid');
     if (!grid) return;
     grid.innerHTML = '<p style="color:rgba(255,255,255,0.4); font-size:0.9rem;">Lade...</p>';
 
-    const res  = await fetch('backend/api.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'getAllImages' })
-    });
-    const data = await res.json();
+    const data = await api('getAllImages');
 
     if (!data.success || !data.images.length) {
         grid.innerHTML = '<p style="color:rgba(255,255,255,0.4); font-size:0.9rem; grid-column:1/-1; text-align:center; padding:60px 0;">Noch keine Fotos vorhanden.</p>';
@@ -28,7 +25,6 @@ async function loadGalerie() {
     _galerieImages = data.images;
     populateGalerieFilters();
 
-    // Standard-Button nur zeigen, wenn default-Bilder vorhanden
     const btn = document.getElementById('galerie-filter-admin');
     if (btn) {
         const hasDefaults = _galerieImages.some(img => img.type === 'default');
@@ -39,7 +35,6 @@ async function loadGalerie() {
 }
 
 function populateGalerieFilters() {
-    // Pflanzen-Filter
     const selPflanze = document.getElementById('galerie-filter-pflanze');
     if (selPflanze) {
         const pflanzen = new Map();
@@ -55,15 +50,14 @@ function populateGalerieFilters() {
             sorted.map(([id, name]) => `<option value="${id}">${name}</option>`).join('');
     }
 
-    // Gruppen-Filter (konkrete Pflanzengruppen, nicht Typ)
     const selGruppe = document.getElementById('galerie-filter-gruppe');
     if (selGruppe) {
         const gruppen = new Map();
         _galerieImages.forEach(img => {
             const key = img.plant_user_group_id ? 'u' + img.plant_user_group_id
-                      : img.plant_group_id      ? String(img.plant_group_id)
-                      : img.group_id            ? String(img.group_id)
-                      : null;
+                : img.plant_group_id ? String(img.plant_group_id)
+                    : img.group_id ? String(img.group_id)
+                        : null;
             if (key && !gruppen.has(key)) {
                 gruppen.set(key, img.group_name || '(Unbenannt)');
             }
@@ -74,30 +68,28 @@ function populateGalerieFilters() {
     }
 }
 
-function toggleAdminFilter() {
+export function toggleAdminFilter() {
     _adminFilterActive = !_adminFilterActive;
     const btn = document.getElementById('galerie-filter-admin');
     if (btn) btn.classList.toggle('active', _adminFilterActive);
     renderGalerie();
 }
 
-function renderGalerie() {
-    const grid   = document.getElementById('galerie-grid');
+export function renderGalerie() {
+    const grid = document.getElementById('galerie-grid');
     const sortBy = document.getElementById('galerie-sort')?.value || 'name';
     if (!grid) return;
 
     let images = [..._galerieImages];
 
-    // --- Galerie-eigene Filter ---
-    const gruppeFilter  = document.getElementById('galerie-filter-gruppe')?.value || '';
+    const gruppeFilter = document.getElementById('galerie-filter-gruppe')?.value || '';
     const pflanzeFilter = document.getElementById('galerie-filter-pflanze')?.value || '';
 
     if (gruppeFilter) {
         images = images.filter(img => {
             const key = img.plant_user_group_id ? 'u' + img.plant_user_group_id
-                      : img.plant_group_id      ? String(img.plant_group_id)
-                      : img.group_id            ? String(img.group_id)
-                      : null;
+                : img.plant_group_id ? String(img.plant_group_id)
+                    : img.group_id ? String(img.group_id) : null;
             return key === gruppeFilter;
         });
     }
@@ -110,23 +102,20 @@ function renderGalerie() {
         images = images.filter(img => img.type === 'default');
     }
 
-    // --- Sidebar-Filter anwenden ---
-    if (typeof filterState !== 'undefined') {
-        if (filterState.types && filterState.types.length > 0) {
-            images = images.filter(img => !img.group_type || filterState.types.includes(img.group_type));
-        } else if (filterState.types && filterState.types.length === 0) {
-            images = [];
-        }
-        if (filterState.groups !== null) {
-            images = images.filter(img => {
-                let key;
-                if (img.plant_user_group_id) key = 'u' + img.plant_user_group_id;
-                else if (img.plant_group_id)  key = String(img.plant_group_id);
-                else if (img.group_id)        key = String(img.group_id);
-                else                          key = null;
-                return key === null || filterState.groups.has(key);
-            });
-        }
+    if (filterState.types && filterState.types.length > 0) {
+        images = images.filter(img => !img.group_type || filterState.types.includes(img.group_type));
+    } else if (filterState.types && filterState.types.length === 0) {
+        images = [];
+    }
+    if (filterState.groups !== null) {
+        images = images.filter(img => {
+            let key;
+            if (img.plant_user_group_id) key = 'u' + img.plant_user_group_id;
+            else if (img.plant_group_id) key = String(img.plant_group_id);
+            else if (img.group_id) key = String(img.group_id);
+            else key = null;
+            return key === null || filterState.groups.has(key);
+        });
     }
 
     if (sortBy === 'name') {
@@ -141,15 +130,15 @@ function renderGalerie() {
     }
 
     grid.innerHTML = images.map(img => {
-        const icon    = TYPE_ICONS[img.group_type]  || '🌿';
-        const label   = TYPE_LABELS_GAL[img.group_type] || img.group_type || '';
-        const isPlant   = img.type === 'plant';
+        const icon = TYPE_ICONS[img.group_type] || '🌿';
+        const label = TYPE_LABELS_GAL[img.group_type] || img.group_type || '';
+        const isPlant = img.type === 'plant';
         const isDefault = img.type === 'default';
-        const badge     = isPlant
+        const badge = isPlant
             ? '<span class="galerie-badge galerie-badge--plant">Pflanze</span>'
             : isDefault
-            ? '<span class="galerie-badge galerie-badge--default">Standard</span>'
-            : '<span class="galerie-badge galerie-badge--group">Gruppe</span>';
+                ? '<span class="galerie-badge galerie-badge--default">Standard</span>'
+                : '<span class="galerie-badge galerie-badge--group">Gruppe</span>';
         return `
         <div class="galerie-card" onclick="showFullImage('${img.file_path_gallery || img.file_path}')">
             ${badge}
@@ -161,3 +150,8 @@ function renderGalerie() {
         </div>`;
     }).join('');
 }
+
+// Bridge
+window.loadGalerie = loadGalerie;
+window.toggleAdminFilter = toggleAdminFilter;
+window.renderGalerie = renderGalerie;
