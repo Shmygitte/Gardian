@@ -1,9 +1,8 @@
 <?php
 /**
  * Gardian – API Router
- * Leitet Actions an die entsprechenden Module weiter.
+ * Zentrale Eingangs-Datei, leitet Actions an Module weiter.
  */
-
 ini_set('display_errors', 0);
 error_reporting(E_ALL);
 
@@ -38,57 +37,86 @@ function requireAdmin($db, $userId) {
 // =========================
 // ROUTING
 // =========================
-$modules = __DIR__ . '/modules/';
+$moduleMap = [
+    // Auth
+    'login'    => 'auth',
+    'logout'   => 'auth',
+    'register' => 'auth',
 
-// Auth (login, logout, register)
-if (in_array($action, ['login', 'logout', 'register'])) {
-    require $modules . 'auth.php';
+    // User
+    'getAvatar'    => 'user',
+    'getUser'      => 'user',
+    'updateUser'   => 'user',
+    'uploadAvatar' => 'user',
+
+    // Map
+    'getPins'          => 'map',
+    'getGardenConfig'  => 'map',
+    'saveGardenConfig' => 'map',
+    'uploadGardenPlan' => 'map',
+
+    // Plants
+    'getPlantsList'   => 'plants',
+    'getPlantDetails' => 'plants',
+    'addPlant'        => 'plants',
+    'updatePlant'     => 'plants',
+    'movePlant'       => 'plants',
+    'duplicatePlant'  => 'plants',
+    'deletePlant'     => 'plants',
+
+    // Groups
+    'getGroups'        => 'groups',
+    'createUserGroup'  => 'groups',
+    'updateUserGroup'  => 'groups',
+    'deleteUserGroup'  => 'groups',
+
+    // Bloom
+    'getAllBloomObservations' => 'bloom',
+    'getBloomObservations'   => 'bloom',
+    'saveBloomObservation'   => 'bloom',
+
+    // Images
+    'uploadImage'     => 'images',
+    'getImages'       => 'images',
+    'deleteImage'     => 'images',
+    'getImagesForPin' => 'images',
+    'getAllImages'     => 'images',
+    'cleanupImages'   => 'images',
+
+    // Icons
+    'getIconLibrary'  => 'icons',
+    'getUserIcons'    => 'icons',
+    'uploadIcon'      => 'icons',
+    'adminUpdateIcon' => 'icons',
+    'deleteIcon'      => 'icons',
+
+    // Care / Kalender
+    'getCareTasksList' => 'care',
+    'saveCareTask'     => 'care',
+    'deleteCareTask'   => 'care',
+    'getCareTaskTypes' => 'care',
+    'toggleCareDone'   => 'care',
+
+    // Admin
+    'adminGetUsers'           => 'admin',
+    'adminUpdateRole'         => 'admin',
+    'adminDeleteUser'         => 'admin',
+    'adminGetGroups'          => 'admin',
+    'adminAddGroup'           => 'admin',
+    'adminUpdateGroup'        => 'admin',
+    'adminDeleteGroup'        => 'admin',
+    'adminGetCareTaskTypes'   => 'admin',
+    'adminSaveCareTaskType'   => 'admin',
+    'adminDeleteCareTaskType' => 'admin',
+    'adminGetLinks'           => 'admin',
+    'adminAddLink'            => 'admin',
+    'adminReorderLinks'       => 'admin',
+    'adminUpdateLink'         => 'admin',
+    'adminDeleteLink'         => 'admin',
+];
+
+if ($action && isset($moduleMap[$action])) {
+    require __DIR__ . '/modules/' . $moduleMap[$action] . '.php';
 }
 
-// User (getAvatar, getUser, updateUser, uploadAvatar)
-if (in_array($action, ['getAvatar', 'getUser', 'updateUser', 'uploadAvatar'])) {
-    require $modules . 'user.php';
-}
-
-// Map (getPins, getGardenConfig, saveGardenConfig, uploadGardenPlan)
-if (in_array($action, ['getPins', 'getGardenConfig', 'saveGardenConfig', 'uploadGardenPlan'])) {
-    require $modules . 'map.php';
-}
-
-// Plants (getPlantsList, getPlantDetails, addPlant, updatePlant, movePlant, duplicatePlant, deletePlant)
-if (in_array($action, ['getPlantsList', 'getPlantDetails', 'addPlant', 'updatePlant', 'movePlant', 'duplicatePlant', 'deletePlant'])) {
-    require $modules . 'plants.php';
-}
-
-// Groups (getGroups, createUserGroup, updateUserGroup, deleteUserGroup)
-if (in_array($action, ['getGroups', 'createUserGroup', 'updateUserGroup', 'deleteUserGroup'])) {
-    require $modules . 'groups.php';
-}
-
-// Bloom (getAllBloomObservations, getBloomObservations, saveBloomObservation)
-if (in_array($action, ['getAllBloomObservations', 'getBloomObservations', 'saveBloomObservation'])) {
-    require $modules . 'bloom.php';
-}
-
-// Images (uploadImage, getImages, deleteImage, getImagesForPin, getAllImages, cleanupImages)
-if (in_array($action, ['uploadImage', 'getImages', 'deleteImage', 'getImagesForPin', 'getAllImages', 'cleanupImages'])) {
-    require $modules . 'images.php';
-}
-
-// Icons (getIconLibrary, getUserIcons, uploadIcon, adminUpdateIcon, deleteIcon)
-if (in_array($action, ['getIconLibrary', 'getUserIcons', 'uploadIcon', 'adminUpdateIcon', 'deleteIcon'])) {
-    require $modules . 'icons.php';
-}
-
-// Care (getCareTasksList, saveCareTask, deleteCareTask, getCareTaskTypes, toggleCareDone)
-if (in_array($action, ['getCareTasksList', 'saveCareTask', 'deleteCareTask', 'getCareTaskTypes', 'toggleCareDone'])) {
-    require $modules . 'care.php';
-}
-
-// Admin (adminGet*, adminAdd*, adminUpdate*, adminDelete*, adminReorder*)
-if (str_starts_with($action ?? '', 'admin') && !in_array($action, ['adminUpdateIcon'])) {
-    require $modules . 'admin.php';
-}
-
-// Unbekannte Action
-echo json_encode(['success' => false, 'error' => 'Unbekannte Action: ' . ($action ?? 'null')]);
+echo json_encode(['success' => false, 'error' => 'Unbekannte Action']);
