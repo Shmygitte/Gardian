@@ -44,7 +44,7 @@ if ($action === 'adminAddGroup') {
     requireAdmin($db, $_SESSION['user_id']);
     $name = trim($data['name'] ?? '');
     $type = $data['type'] ?? null;
-    if (!$name || !in_array($type, ['tree','shrub','flower','s_flower'])) {
+    if (!$name || !in_array($type, ['tree','shrub','flower','climber','s_flower'])) {
         echo json_encode(['success' => false, 'error' => 'Name und Typ erforderlich']);
         exit;
     }

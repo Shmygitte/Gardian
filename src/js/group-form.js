@@ -7,6 +7,7 @@ const GF_TYPE_OPTIONS = [
     { v: 'tree',     l: '🌳 Baum' },
     { v: 'shrub',    l: '🌿 Strauch' },
     { v: 'flower',   l: '🌸 Blume' },
+    { v: 'climber',  l: '🌱 Kletterpflanze' },
     { v: 's_flower', l: '🌼 Blümchen' },
 ];
 

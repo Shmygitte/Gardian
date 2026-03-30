@@ -138,6 +138,14 @@ function getMigrations() {
             'name' => '018_links_sort_order',
             'sql'  => "ALTER TABLE gd_useful_links ADD COLUMN sort_order INT UNSIGNED NOT NULL DEFAULT 0"
         ],
+        [
+            'name' => '019_type_enum_add_climber_default_groups',
+            'sql'  => "ALTER TABLE gd_default_groups MODIFY COLUMN type ENUM('tree','shrub','flower','climber','s_flower') NOT NULL"
+        ],
+        [
+            'name' => '020_type_enum_add_climber_user_groups',
+            'sql'  => "ALTER TABLE gd_user_groups MODIFY COLUMN type ENUM('tree','shrub','flower','climber','s_flower') NULL"
+        ],
     ];
 }
 

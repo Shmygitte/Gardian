@@ -2,8 +2,8 @@
  * Gardian – Gartengalerie
  */
 
-const TYPE_ICONS = { tree: '🌳', shrub: '🌿', flower: '🌸', s_flower: '🌼' };
-const TYPE_LABELS_GAL = { tree: 'Baum', shrub: 'Strauch', flower: 'Blume', s_flower: 'Blümchen' };
+const TYPE_ICONS = { tree: '🌳', shrub: '🌿', flower: '🌸', climber: '🌱', s_flower: '🌼' };
+const TYPE_LABELS_GAL = { tree: 'Baum', shrub: 'Strauch', flower: 'Blume', climber: 'Kletterpflanze', s_flower: 'Blümchen' };
 
 let _galerieImages = [];
 let _adminFilterActive = false;

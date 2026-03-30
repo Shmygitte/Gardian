@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS gd_default_groups (
     id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name          VARCHAR(150)  NOT NULL UNIQUE,
     -- Plant type
-    type          ENUM('tree', 'shrub', 'flower', 's_flower') NOT NULL,
+    type          ENUM('tree', 'shrub', 'flower', 'climber', 's_flower') NOT NULL,
     -- Bloom
     bloom_start   TINYINT UNSIGNED NULL COMMENT '1-12 (month)',
     bloom_end     TINYINT UNSIGNED NULL COMMENT '1-12 (month)',
@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS gd_user_groups (
     name          VARCHAR(150)  NULL COMMENT 'Eigenständiger Gruppenname (kein Default-Backing nötig)',
     group_id      INT UNSIGNED  NULL COMMENT 'FK zu gd_default_groups, NULL = eigenständige User-Gruppe',
     -- Plant type
-    type          ENUM('tree', 'shrub', 'flower', 's_flower') NULL,
+    type          ENUM('tree', 'shrub', 'flower', 'climber', 's_flower') NULL,
     -- Bloom
     bloom_start   TINYINT UNSIGNED NULL,
     bloom_end     TINYINT UNSIGNED NULL,

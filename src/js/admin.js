@@ -4,7 +4,7 @@
 
 const GROUP_FIELDS_ADMIN = [
     { key: 'name',         label: 'Name',             type: 'text',   required: true },
-    { key: 'type',         label: 'Typ',               type: 'select', options: ['tree','shrub','flower','s_flower'], labels: ['Baum','Strauch','Blume','Blümchen'], required: true },
+    { key: 'type',         label: 'Typ',               type: 'select', options: ['tree','shrub','flower','climber','s_flower'], labels: ['Baum','Strauch','Blume','Kletterpflanze','Blümchen'], required: true },
     { key: 'bloom_months', label: 'Blütezeit',         type: 'bloom_toggle' },
     { key: 'marker_icon',  label: 'Marker-Icon',       type: 'text' },
     { key: 'marker_color', label: 'Marker-Farbe',      type: 'color' },
@@ -123,8 +123,12 @@ async function loadAdminGroups() {
 
     panel.innerHTML = `
         <div style="margin-bottom:16px; border:2px dashed var(--border); border-radius:var(--radius-md); padding:16px;">
-            <p style="font-weight:600; margin-bottom:12px;">Neue Gruppe anlegen</p>
-            ${renderGroupFormNice({}, 'gform-new', 'adminAddGroup()')}
+            <p style="font-weight:600; margin-bottom:0; cursor:pointer; display:flex; align-items:center; gap:8px;" onclick="const b=document.getElementById('admin-new-group-body'); const a=this.querySelector('.toggle-arrow'); if(b.style.display==='none'){b.style.display='';a.textContent='▼';}else{b.style.display='none';a.textContent='▶';}">
+                <span class="toggle-arrow" style="font-size:0.7rem;">▶</span> Neue Gruppe anlegen
+            </p>
+            <div id="admin-new-group-body" style="display:none; margin-top:12px;">
+                ${renderGroupFormNice({}, 'gform-new', 'adminAddGroup()')}
+            </div>
         </div>
         ${groupsHtml}`;
 

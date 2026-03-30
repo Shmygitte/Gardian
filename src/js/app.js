@@ -31,6 +31,7 @@ const DEFAULT_MARKER = {
     tree:      { size: 44, fontSize: '1.5rem' },
     shrub:     { size: 34, fontSize: '1.2rem' },
     flower:    { size: 20, fontSize: '0.8rem' },
+    climber:   { size: 20, fontSize: '0.8rem' },
     s_flower:  { size: 10, fontSize: '0.45rem' },
     _fallback: { size: 30, fontSize: '1rem' }
 };
@@ -644,6 +645,7 @@ async function savePlantEdit() {
 function getEmoji(type) {
     if (type === 'tree') return '🌳';
     if (type === 'shrub') return '🌿';
+    if (type === 'climber') return '🌱';
     return '🌸';
 }
 
@@ -1032,7 +1034,7 @@ function handleMapClick(e) {
 
 const NEW_GROUP_FIELDS = [
     { key: 'name',         label: 'Name *',            type: 'text',     required: true },
-    { key: 'type',         label: 'Typ *',             type: 'select',   options: [{v:'tree',l:'Baum'},{v:'shrub',l:'Strauch'},{v:'flower',l:'Blume'},{v:'s_flower',l:'Blümchen'}], required: true },
+    { key: 'type',         label: 'Typ *',             type: 'select',   options: [{v:'tree',l:'Baum'},{v:'shrub',l:'Strauch'},{v:'flower',l:'Blume'},{v:'climber',l:'Kletterpflanze'},{v:'s_flower',l:'Blümchen'}], required: true },
     { key: 'bloom_start',  label: 'Blüte von (Monat)', type: 'number' },
     { key: 'bloom_end',    label: 'Blüte bis (Monat)', type: 'number' },
     { key: 'marker_color', label: 'Marker-Farbe',      type: 'color' },

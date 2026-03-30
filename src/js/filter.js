@@ -4,7 +4,7 @@
  */
 
 const filterState = {
-    types:      ['tree', 'shrub', 'flower', 's_flower'],
+    types:      ['tree', 'shrub', 'flower', 'climber', 's_flower'],
     groups:     null, // null = alle; sonst Set mit aktiven group_ids
     careFilter: false,
     careMonths: new Set() // leer = alle Monate
