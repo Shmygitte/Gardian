@@ -26,13 +26,13 @@ let adminCurrentTab = 'users';
 
 function switchAdminTab(tab) {
     adminCurrentTab = tab;
-    ['users','groups','care-types','icons','links','db'].forEach(t => {
+    ['users','groups','care-types','icons','links','system'].forEach(t => {
         document.getElementById(`admin-panel-${t}`).style.display = tab === t ? 'block' : 'none';
         document.getElementById(`admin-tab-${t}`).className = 'c-btn ' + (tab === t ? 'c-btn--secondary' : 'c-btn--text');
     });
     if (tab === 'icons') loadAdminIcons();
     if (tab === 'links') loadAdminLinks();
-    if (tab === 'db') loadMigrations();
+    if (tab === 'system') loadSystemInfo();
 }
 
 async function loadAdminView() {
@@ -584,10 +584,163 @@ async function adminDeleteLink(id, label) {
 }
 
 // ========================
+// SYSTEM-INFO (Sub-Tabs: Farben, Typografie, Datenbank)
+// ========================
+let _systemSubTab = 'colors';
+
+function switchSystemSub(tab) {
+    _systemSubTab = tab;
+    ['colors','typo','db'].forEach(t => {
+        const panel = document.getElementById('system-panel-' + t);
+        const btn   = document.getElementById('system-sub-' + t);
+        if (panel) panel.style.display = tab === t ? 'block' : 'none';
+        if (btn)   btn.className = 'c-btn ' + (tab === t ? 'c-btn--secondary' : 'c-btn--text');
+    });
+    if (tab === 'db') loadMigrations();
+}
+
+function loadSystemInfo() {
+    renderSystemColors();
+    renderSystemTypo();
+    switchSystemSub(_systemSubTab);
+}
+
+function renderSystemColors() {
+    const panel = document.getElementById('system-panel-colors');
+    const colors = [
+        { label: 'Hintergrund',     var: '--bg-app' },
+        { label: 'Card',            var: '--bg-card' },
+        { label: 'Surface',         var: '--bg-surface' },
+        { label: 'Primary',         var: '--primary' },
+        { label: 'Primary Light',   var: '--primary-light' },
+        { label: 'Text Main',       var: '--text-main' },
+        { label: 'Text Muted',      var: '--text-muted' },
+        { label: 'Border',          var: '--border' },
+        { label: 'Danger',          var: '--danger' },
+        { label: 'Shadow',          var: '--shadow-soft' },
+    ];
+    const style = getComputedStyle(document.documentElement);
+    const cards = colors.map(c => {
+        const val = style.getPropertyValue(c.var).trim();
+        return `<div style="border:1px solid var(--border);border-radius:6px;padding:10px;display:flex;align-items:center;gap:10px;">
+            <div style="width:32px;height:32px;border-radius:4px;border:1px solid var(--border);background:${val};flex-shrink:0;"></div>
+            <div>
+                <div style="font-weight:600;font-size:0.85rem;">${c.label}</div>
+                <div style="font-size:0.7rem;color:var(--text-muted);font-family:monospace;">${c.var}</div>
+                <div style="font-size:0.7rem;color:var(--text-muted);">${val}</div>
+            </div>
+        </div>`;
+    }).join('');
+
+    const theme = document.documentElement.getAttribute('data-theme') || 'light';
+    panel.innerHTML = `
+        <h4 style="font-size:0.9rem;font-weight:600;color:var(--primary);margin-bottom:12px;">CSS-Variablen (aktives Theme: ${theme})</h4>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;">${cards}</div>`;
+}
+
+function renderSystemTypo() {
+    const panel = document.getElementById('system-panel-typo');
+    const s = getComputedStyle(document.documentElement);
+    const v = (name) => s.getPropertyValue(name).trim() || '–';
+    const section = 'border-left:3px solid var(--primary);padding-left:12px;margin-bottom:24px;';
+
+    // Font
+    const fontHtml = `
+        <div style="${section}">
+            <h4 style="font-size:0.9rem;font-weight:600;color:var(--primary);margin-bottom:8px;">Font</h4>
+            <div style="border:1px solid var(--border);border-radius:8px;padding:12px;font-family:var(--font-main);font-size:1rem;">
+                ${v('--font-main')}
+            </div>
+        </div>`;
+
+    // Spacing
+    const spacings = [
+        { var: '--space-xs', label: '4px' },
+        { var: '--space-sm', label: '8px' },
+        { var: '--space-md', label: '16px' },
+        { var: '--space-lg', label: '24px' },
+        { var: '--space-xl', label: '32px' },
+    ];
+    const spacingRows = spacings.map(sp => {
+        const val = v(sp.var);
+        return `<div style="display:flex;align-items:center;gap:12px;font-size:0.8rem;">
+            <span style="font-family:monospace;color:var(--text-muted);min-width:90px;">${sp.var}</span>
+            <div style="width:${val};height:${val};background:var(--primary-light);border-radius:2px;flex-shrink:0;border:1px solid var(--primary);opacity:0.6;"></div>
+            <span style="font-weight:600;">${val}</span>
+        </div>`;
+    }).join('');
+    const spacingHtml = `
+        <div style="${section}">
+            <h4 style="font-size:0.9rem;font-weight:600;color:var(--primary);margin-bottom:10px;">Spacing-Skala</h4>
+            <div style="display:flex;flex-direction:column;gap:8px;">${spacingRows}</div>
+        </div>`;
+
+    // Border Radius
+    const radii = [
+        { var: '--radius-sm', label: 'SM' },
+        { var: '--radius-md', label: 'MD' },
+        { var: '--radius-lg', label: 'LG' },
+    ];
+    const radiusCards = radii.map(r => {
+        const val = v(r.var);
+        return `<div style="text-align:center;">
+            <div style="width:60px;height:60px;border:2px solid var(--primary-light);border-radius:${val};margin:0 auto 6px;"></div>
+            <div style="font-family:monospace;font-size:0.7rem;color:var(--text-muted);">${r.var}</div>
+            <div style="font-size:0.75rem;font-weight:600;">${val}</div>
+        </div>`;
+    }).join('');
+    const radiusHtml = `
+        <div style="${section}">
+            <h4 style="font-size:0.9rem;font-weight:600;color:var(--primary);margin-bottom:10px;">Border Radius</h4>
+            <div style="display:flex;gap:20px;flex-wrap:wrap;">${radiusCards}</div>
+        </div>`;
+
+    // Shadows
+    const shadows = [
+        { var: '--shadow-soft',   label: 'Soft' },
+        { var: '--shadow-medium', label: 'Medium' },
+        { var: '--shadow-xl',     label: 'XL' },
+    ];
+    const shadowCards = shadows.map(sh => {
+        const val = v(sh.var);
+        return `<div style="text-align:center;">
+            <div style="width:60px;height:60px;background:var(--bg-card);border-radius:var(--radius-md);box-shadow:${val};margin:0 auto 6px;"></div>
+            <div style="font-family:monospace;font-size:0.7rem;color:var(--text-muted);">${sh.var}</div>
+        </div>`;
+    }).join('');
+    const shadowHtml = `
+        <div style="${section}">
+            <h4 style="font-size:0.9rem;font-weight:600;color:var(--primary);margin-bottom:10px;">Shadows</h4>
+            <div style="display:flex;gap:20px;flex-wrap:wrap;">${shadowCards}</div>
+        </div>`;
+
+    // Transitions
+    const transitions = [
+        { var: '--transition-fast', label: 'Fast' },
+        { var: '--transition',      label: 'Normal' },
+        { var: '--transition-base', label: 'Base' },
+    ];
+    const transCards = transitions.map(t => {
+        const val = v(t.var);
+        return `<div style="border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:0.8rem;display:inline-flex;align-items:center;gap:8px;">
+            <span style="font-family:monospace;color:var(--text-muted);">${t.var}</span>
+            <span style="font-weight:600;">${val}</span>
+        </div>`;
+    }).join('');
+    const transHtml = `
+        <div style="${section}">
+            <h4 style="font-size:0.9rem;font-weight:600;color:var(--primary);margin-bottom:10px;">Transitions</h4>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">${transCards}</div>
+        </div>`;
+
+    panel.innerHTML = fontHtml + spacingHtml + radiusHtml + shadowHtml + transHtml;
+}
+
+// ========================
 // DATENBANK-MIGRATIONEN
 // ========================
 async function loadMigrations() {
-    const panel = document.getElementById('admin-panel-db');
+    const panel = document.getElementById('system-panel-db');
     panel.innerHTML = '<p style="color:var(--text-muted)">Lade...</p>';
     try {
         const res  = await fetch('backend/migrate.php');
@@ -600,7 +753,7 @@ async function loadMigrations() {
 }
 
 function renderMigrationPanel(pending, history) {
-    const panel = document.getElementById('admin-panel-db');
+    const panel = document.getElementById('system-panel-db');
 
     const pendingHtml = pending.length
         ? pending.map(name => `<div style="padding:4px 8px;font-size:0.8rem;background:var(--bg-app);border:1px solid var(--border);border-left:3px solid var(--primary);border-radius:4px;">${name}</div>`).join('')

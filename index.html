@@ -149,14 +149,24 @@
                                 <button id="admin-tab-care-types" class="c-btn c-btn--text"      onclick="switchAdminTab('care-types')">Aufgaben-Typen</button>
                                 <button id="admin-tab-icons"      class="c-btn c-btn--text"      onclick="switchAdminTab('icons')">Icon-Bibliothek</button>
                                 <button id="admin-tab-links"      class="c-btn c-btn--text"      onclick="switchAdminTab('links')">Nützliche Links</button>
-                                <button id="admin-tab-db"         class="c-btn c-btn--text"      onclick="switchAdminTab('db')">Datenbank</button>
+                                <button id="admin-tab-system"     class="c-btn c-btn--text"      onclick="switchAdminTab('system')">System-Info</button>
                             </div>
                             <div id="admin-panel-users"></div>
                             <div id="admin-panel-groups"     style="display:none;"></div>
                             <div id="admin-panel-care-types" style="display:none;"></div>
                             <div id="admin-panel-icons"      style="display:none;"></div>
                             <div id="admin-panel-links"      style="display:none;"></div>
-                            <div id="admin-panel-db"          style="display:none;"></div>
+                            <div id="admin-panel-system"     style="display:none;">
+                                <!-- Sub-Tabs -->
+                                <div style="display:flex; gap:6px; margin-bottom:16px;">
+                                    <button id="system-sub-colors" class="c-btn c-btn--secondary" onclick="switchSystemSub('colors')" style="font-size:0.8rem;">🎨 Farben</button>
+                                    <button id="system-sub-typo"   class="c-btn c-btn--text"      onclick="switchSystemSub('typo')"   style="font-size:0.8rem;">📐 Typografie & Layout</button>
+                                    <button id="system-sub-db"     class="c-btn c-btn--text"      onclick="switchSystemSub('db')"     style="font-size:0.8rem;">🗄️ Datenbank</button>
+                                </div>
+                                <div id="system-panel-colors"></div>
+                                <div id="system-panel-typo"   style="display:none;"></div>
+                                <div id="system-panel-db"     style="display:none;"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
