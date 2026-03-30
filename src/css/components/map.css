@@ -133,34 +133,8 @@
     color: #a3e635;
 }
 
-/* Marker-Größen nach Typ */
-.marker__pin {
-    width: 30px;
-    height: 30px;
-}
-
-.marker[data-type="tree"] .marker__pin {
-    width: 44px;
-    height: 44px;
-    font-size: 1.5rem;
-}
-
-.marker[data-type="shrub"] .marker__pin {
-    width: 34px;
-    height: 34px;
-    font-size: 1.2rem;
-}
-
-.marker[data-type="flower"] .marker__pin {
-    width: 24px;
-    height: 24px;
-    font-size: 0.9rem;
-}
-
+/* Marker-Größen werden via JS (DEFAULT_MARKER in app.js) gesetzt */
 .marker[data-type="s_flower"] .marker__pin {
-    width: 18px;
-    height: 18px;
-    font-size: 0.65rem;
     border-width: 1px !important;
 }
 

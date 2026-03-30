@@ -27,6 +27,14 @@ const bloomState = {
 const bloomLayerFilter = { blooming: true, evergreen: true, resting: true };
 let bloomObservations = []; // alle Beobachtungen des Users
 
+const DEFAULT_MARKER = {
+    tree:      { size: 44, fontSize: '1.5rem' },
+    shrub:     { size: 34, fontSize: '1.2rem' },
+    flower:    { size: 20, fontSize: '0.8rem' },
+    s_flower:  { size: 10, fontSize: '0.45rem' },
+    _fallback: { size: 30, fontSize: '1rem' }
+};
+
 let _saveConfigTimer = null;
 function scheduleSaveConfig() {
     clearTimeout(_saveConfigTimer);
@@ -393,8 +401,8 @@ function renderMarkers() {
         marker.title = '';
 
         // Ebene bestimmen: blühend > evergreen (nicht blühend) > ruhend
-        const defaultSizeMap = { tree: 44, shrub: 34, flower: 24, s_flower: 18 };
-        const effectiveSize = pin.marker_size || defaultSizeMap[pin.type] || 30;
+        const defaults = DEFAULT_MARKER[pin.type] || DEFAULT_MARKER._fallback;
+        const effectiveSize = pin.marker_size || defaults.size;
         let markerLayer = 'blooming';
         let markerColor = pin.marker_color || '#4CAF50';
 
@@ -426,10 +434,10 @@ function renderMarkers() {
         marker.dataset.layer = markerLayer;
 
         const iconContent = resolveMarkerIcon(pin.marker_icon, pin.type, pin.marker_icon_color);
-        const customSize = pin.marker_size ? `width:${pin.marker_size}px;height:${pin.marker_size}px;` : '';
-        const fontSize = pin.marker_size ? `font-size:${Math.max(pin.marker_size * 0.5, 8)}px;` : '';
+        const sizeStyle = `width:${effectiveSize}px;height:${effectiveSize}px;`;
+        const fontStyle = pin.marker_size ? `font-size:${Math.max(pin.marker_size * 0.5, 8)}px;` : `font-size:${defaults.fontSize};`;
         marker.innerHTML = `
-            <div class="marker__pin" style="background:${markerColor}; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; border:1px solid white; box-shadow:0 2px 4px rgba(0,0,0,0.2);${customSize}${fontSize}">
+            <div class="marker__pin" style="background:${markerColor}; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; border:1px solid white; box-shadow:0 2px 4px rgba(0,0,0,0.2);${sizeStyle}${fontStyle}">
                 ${iconContent}
             </div>
         `;
@@ -469,7 +477,7 @@ function openPlantEditModal(pin) {
     document.getElementById('edit-plant-name').value = p.plant_name || '';
     document.getElementById('edit-marker-color').value = p.marker_color || '#4CAF50';
 
-    const defaultSize = { tree: 44, shrub: 34, flower: 24, s_flower: 18 }[p.type] || 30;
+    const defaultSize = (DEFAULT_MARKER[p.type] || DEFAULT_MARKER._fallback).size;
     document.getElementById('edit-marker-size').value = p.marker_size || '';
     document.getElementById('edit-marker-size').dataset.defaultSize = defaultSize;
     document.getElementById('edit-marker-size').dataset.pinType = p.type || 'flower';
