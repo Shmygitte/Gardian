@@ -26,12 +26,13 @@ let adminCurrentTab = 'users';
 
 function switchAdminTab(tab) {
     adminCurrentTab = tab;
-    ['users','groups','care-types','icons','links'].forEach(t => {
+    ['users','groups','care-types','icons','links','db'].forEach(t => {
         document.getElementById(`admin-panel-${t}`).style.display = tab === t ? 'block' : 'none';
         document.getElementById(`admin-tab-${t}`).className = 'c-btn ' + (tab === t ? 'c-btn--secondary' : 'c-btn--text');
     });
     if (tab === 'icons') loadAdminIcons();
     if (tab === 'links') loadAdminLinks();
+    if (tab === 'db') loadMigrations();
 }
 
 async function loadAdminView() {
@@ -580,4 +581,103 @@ async function adminDeleteLink(id, label) {
     const data = await res.json();
     if (data.success) loadAdminLinks();
     else customAlert(data.error || 'Fehler');
+}
+
+// ========================
+// DATENBANK-MIGRATIONEN
+// ========================
+async function loadMigrations() {
+    const panel = document.getElementById('admin-panel-db');
+    panel.innerHTML = '<p style="color:var(--text-muted)">Lade...</p>';
+    try {
+        const res  = await fetch('backend/migrate.php');
+        const data = await res.json();
+        if (!data.success) { panel.innerHTML = '<p style="color:red">Fehler beim Laden.</p>'; return; }
+        renderMigrationPanel(data.pending, data.history);
+    } catch (e) {
+        panel.innerHTML = '<p style="color:red">Fehler: ' + e.message + '</p>';
+    }
+}
+
+function renderMigrationPanel(pending, history) {
+    const panel = document.getElementById('admin-panel-db');
+
+    const pendingHtml = pending.length
+        ? pending.map(name => `<div style="padding:4px 8px;font-size:0.8rem;background:var(--bg-app);border:1px solid var(--border);border-left:3px solid var(--primary);border-radius:4px;">${name}</div>`).join('')
+        : '<p style="color:var(--text-muted);font-size:0.85rem;">Alles aktuell – keine ausstehenden Migrationen.</p>';
+
+    const historyRows = history.length
+        ? history.map(h => {
+            const icon = h.status === 'success' ? '✅' : '❌';
+            const date = new Date(h.executed_at).toLocaleString('de-DE');
+            return `<tr style="font-size:0.8rem;">
+                <td style="padding:4px 8px;">${icon}</td>
+                <td style="padding:4px 8px;font-family:monospace;">${h.name}</td>
+                <td style="padding:4px 8px;">${h.executed_by}</td>
+                <td style="padding:4px 8px;color:var(--text-muted);">${date}</td>
+                <td style="padding:4px 8px;color:var(--danger);font-size:0.75rem;">${h.error_message || ''}</td>
+            </tr>`;
+        }).join('')
+        : '<tr><td colspan="5" style="padding:8px;color:var(--text-muted);font-size:0.85rem;">Noch keine Migrationen ausgeführt.</td></tr>';
+
+    panel.innerHTML = `
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+            <button class="c-btn c-btn--primary" onclick="runMigrations()" ${pending.length === 0 ? 'disabled style="opacity:0.5;font-size:0.85rem;padding:6px 16px;"' : 'style="font-size:0.85rem;padding:6px 16px;"'}>
+                ▶ Datenbank aktualisieren
+            </button>
+            <span style="font-size:0.8rem;color:var(--text-muted);">${pending.length} ausstehend</span>
+        </div>
+
+        <div id="migration-results" style="display:none;margin-bottom:16px;"></div>
+
+        ${pending.length ? `
+        <div style="margin-bottom:20px;">
+            <h4 style="font-size:0.85rem;font-weight:600;margin-bottom:8px;">Ausstehende Migrationen</h4>
+            <div style="display:flex;flex-direction:column;gap:4px;">${pendingHtml}</div>
+        </div>` : ''}
+
+        <div>
+            <h4 style="font-size:0.85rem;font-weight:600;margin-bottom:8px;">Verlauf</h4>
+            <table style="width:100%;border-collapse:collapse;">
+                <thead>
+                    <tr style="font-size:0.75rem;color:var(--text-muted);text-align:left;border-bottom:1px solid var(--border);">
+                        <th style="padding:4px 8px;width:30px;"></th>
+                        <th style="padding:4px 8px;">Migration</th>
+                        <th style="padding:4px 8px;">Benutzer</th>
+                        <th style="padding:4px 8px;">Zeitpunkt</th>
+                        <th style="padding:4px 8px;">Fehler</th>
+                    </tr>
+                </thead>
+                <tbody>${historyRows}</tbody>
+            </table>
+        </div>`;
+}
+
+async function runMigrations() {
+    if (!await customConfirm('Datenbank-Migrationen jetzt ausführen?', { confirmLabel: 'Ausführen' })) return;
+    const resultsDiv = document.getElementById('migration-results');
+    resultsDiv.style.display = 'block';
+    resultsDiv.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;">Migrationen werden ausgeführt...</p>';
+
+    try {
+        const res  = await fetch('backend/migrate.php', { method: 'POST' });
+        const data = await res.json();
+        if (!data.success) {
+            resultsDiv.innerHTML = '<p style="color:var(--danger);">Fehler: ' + (data.error || 'Unbekannt') + '</p>';
+            return;
+        }
+        const lines = data.results.map(r => {
+            if (r.status === 'success')  return `<div style="padding:4px 8px;font-size:0.8rem;color:#16a34a;">✅ ${r.name}</div>`;
+            if (r.status === 'skipped')  return `<div style="padding:4px 8px;font-size:0.8rem;color:var(--text-muted);">⏭ ${r.name}</div>`;
+            return `<div style="padding:4px 8px;font-size:0.8rem;color:var(--danger);">❌ ${r.name} – ${r.error}</div>`;
+        }).join('');
+        resultsDiv.innerHTML = `
+            <div style="border:1px solid var(--border);border-radius:4px;padding:8px;background:var(--bg-app);">
+                <h4 style="font-size:0.85rem;font-weight:600;margin-bottom:6px;">Ergebnis</h4>
+                ${lines}
+            </div>`;
+        loadMigrations();
+    } catch (e) {
+        resultsDiv.innerHTML = '<p style="color:var(--danger);">Fehler: ' + e.message + '</p>';
+    }
 }
