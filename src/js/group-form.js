@@ -30,14 +30,19 @@ const GF_LABEL_STYLE  = 'font-size:0.75rem;color:var(--text-muted);font-weight:6
 function renderGroupFormNice(data = {}, formId, onSubmit) {
     const v = (key) => data[key] ?? '';
 
+    // Accent-Border Styles für Sektionen
+    const GF_SECTION = 'border-left:3px solid var(--primary);border-radius:6px;padding-left:10px;';
+    const GF_SECTION_MUTED = 'border-left:3px solid var(--border);border-radius:6px;padding-left:10px;';
+    const GF_SECTION_GREEN = 'border-left:3px solid #4CAF50;border-radius:6px;padding-left:10px;';
+
     // Linke Spalte: Name, Typ, Farbe, Blütezeit, Immergrün
     const leftCol = `
         <div style="display:flex;flex-direction:column;gap:12px;">
-            <div>
+            <div style="${GF_SECTION}">
                 <label class="c-gf__label" style="${GF_LABEL_STYLE}">Name der Pflanze</label>
                 <input type="text" name="name" value="${v('name')}" placeholder="z.B. Pfirsich 'Red Haven'" style="${GF_INPUT_STYLE}" required>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div style="${GF_SECTION}display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                 <div>
                     <label class="c-gf__label" style="${GF_LABEL_STYLE}">Pflanzenart</label>
                     <select name="type" style="${GF_SELECT_STYLE}">
@@ -51,7 +56,7 @@ function renderGroupFormNice(data = {}, formId, onSubmit) {
                         style="width:100%;height:34px;padding:3px;cursor:pointer;border:1px solid var(--border);border-radius:4px;background:var(--bg-app);">
                 </div>
             </div>
-            <div>
+            <div style="${GF_SECTION_MUTED}">
                 <label class="c-gf__label" style="${GF_LABEL_STYLE}">Marker-Icon</label>
                 <input type="hidden" name="marker_icon" value="${v('marker_icon') || ''}">
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
@@ -62,16 +67,16 @@ function renderGroupFormNice(data = {}, formId, onSubmit) {
                 </div>
                 <div id="${formId}-icon-grid" style="display:grid;grid-template-columns:repeat(8,1fr);gap:4px;max-height:200px;overflow-y:auto;"></div>
             </div>
-            <div>
+            <div style="${GF_SECTION_GREEN}">
                 <label class="c-gf__label" style="${GF_LABEL_STYLE}">Blütezeit</label>
                 ${renderBloomToggle('', parseInt(v('bloom_months')) || 0, 'bloom_months')}
             </div>
-            <label style="background:var(--bg-app);border:1px solid var(--border);border-radius:4px;padding:8px 10px;display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.82rem;">
+            <label style="${GF_SECTION_GREEN}background:var(--bg-app);border:1px solid var(--border);border-left:3px solid #4CAF50;border-radius:6px;padding:8px 10px;padding-left:10px;display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.82rem;">
                 <input type="checkbox" name="evergreen" id="${formId}-evergreen" ${v('evergreen') == 1 ? 'checked' : ''}
                     style="width:15px;height:15px;cursor:pointer;accent-color:var(--primary);">
                 🌿 Immergrün <span style="color:var(--text-muted);font-size:0.75rem;">(außerhalb der Blütezeit sichtbar)</span>
             </label>
-            <div>
+            <div style="${GF_SECTION_MUTED}">
                 <label class="c-gf__label" style="${GF_LABEL_STYLE}">📷 Foto</label>
                 <div id="${formId}-photo-container" style="margin-bottom:6px;"></div>
                 <label style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1px dashed var(--border);border-radius:4px;cursor:pointer;font-size:0.78rem;color:var(--text-muted);transition:border-color 0.2s;"
@@ -99,7 +104,7 @@ function renderGroupFormNice(data = {}, formId, onSubmit) {
     }).join('');
 
     const rightCol = `
-        <div style="background:var(--bg-app);border:1px solid var(--border);border-radius:4px;padding:12px;">
+        <div style="background:var(--bg-app);border:1px solid var(--border);border-left:3px solid var(--primary);border-radius:6px;padding:12px;">
             <div style="font-size:0.68rem;font-weight:700;color:var(--primary);letter-spacing:0.06em;margin-bottom:10px;">📋 STECKBRIEF</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                 ${steckbriefFields}
