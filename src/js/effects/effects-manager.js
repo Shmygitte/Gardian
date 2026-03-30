@@ -8,7 +8,7 @@ const EffectManager = {
      * @param {string} event - The name of the event (e.g., 'sidebar-click')
      * @param {HTMLElement} [element] - The element that triggered the effect
      */
-    trigger: function(event, element) {
+    trigger: function(event, element, element2) {
         // 1. Check if effects are enabled globally by user preference
         const effectsToggle = document.getElementById('settings-effects-toggle');
         let isEnabled = window.effectsEnabled !== undefined ? window.effectsEnabled : true;
@@ -34,7 +34,7 @@ const EffectManager = {
         effectsForEvent.forEach(effectName => {
             if (typeof EffectLibrary[effectName] === 'function') {
                 try {
-                    EffectLibrary[effectName](element);
+                    EffectLibrary[effectName](element, element2);
                 } catch (e) {
                     console.error(`EffectManager: Error running effect ${effectName}:`, e);
                 }

@@ -951,6 +951,13 @@ async function handleMouseUp(e) {
                 if (data.success) {
                     state.pins = state.pins.map(p => p.id === id ? { ...p, id: String(data.id), pos_x: finalX, pos_y: finalY } : p);
                     renderMarkers();
+                    // Samen-Flug vom Original zum neuen Klon
+                    if (state._duplicateOriginId && typeof EffectManager !== 'undefined') {
+                        const origMarker = document.querySelector(`.marker[data-id="${state._duplicateOriginId}"]`);
+                        const cloneMarker = document.querySelector(`.marker[data-id="${data.id}"]`);
+                        if (origMarker && cloneMarker) EffectManager.trigger('plant-duplicate', origMarker, cloneMarker);
+                    }
+                    state._duplicateOriginId = null;
                 }
             }
         } else if (state.hasMoved) {
@@ -960,6 +967,9 @@ async function handleMouseUp(e) {
                 body: JSON.stringify({ action: 'movePlant', id, pos_x: x, pos_y: y })
             });
             state.pins = state.pins.map(p => String(p.id) === id ? { ...p, pos_x: x, pos_y: y } : p);
+            // Einpflanz-Effekt am neuen Standort
+            const movedMarker = document.querySelector(`.marker[data-id="${id}"]`);
+            if (movedMarker && typeof EffectManager !== 'undefined') EffectManager.trigger('plant-drop', movedMarker);
         }
 
         state.isDragging = false;
@@ -1126,6 +1136,9 @@ async function saveNeueGruppe() {
             closeModal();
             await loadFilterGroups();
             await loadPins();
+            // Sprout-Effekt auf dem neuen Marker
+            const newMarker = document.querySelector(`.marker[data-id="${plantData.id}"]`);
+            if (newMarker && typeof EffectManager !== 'undefined') EffectManager.trigger('plant-place', newMarker);
         } else {
             customAlert(plantData.error || 'Pflanze konnte nicht angelegt werden');
         }
@@ -1196,6 +1209,8 @@ async function confirmAddPlant() {
         closeModal();
         await loadFilterGroups();
         await loadPins();
+        const newMarker = document.querySelector(`.marker[data-id="${data.id}"]`);
+        if (newMarker && typeof EffectManager !== 'undefined') EffectManager.trigger('plant-place', newMarker);
     }
 }
 
@@ -1208,6 +1223,7 @@ function handleMarkerMouseDown(e, id) {
     if (e.altKey) {
         const original = state.pins.find(p => String(p.id) === id);
         if (original) {
+            state._duplicateOriginId = id;
             const clone = { ...original, id: 'pending_' + Date.now() };
             state.pins.push(clone);
             renderMarkers();
