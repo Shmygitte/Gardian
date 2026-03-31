@@ -149,8 +149,21 @@ function getMigrations() {
     ];
 }
 
+// Kommentar-Tabelle sicherstellen
+$db->exec("CREATE TABLE IF NOT EXISTS `gd_table_comments` (
+    `table_name` varchar(255) PRIMARY KEY,
+    `comment` text NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
 // ─── GET: Status anzeigen ───
 if ($method === 'GET') {
+    // Tabellen-Kommentare laden
+    if (isset($_GET['action']) && $_GET['action'] === 'comments') {
+        $rows = $db->query("SELECT table_name, comment FROM gd_table_comments")->fetchAll(PDO::FETCH_KEY_PAIR);
+        echo json_encode(['success' => true, 'comments' => $rows ?: new \stdClass()]);
+        exit;
+    }
+
     // Datenbankstruktur abfragen
     if (isset($_GET['action']) && $_GET['action'] === 'structure') {
         $dbName = 'dev-gardian';
@@ -188,8 +201,23 @@ if ($method === 'GET') {
     exit;
 }
 
-// ─── POST: Migrationen ausführen ───
+// ─── POST: Kommentar speichern oder Migrationen ausführen ───
 if ($method === 'POST') {
+    $input = json_decode(file_get_contents('php://input'), true);
+    if (isset($input['action']) && $input['action'] === 'save_comment') {
+        $tbl = $input['table_name'] ?? '';
+        $cmt = $input['comment'] ?? '';
+        if ($tbl === '') { echo json_encode(['success' => false, 'error' => 'Kein Tabellenname']); exit; }
+        if (trim($cmt) === '') {
+            $db->prepare("DELETE FROM gd_table_comments WHERE table_name = ?")->execute([$tbl]);
+        } else {
+            $stmt = $db->prepare("REPLACE INTO gd_table_comments (table_name, comment) VALUES (?, ?)");
+            $stmt->execute([$tbl, $cmt]);
+        }
+        echo json_encode(['success' => true]);
+        exit;
+    }
+
     $migrations  = getMigrations();
     $alreadyDone = $db->query("SELECT name FROM gd_migrations WHERE status = 'success'")->fetchAll(PDO::FETCH_COLUMN);
     $username    = $user['username'];

@@ -848,38 +848,41 @@ async function loadDbStructure() {
     const panel = document.getElementById('system-panel-structure');
     panel.innerHTML = '<p style="color:var(--text-muted)">Lade Datenbankstruktur...</p>';
     try {
-        const [structRes, migrateRes] = await Promise.all([
+        const [structRes, migrateRes, commentsRes] = await Promise.all([
             fetch('backend/migrate.php?action=structure'),
-            fetch('backend/migrate.php')
+            fetch('backend/migrate.php'),
+            fetch('backend/migrate.php?action=comments')
         ]);
-        const structData  = await structRes.json();
-        const migrateData = await migrateRes.json();
+        const structData   = await structRes.json();
+        const migrateData  = await migrateRes.json();
+        const commentsData = await commentsRes.json();
         if (!structData.success) { panel.innerHTML = '<p style="color:red">Fehler beim Laden.</p>'; return; }
 
-        const executed  = migrateData.success ? (migrateData.history || []).filter(h => h.status === 'success').length : 0;
-        const pending   = migrateData.success ? (migrateData.pending || []).length : 0;
+        const executed   = migrateData.success ? (migrateData.history || []).filter(h => h.status === 'success').length : 0;
+        const pending    = migrateData.success ? (migrateData.pending || []).length : 0;
         const tableCount = structData.tables.length;
+        const comments   = commentsData.success ? commentsData.comments : {};
 
-        renderDbStructure(panel, structData.tables, executed, pending, tableCount);
+        renderDbStructure(panel, structData.tables, executed, pending, tableCount, comments);
     } catch (e) {
         panel.innerHTML = '<p style="color:red">Fehler: ' + e.message + '</p>';
     }
 }
 
-function renderDbStructure(panel, tables, executed, pending, tableCount) {
+function renderDbStructure(panel, tables, executed, pending, tableCount, comments) {
     const statCards = `
-        <div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;">
-            <div style="padding:16px 24px;border-radius:8px;background:linear-gradient(135deg,#d4edda,#c3e6cb);border:1px solid #b1dfbb;min-width:140px;">
-                <div style="font-size:1.8rem;font-weight:700;color:#155724;">${executed}</div>
-                <div style="font-size:0.75rem;color:#155724;">Migrationen ausgeführt</div>
+        <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+            <div style="padding:6px 14px;border-radius:6px;background:linear-gradient(135deg,#d4edda,#c3e6cb);border:1px solid #b1dfbb;display:flex;align-items:center;gap:6px;">
+                <span style="font-size:0.9rem;font-weight:700;color:#155724;">${executed}</span>
+                <span style="font-size:0.7rem;color:#155724;">Migrationen</span>
             </div>
-            <div style="padding:16px 24px;border-radius:8px;background:var(--bg-surface);border:1px solid var(--border);min-width:140px;">
-                <div style="font-size:1.8rem;font-weight:700;color:var(--text-muted);">${pending}</div>
-                <div style="font-size:0.75rem;color:var(--text-muted);">ausstehend</div>
+            <div style="padding:6px 14px;border-radius:6px;background:var(--bg-surface);border:1px solid var(--border);display:flex;align-items:center;gap:6px;">
+                <span style="font-size:0.9rem;font-weight:700;color:var(--text-muted);">${pending}</span>
+                <span style="font-size:0.7rem;color:var(--text-muted);">ausstehend</span>
             </div>
-            <div style="padding:16px 24px;border-radius:8px;background:linear-gradient(135deg,#fff3cd,#ffeeba);border:1px solid #ffc107;min-width:140px;">
-                <div style="font-size:1.8rem;font-weight:700;color:#856404;">${tableCount}</div>
-                <div style="font-size:0.75rem;color:#856404;">Tabellen</div>
+            <div style="padding:6px 14px;border-radius:6px;background:linear-gradient(135deg,#fff3cd,#ffeeba);border:1px solid #ffc107;display:flex;align-items:center;gap:6px;">
+                <span style="font-size:0.9rem;font-weight:700;color:#856404;">${tableCount}</span>
+                <span style="font-size:0.7rem;color:#856404;">Tabellen</span>
             </div>
         </div>`;
 
@@ -899,16 +902,23 @@ function renderDbStructure(panel, tables, executed, pending, tableCount) {
                 <td style="padding:6px 12px;color:var(--text-muted);font-size:0.75rem;">${c.EXTRA || ''}</td>
             </tr>`).join('');
 
+        const existingComment = (comments[t.name] || '').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+        const hasComment = !!comments[t.name];
+
         return `
             <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--bg-card);">
                 <div onclick="toggleDbTable(${i})" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none;transition:background 0.15s;" onmouseover="this.style.background='var(--bg-surface)'" onmouseout="this.style.background='transparent'">
                     <div style="display:flex;align-items:center;gap:10px;">
                         <span style="font-size:0.9rem;font-weight:600;">${t.name}</span>
                         <span style="font-size:0.7rem;color:var(--text-muted);">${t.columns.length} Spalten · ${t.rows} Zeilen</span>
+                        ${hasComment ? '<span style="font-size:0.7rem;color:var(--primary);">💬</span>' : ''}
                     </div>
                     <span id="db-table-arrow-${i}" style="font-size:0.7rem;color:var(--text-muted);transition:transform 0.2s;">▶</span>
                 </div>
                 <div id="db-table-detail-${i}" style="display:none;border-top:1px solid var(--border);">
+                    <div style="padding:8px 12px;background:var(--bg-surface);">
+                        <textarea id="db-comment-${i}" data-table="${t.name}" onblur="saveDbComment(this)" placeholder="Notiz zu dieser Tabelle…" style="width:100%;min-height:36px;padding:6px 8px;font-size:0.8rem;border:1px solid var(--border);border-radius:4px;background:var(--bg-card);color:var(--text-main);resize:vertical;font-family:inherit;">${existingComment}</textarea>
+                    </div>
                     <table style="width:100%;border-collapse:collapse;">
                         <thead>
                             <tr style="font-size:0.7rem;color:var(--text-muted);text-align:left;background:var(--bg-surface);">
@@ -925,6 +935,20 @@ function renderDbStructure(panel, tables, executed, pending, tableCount) {
     }).join('');
 
     panel.innerHTML = statCards + `<div style="display:flex;flex-direction:column;gap:8px;">${tableItems}</div>`;
+}
+
+async function saveDbComment(textarea) {
+    const tableName = textarea.dataset.table;
+    const comment   = textarea.value.trim();
+    try {
+        await fetch('backend/migrate.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'save_comment', table_name: tableName, comment })
+        });
+    } catch (e) {
+        console.error('Kommentar speichern fehlgeschlagen:', e);
+    }
 }
 
 function toggleDbTable(index) {
@@ -967,3 +991,4 @@ window.adminAddLink = adminAddLink;
 window.adminDeleteLink = adminDeleteLink;
 window.runMigrations = runMigrations;
 window.toggleDbTable = toggleDbTable;
+window.saveDbComment = saveDbComment;
