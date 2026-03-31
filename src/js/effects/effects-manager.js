@@ -4,13 +4,15 @@
  */
 const EffectManager = {
     _lastClicked: null,
+    _mouseX: null,
+    _mouseY: null,
 
     /**
      * Executes the effects for a given event, if enabled
      * @param {string} event - The name of the event (e.g., 'sidebar-click')
      * @param {HTMLElement} [element] - The element that triggered the effect
      */
-    trigger: function(event, element, element2) {
+    trigger: function(event, element, element2, extra) {
         // Fallback: letztes geklicktes Element nutzen
         if (!element && this._lastClicked) element = this._lastClicked;
         // 1. Check if effects are enabled globally by user preference
@@ -38,7 +40,7 @@ const EffectManager = {
         effectsForEvent.forEach(effectName => {
             if (typeof EffectLibrary[effectName] === 'function') {
                 try {
-                    EffectLibrary[effectName](element, element2);
+                    EffectLibrary[effectName](element, element2, extra);
                 } catch (e) {
                     console.error(`EffectManager: Error running effect ${effectName}:`, e);
                 }
@@ -67,7 +69,11 @@ const EffectManager = {
     }
 };
 
-// Letzten Klick tracken für Element-Position bei Effekten
+// Mausposition + letzten Klick tracken
+document.addEventListener('mousemove', (e) => {
+    EffectManager._mouseX = e.clientX;
+    EffectManager._mouseY = e.clientY;
+}, { passive: true });
 document.addEventListener('click', (e) => {
     const btn = e.target.closest('button, .c-btn, [onclick]');
     if (btn) EffectManager._lastClicked = btn;

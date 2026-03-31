@@ -414,6 +414,102 @@ const EffectLibrary = {
         setTimeout(() => shadow.remove(), 900);
     },
 
+    /**
+     * Glitzer-Partikel beim Zoomen – steigen auf (rein) oder schweben weg (raus)
+     */
+    triggerZoomSparkle: function(element, _el2, direction) {
+        // Mausposition nutzen
+        const cx = EffectManager._mouseX ?? window.innerWidth / 2;
+        const cy = EffectManager._mouseY ?? window.innerHeight / 2;
+        const count = 8 + Math.floor(Math.random() * 5);
+        const colors = ['#d946ef', '#a78bfa', '#f9a8d4', '#fbbf24', '#7dd3fc', '#ffffff'];
+
+        for (let i = 0; i < count; i++) {
+            const spark = document.createElement('div');
+            const size = 3 + Math.random() * 5;
+            const angle = Math.random() * Math.PI * 2;
+            const dist = 40 + Math.random() * 100;
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            const startDist = direction === 'in' ? (80 + Math.random() * 120) : (Math.random() * 40);
+            const startX = cx + Math.cos(angle) * startDist + (Math.random() - 0.5) * 20;
+            const startY = cy + Math.sin(angle) * startDist + (Math.random() - 0.5) * 20;
+
+            Object.assign(spark.style, {
+                position: 'fixed',
+                left: startX + 'px',
+                top: startY + 'px',
+                width: size + 'px',
+                height: size + 'px',
+                borderRadius: '50%',
+                background: color,
+                boxShadow: `0 0 ${size + 2}px ${color}`,
+                pointerEvents: 'none',
+                zIndex: '99999',
+                opacity: '0.9'
+            });
+            document.body.appendChild(spark);
+
+            const delay = Math.random() * 80;
+            setTimeout(() => {
+                if (direction === 'in') {
+                    // Reinzoomen: von außen zum Cursor – erst sichtbar fliegen, dann verblassen
+                    spark.style.transition = `left 0.5s ease-in, top 0.5s ease-in, opacity 0.3s ease-in 0.35s, transform 0.3s ease-in 0.35s`;
+                    spark.style.left = (cx + (Math.random() - 0.5) * 6) + 'px';
+                    spark.style.top = (cy + (Math.random() - 0.5) * 6) + 'px';
+                    spark.style.opacity = '0';
+                    spark.style.transform = 'scale(0.3)';
+                } else {
+                    // Rauszoomen: vom Cursor nach außen
+                    const dur = 0.5 + Math.random() * 0.4;
+                    spark.style.transition = `all ${dur}s ease-out`;
+                    spark.style.left = (startX + Math.cos(angle) * dist) + 'px';
+                    spark.style.top = (startY + Math.sin(angle) * dist) + 'px';
+                    spark.style.opacity = '0';
+                    spark.style.transform = 'scale(0)';
+                }
+            }, delay);
+            setTimeout(() => spark.remove(), 800);
+        }
+    },
+
+    /**
+     * Leuchtende Spur beim Pannen der Karte
+     */
+    triggerPanTrail: function(x, y) {
+        const count = 3 + Math.floor(Math.random() * 2);
+        const colors = ['#d946ef', '#a78bfa', '#f9a8d4', '#7dd3fc', '#fbbf24'];
+
+        for (let i = 0; i < count; i++) {
+            const dot = document.createElement('div');
+            const size = 3 + Math.random() * 5;
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            const offsetX = (Math.random() - 0.5) * 50;
+            const offsetY = (Math.random() - 0.5) * 50;
+
+            Object.assign(dot.style, {
+                position: 'fixed',
+                left: (x + offsetX - size / 2) + 'px',
+                top: (y + offsetY - size / 2) + 'px',
+                width: size + 'px',
+                height: size + 'px',
+                borderRadius: '50%',
+                background: color,
+                boxShadow: `0 0 ${size + 4}px ${color}80`,
+                pointerEvents: 'none',
+                zIndex: '99999',
+                opacity: String(0.5 + Math.random() * 0.4),
+                transition: `all ${0.4 + Math.random() * 0.4}s ease-out`
+            });
+            document.body.appendChild(dot);
+
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                dot.style.opacity = '0';
+                dot.style.transform = 'scale(0.2)';
+            }));
+            setTimeout(() => dot.remove(), 800);
+        }
+    },
+
     triggerSubtlePulse: function() {
         const main = document.querySelector('.l-main-content');
         if (main) {

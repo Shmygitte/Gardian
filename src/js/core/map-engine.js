@@ -114,8 +114,19 @@ function handleWheel(e) {
     state.panX = mouseX - (mouseX - state.panX) * zoomRatio;
     state.panY = mouseY - (mouseY - state.panY) * zoomRatio;
     state.zoom = newZoom;
-    updateTransform();
+    const isUnicorn = (document.documentElement.getAttribute('data-theme') || 'light') === 'unicorn';
+    updateTransform(isUnicorn);
     scheduleSaveConfig();
+
+    // Zoom-Effekt (throttled)
+    if (typeof EffectManager !== 'undefined') {
+        const now = Date.now();
+        if (!handleWheel._lastSparkle || now - handleWheel._lastSparkle > 300) {
+            handleWheel._lastSparkle = now;
+            const dir = direction > 0 ? 'in' : 'out';
+            EffectManager.trigger(dir === 'in' ? 'zoom-in' : 'zoom-out', null, null, dir);
+        }
+    }
 }
 
 function handleMouseDown(e) {
@@ -171,6 +182,19 @@ function handleMouseMove(e) {
         state.panX = e.clientX - state.panStartPos.x;
         state.panY = e.clientY - state.panStartPos.y;
         updateTransform();
+
+        // Pan-Trail (throttled)
+        if (state.hasMoved && typeof EffectLibrary !== 'undefined' && typeof EffectLibrary.triggerPanTrail === 'function') {
+            const now = Date.now();
+            if (!handleMouseMove._lastTrail || now - handleMouseMove._lastTrail > 35) {
+                handleMouseMove._lastTrail = now;
+                const theme = document.documentElement.getAttribute('data-theme') || 'light';
+                if (theme === 'unicorn') {
+                    const toggle = document.getElementById('settings-effects-toggle');
+                    if (!toggle || toggle.checked) EffectLibrary.triggerPanTrail(e.clientX, e.clientY);
+                }
+            }
+        }
     }
 }
 
@@ -238,8 +262,12 @@ async function handleMouseUp(e) {
     setTimeout(() => { state.hasMoved = false; }, 50);
 }
 
-export function updateTransform() {
+export function updateTransform(smooth) {
     if (elements.mapWrapper) {
+        if (smooth) {
+            elements.mapWrapper.style.transition = 'transform 0.25s cubic-bezier(0.22, 0.61, 0.36, 1)';
+            setTimeout(() => { elements.mapWrapper.style.transition = ''; }, 260);
+        }
         elements.mapWrapper.style.transform = `translate(${state.panX}px, ${state.panY}px) scale(${state.zoom})`;
     }
 }

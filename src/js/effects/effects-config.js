@@ -8,7 +8,9 @@ const THEME_EFFECTS_CONFIG = {
         "save-success": ["triggerBubbles"],
         "plant-place": ["triggerSprout"],
         "plant-duplicate": ["triggerSeedFly"],
-        "plant-drop": ["triggerPlantDrop"]
+        "plant-drop": ["triggerPlantDrop"],
+        "zoom-in": ["triggerZoomSparkle"],
+        "zoom-out": ["triggerZoomSparkle"]
     },
     "dark": {
         "sidebar-click": ["triggerSubtlePulse"]
