@@ -16,4 +16,9 @@
 <?php endif; ?>
 </head>
 <body>
+<?php if (str_starts_with($_SERVER['HTTP_HOST'] ?? '', 'localhost') || str_starts_with($_SERVER['HTTP_HOST'] ?? '', '127.0.0.1')): ?>
+<div style="position:fixed;top:8px;left:8px;z-index:99999;padding:2px 8px;border-radius:var(--radius-sm, 6px);background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);font-size:0.65rem;font-family:monospace;color:rgba(255,255,255,0.7);pointer-events:none;">
+<?= trim(@file_get_contents(dirname(__DIR__, 2) . '/.git-branch') ?: 'unknown') ?>
+</div>
+<?php endif; ?>
 <div class="l-app-shell">
