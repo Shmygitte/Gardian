@@ -3,7 +3,7 @@
                 <label class="c-label">Menü</label>
                 <nav style="display: flex; flex-direction: column; gap: 4px;">
 <?php
-$isIndexPage = in_array($pageId, ['dashboard', 'pflanzen', 'galerie', 'einstellungen', 'admin']);
+$isIndexPage = in_array($pageId, ['dashboard', 'pflanzen', 'galerie', 'einstellungen', 'about', 'admin']);
 $navItems = [
     ['id' => 'dashboard',     'label' => 'Gartenkarte',    'indexView' => true],
     ['id' => 'pflanzen',      'label' => 'Pflanzen',       'indexView' => true],
@@ -11,6 +11,7 @@ $navItems = [
     ['id' => 'tabelle',       'label' => 'Tabelle',        'href' => 'tabelle.php'],
     ['id' => 'kalender',      'label' => 'Gartenkalender',  'href' => 'kalender.php'],
     ['id' => 'einstellungen', 'label' => 'Einstellungen',  'indexView' => true],
+    ['id' => 'about',         'label' => 'About',          'indexView' => true],
     ['id' => 'admin',         'label' => 'Admin',          'indexView' => true, 'admin' => true],
 ];
 

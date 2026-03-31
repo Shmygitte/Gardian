@@ -94,7 +94,7 @@ async function saveCroppedAvatar() {
 }
 
 // View-Steuerung
-const views = ['dashboard', 'pflanzen', 'galerie', 'einstellungen', 'admin'];
+const views = ['dashboard', 'pflanzen', 'galerie', 'einstellungen', 'about', 'admin'];
 
 function showView(name) {
     history.replaceState(null, '', '#' + name);
@@ -107,6 +107,14 @@ function showView(name) {
             navEl.style.justifyContent = 'flex-start';
         }
     });
+
+    // About-View: Inhalt aus Build-generiertem HTML laden
+    if (name === 'about') {
+        const el = document.getElementById('about-user-content');
+        if (el && !el.innerHTML.trim()) {
+            el.innerHTML = window.__ABOUT_USER_HTML__ || '<p style="color:var(--text-muted);">Kein Inhalt verfuegbar.</p>';
+        }
+    }
 
     // Trigger interaction effect
     if (typeof EffectManager !== 'undefined') {

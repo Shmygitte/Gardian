@@ -147,6 +147,11 @@ include 'src/layout/header.php';
                     </div>
                 </div>
 
+                <!-- View: About -->
+                <div id="view-about" style="display: none; padding: 32px; overflow-y: auto;">
+                    <div style="max-width:720px;" id="about-user-content"></div>
+                </div>
+
                 <!-- View: Einstellungen -->
                 <div id="view-einstellungen" style="display: none; padding: 24px; overflow-y: auto;" class="view-einstellungen">
                     <div class="settings-grid" style="max-width: 900px; display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));">

@@ -6,15 +6,10 @@
 const fs = require('fs');
 const path = require('path');
 
-const mdPath  = path.join(__dirname, '..', 'docs', 'about-app.md');
-const outPath = path.join(__dirname, '..', 'src', 'js', 'generated', 'about-content.js');
-
-if (!fs.existsSync(mdPath)) {
-    console.error('about-app.md nicht gefunden:', mdPath);
-    process.exit(1);
-}
-
-const md = fs.readFileSync(mdPath, 'utf-8');
+const files = [
+    { md: 'about-app.md',  varName: '__ABOUT_HTML__' },
+    { md: 'about-user.md', varName: '__ABOUT_USER_HTML__' },
+];
 
 function mdToHtml(src) {
     let html = '';
@@ -118,9 +113,20 @@ function mdToHtml(src) {
     return html;
 }
 
-const htmlContent = mdToHtml(md);
-const jsContent = `// Auto-generated from docs/about-app.md – DO NOT EDIT\nwindow.__ABOUT_HTML__ = ${JSON.stringify(htmlContent)};\n`;
+const outPath = path.join(__dirname, '..', 'src', 'js', 'generated', 'about-content.js');
+let jsContent = '// Auto-generated from docs/*.md – DO NOT EDIT\n';
+
+for (const file of files) {
+    const mdPath = path.join(__dirname, '..', 'docs', file.md);
+    if (!fs.existsSync(mdPath)) {
+        console.error(file.md + ' nicht gefunden:', mdPath);
+        process.exit(1);
+    }
+    const md = fs.readFileSync(mdPath, 'utf-8');
+    const htmlContent = mdToHtml(md);
+    jsContent += `window.${file.varName} = ${JSON.stringify(htmlContent)};\n`;
+}
 
 fs.mkdirSync(path.dirname(outPath), { recursive: true });
 fs.writeFileSync(outPath, jsContent, 'utf-8');
-console.log('about-content.js generiert.');
+console.log('about-content.js generiert (' + files.length + ' Dateien).');
