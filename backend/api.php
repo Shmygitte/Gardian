@@ -123,6 +123,7 @@ $moduleMap = [
 
 if ($action && isset($moduleMap[$action])) {
     require __DIR__ . '/modules/' . $moduleMap[$action] . '.php';
+    exit;
 }
 
 echo json_encode(['success' => false, 'error' => 'Unbekannte Action']);

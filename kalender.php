@@ -151,15 +151,6 @@ let kalData  = null;
 let _plantsCache   = null;
 let _taskTypesCache = null;
 
-// ---- API ----
-function api(action, extra = {}) {
-    return fetch('backend/api.php', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({action, ...extra})
-    }).then(r => r.json());
-}
-
 // ---- Init ----
 async function init() {
     const auth = await api('getAvatar');
@@ -472,11 +463,6 @@ function esc(s) {
     return s == null ? '' : String(s)
         .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
         .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-}
-
-async function doLogout() {
-    await api('logout');
-    location.href = 'login.html';
 }
 
 document.addEventListener('DOMContentLoaded', init);

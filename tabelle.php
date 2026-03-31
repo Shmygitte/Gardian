@@ -109,15 +109,6 @@ const INHERIT_FIELDS = new Set(['height','location','spacing','care','water','ha
 let tblData = null;
 const expanded = new Set();
 
-// ---- API ----
-function api(action, extra = {}) {
-    return fetch('backend/api.php', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({action, ...extra})
-    }).then(r => r.json());
-}
-
 // ---- Init ----
 async function init() {
     const auth = await api('getAvatar');
@@ -588,9 +579,4 @@ function showStatus(msg) {
     if (!msg.startsWith('Fehler')) setTimeout(() => { el.textContent = ''; }, 2000);
 }
 
-// ---- Logout ----
-async function doLogout() {
-    await api('logout');
-    location.href = 'login.html';
-}
 </script>

@@ -141,7 +141,7 @@ function getGroupFormNiceData(formId) {
 function _gfResolveIcon(val) {
     if (!val) return '<span style="color:var(--text-muted);font-size:0.7rem;">—</span>';
     if (val.startsWith('lib:') && iconLibraryCache) {
-        const path = _iconLibraryCache[val.substring(4)];
+        const path = iconLibraryCache[val.substring(4)];
         if (path) return `<img src="${path}" style="width:20px;height:20px;object-fit:contain;">`;
     }
     return `<span>${val}</span>`;

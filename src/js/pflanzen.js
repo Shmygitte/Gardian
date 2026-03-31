@@ -504,6 +504,7 @@ async function saveGruppeBearbeiten(groupId, formId) {
     });
     const data = await res.json();
     if (data.success) {
+        if (typeof EffectManager !== 'undefined') EffectManager.trigger('save-success');
         if (typeof closeNeueGruppeModal === 'function') closeNeueGruppeModal();
         await loadPflanzenListe();
         if (typeof loadPins === 'function') await loadPins();
@@ -660,6 +661,7 @@ window.toggleRemovedReason = toggleRemovedReason;
 window.handlePlantClick = handlePlantClick;
 window.handlePlantDblClick = handlePlantDblClick;
 window.toggleAccordion = toggleAccordion;
+window.ensureBloomLoaded = ensureBloomLoaded;
 window.switchBloomTab = switchBloomTab;
 window.bloomToggleMonth = bloomToggleMonth;
 window.addBloomYear = addBloomYear;

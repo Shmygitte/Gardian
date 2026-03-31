@@ -153,6 +153,7 @@ export async function savePlantEdit() {
     };
     const data = await api('updatePlant', payload);
     if (data.success) {
+        if (typeof EffectManager !== 'undefined') EffectManager.trigger('save-success');
         closePlantEditModal();
         await window.loadPins();
     } else {

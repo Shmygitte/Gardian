@@ -32,7 +32,9 @@ function switchAdminTab(tab) {
         document.getElementById(`admin-panel-${t}`).style.display = tab === t ? 'block' : 'none';
         document.getElementById(`admin-tab-${t}`).className = 'c-btn ' + (tab === t ? 'c-btn--secondary' : 'c-btn--text');
     });
+    if (tab === 'groups') loadAdminGroups();
     if (tab === 'plant-types') loadAdminPlantTypes();
+    if (tab === 'care-types') loadAdminCareTypes();
     if (tab === 'icons') loadAdminIcons();
     if (tab === 'links') loadAdminLinks();
     if (tab === 'system') loadSystemInfo();
@@ -215,6 +217,7 @@ function toggleAdminGroupEdit(id) {
 async function adminSaveGroup(id) {
     const formData = { ...getGroupFormNiceData('gform-' + id), action: 'adminUpdateGroup', id };
     await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(formData) });
+    if (typeof EffectManager !== 'undefined') EffectManager.trigger('save-success');
     loadAdminGroups();
 }
 
@@ -222,7 +225,7 @@ async function adminAddGroup() {
     const formData = { ...getGroupFormNiceData('gform-new'), action: 'adminAddGroup' };
     const res  = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(formData) });
     const data = await res.json();
-    if (data.success) loadAdminGroups();
+    if (data.success) { if (typeof EffectManager !== 'undefined') EffectManager.trigger('save-success'); loadAdminGroups(); }
     else customAlert(data.error || 'Fehler');
 }
 
@@ -309,7 +312,7 @@ async function adminSaveCareType(id) {
     const res = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ action:'adminSaveCareTaskType', id, name, icon }) });
     const data = await res.json();
-    if (data.success) loadAdminCareTypes();
+    if (data.success) { if (typeof EffectManager !== 'undefined') EffectManager.trigger('save-success'); loadAdminCareTypes(); }
     else customAlert(data.error || 'Fehler');
 }
 
@@ -319,7 +322,7 @@ async function adminAddCareType() {
     if (!name) { customAlert('Bitte einen Namen eingeben.'); return; }
     const res  = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'adminSaveCareTaskType', name, icon }) });
     const data = await res.json();
-    if (data.success) loadAdminCareTypes();
+    if (data.success) { if (typeof EffectManager !== 'undefined') EffectManager.trigger('save-success'); loadAdminCareTypes(); }
     else customAlert(data.error || 'Fehler');
 }
 
@@ -424,7 +427,7 @@ async function adminSavePlantType(id) {
     const res = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ action:'adminSavePlantType', id, key, label, icon, marker_size, marker_color }) });
     const data = await res.json();
-    if (data.success) loadAdminPlantTypes();
+    if (data.success) { if (typeof EffectManager !== 'undefined') EffectManager.trigger('save-success'); loadAdminPlantTypes(); }
     else customAlert(data.error || 'Fehler');
 }
 
@@ -436,7 +439,7 @@ async function adminAddPlantType() {
     const res  = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ action:'adminSavePlantType', key, label, icon }) });
     const data = await res.json();
-    if (data.success) loadAdminPlantTypes();
+    if (data.success) { if (typeof EffectManager !== 'undefined') EffectManager.trigger('save-success'); loadAdminPlantTypes(); }
     else customAlert(data.error || 'Fehler');
 }
 
@@ -570,7 +573,7 @@ async function adminSaveIcon(id) {
     const res = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ action:'adminUpdateIcon', id, name, category }) });
     const data = await res.json();
-    if (data.success) loadAdminIcons();
+    if (data.success) { if (typeof EffectManager !== 'undefined') EffectManager.trigger('save-success'); loadAdminIcons(); }
     else customAlert(data.error || 'Fehler');
 }
 
@@ -692,7 +695,7 @@ async function adminSaveLink(id) {
     const res = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ action:'adminUpdateLink', id, label, url }) });
     const data = await res.json();
-    if (data.success) loadAdminLinks();
+    if (data.success) { if (typeof EffectManager !== 'undefined') EffectManager.trigger('save-success'); loadAdminLinks(); }
     else customAlert(data.error || 'Fehler');
 }
 
@@ -702,7 +705,7 @@ async function adminAddLink() {
     if (!label || !url) { customAlert('Bitte Bezeichnung und URL eingeben.'); return; }
     const res  = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'adminAddLink', label, url }) });
     const data = await res.json();
-    if (data.success) loadAdminLinks();
+    if (data.success) { if (typeof EffectManager !== 'undefined') EffectManager.trigger('save-success'); loadAdminLinks(); }
     else customAlert(data.error || 'Fehler');
 }
 

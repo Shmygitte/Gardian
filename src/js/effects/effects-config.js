@@ -5,8 +5,7 @@
 const THEME_EFFECTS_CONFIG = {
     "unicorn": {
         "sidebar-click": ["triggerConfetti"],
-        "save-success": ["triggerConfetti"],
-        "save-click": ["triggerBubbles"],
+        "save-success": ["triggerBubbles"],
         "plant-place": ["triggerSprout"],
         "plant-duplicate": ["triggerSeedFly"],
         "plant-drop": ["triggerPlantDrop"]

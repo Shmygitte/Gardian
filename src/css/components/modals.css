@@ -58,11 +58,11 @@
 
 /* Footer */
 .c-modal .c-modal__footer {
-    padding: 8px 14px;
+    padding: 10px 14px;
     border-top: 1px solid var(--border);
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 10px;
 }
 
 .c-modal .c-modal__footer .c-modal__spacer {
@@ -122,8 +122,8 @@
 
 /* Buttons in footer */
 .c-modal .c-modal__footer .c-btn--primary {
-    font-size: 0.78rem;
-    padding: 5px 16px;
+    font-size: 0.82rem;
+    padding: 7px 20px;
 }
 
 .c-modal .c-modal__footer .c-btn--text {

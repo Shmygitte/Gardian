@@ -3,12 +3,16 @@
  * Centralized system to trigger interaction feedback.
  */
 const EffectManager = {
+    _lastClicked: null,
+
     /**
      * Executes the effects for a given event, if enabled
      * @param {string} event - The name of the event (e.g., 'sidebar-click')
      * @param {HTMLElement} [element] - The element that triggered the effect
      */
     trigger: function(event, element, element2) {
+        // Fallback: letztes geklicktes Element nutzen
+        if (!element && this._lastClicked) element = this._lastClicked;
         // 1. Check if effects are enabled globally by user preference
         const effectsToggle = document.getElementById('settings-effects-toggle');
         let isEnabled = window.effectsEnabled !== undefined ? window.effectsEnabled : true;
@@ -62,3 +66,9 @@ const EffectManager = {
         }
     }
 };
+
+// Letzten Klick tracken für Element-Position bei Effekten
+document.addEventListener('click', (e) => {
+    const btn = e.target.closest('button, .c-btn, [onclick]');
+    if (btn) EffectManager._lastClicked = btn;
+}, true);
