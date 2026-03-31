@@ -135,11 +135,13 @@ include 'src/layout/header.php';
                                     <button id="system-sub-typo"   class="c-btn c-btn--text"      onclick="switchSystemSub('typo')"   style="font-size:0.8rem;">📐 Typografie & Layout</button>
                                     <button id="system-sub-structure" class="c-btn c-btn--text"   onclick="switchSystemSub('structure')" style="font-size:0.8rem;">🗄️ Datenbank</button>
                                     <button id="system-sub-db"     class="c-btn c-btn--text"      onclick="switchSystemSub('db')"     style="font-size:0.8rem;">🔄 Migration</button>
+                                    <button id="system-sub-about"  class="c-btn c-btn--text"      onclick="switchSystemSub('about')"  style="font-size:0.8rem;">📖 About</button>
                                 </div>
                                 <div id="system-panel-colors"></div>
                                 <div id="system-panel-typo"      style="display:none;"></div>
                                 <div id="system-panel-db"        style="display:none;"></div>
                                 <div id="system-panel-structure" style="display:none;"></div>
+                                <div id="system-panel-about"     style="display:none;"></div>
                             </div>
                         </div>
                     </div>
@@ -532,6 +534,7 @@ $extraScripts = '
     <script type="module" src="src/js/filter.js"></script>
     <script type="module" src="src/js/pflege.js"></script>
     <script type="module" src="src/js/app.js"></script>
+    <script src="src/js/generated/about-content.js"></script>
     <script type="module" src="src/js/admin.js"></script>
     <script type="module" src="src/js/pflanzen.js"></script>
     <script type="module" src="src/js/modules/ui-controller.js"></script>';

@@ -724,7 +724,7 @@ let _systemSubTab = 'colors';
 
 function switchSystemSub(tab) {
     _systemSubTab = tab;
-    ['colors','typo','db','structure'].forEach(t => {
+    ['colors','typo','db','structure','about'].forEach(t => {
         const panel = document.getElementById('system-panel-' + t);
         const btn   = document.getElementById('system-sub-' + t);
         if (panel) panel.style.display = tab === t ? 'block' : 'none';
@@ -732,12 +732,20 @@ function switchSystemSub(tab) {
     });
     if (tab === 'db') loadMigrations();
     if (tab === 'structure') loadDbStructure();
+    if (tab === 'about') renderAboutPanel();
 }
 
 function loadSystemInfo() {
     renderSystemColors();
     renderSystemTypo();
     switchSystemSub(_systemSubTab);
+}
+
+function renderAboutPanel() {
+    const panel = document.getElementById('system-panel-about');
+    if (!panel) return;
+    const html = window.__ABOUT_HTML__ || '<p style="color:var(--text-muted);">Kein About-Inhalt verfuegbar.</p>';
+    panel.innerHTML = `<div style="max-width:720px;padding:8px 0;">${html}</div>`;
 }
 
 function renderSystemColors() {

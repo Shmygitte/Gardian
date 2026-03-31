@@ -2,7 +2,7 @@
   "name": "gardian",
   "version": "1.0.0",
   "scripts": {
-    "build": "rm -rf ../Gardian-runtime/src ../Gardian-runtime/backend && rm -f ../Gardian-runtime/index.php ../Gardian-runtime/tabelle.php ../Gardian-runtime/kalender.php ../Gardian-runtime/login.html && mkdir -p ../Gardian-runtime/src ../Gardian-runtime/backend ../Gardian-runtime/assets/maps && cp -r backend/* ../Gardian-runtime/backend/ && cp -r src/* ../Gardian-runtime/src/ && cp -r assets/* ../Gardian-runtime/assets/ && cp index.php tabelle.php kalender.php login.html ../Gardian-runtime/ && git branch --show-current > ../Gardian-runtime/.git-branch",
+    "build": "node scripts/build-about.js && rm -rf ../Gardian-runtime/src ../Gardian-runtime/backend && rm -f ../Gardian-runtime/index.php ../Gardian-runtime/tabelle.php ../Gardian-runtime/kalender.php ../Gardian-runtime/login.html && mkdir -p ../Gardian-runtime/src ../Gardian-runtime/backend ../Gardian-runtime/assets/maps && cp -r backend/* ../Gardian-runtime/backend/ && cp -r src/* ../Gardian-runtime/src/ && cp -r assets/* ../Gardian-runtime/assets/ && cp index.php tabelle.php kalender.php login.html ../Gardian-runtime/ && git branch --show-current > ../Gardian-runtime/.git-branch",
     "start": "php -S localhost:8888 -t ../Gardian-runtime/"
   }
 }
