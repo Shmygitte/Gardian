@@ -2,6 +2,7 @@
  * Gardian – Pflanzen-Liste
  */
 // ES Module – fetch-Aufrufe werden schrittweise auf api() migriert
+import { getTypeLabel } from './core/state.js';
 
 const FIELD_LABELS = {
     type:               'Typ',
@@ -29,11 +30,9 @@ const FIELD_LABELS = {
     created_at:         'Erstellt am',
 };
 
-const TYPE_LABELS = { tree: 'Baum', shrub: 'Strauch', flower: 'Blume', climber: 'Kletterpflanze', s_flower: 'Blümchen' };
-
 function formatValue(key, val) {
     if (val === null || val === undefined || val === '') return '—';
-    if (key === 'type') return TYPE_LABELS[val] || val;
+    if (key === 'type') return getTypeLabel(val);
     if (key === 'hardy' || key === 'scented' || key === 'cutflower' || key === 'evergreen') return val == 1 ? 'Ja' : 'Nein';
     if (key === 'marker_color') return `<span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${val};border:1px solid #ccc;vertical-align:middle;margin-right:4px;"></span>${val}`;
     if (key === 'pos_x' || key === 'pos_y') return parseFloat(val).toFixed(1) + '%';

@@ -2,10 +2,11 @@
  * Gardian – Admin-Bereich
  */
 // ES Module – fetch-Aufrufe werden schrittweise auf api() migriert
+import { plantTypesCache } from './core/state.js';
 
 const GROUP_FIELDS_ADMIN = [
     { key: 'name',         label: 'Name',             type: 'text',   required: true },
-    { key: 'type',         label: 'Typ',               type: 'select', options: ['tree','shrub','flower','climber','s_flower'], labels: ['Baum','Strauch','Blume','Kletterpflanze','Blümchen'], required: true },
+    { key: 'type',         label: 'Typ',               type: 'select', dynamicOptions: true, required: true },
     { key: 'bloom_months', label: 'Blütezeit',         type: 'bloom_toggle' },
     { key: 'marker_icon',  label: 'Marker-Icon',       type: 'text' },
     { key: 'marker_color', label: 'Marker-Farbe',      type: 'color' },
@@ -27,10 +28,11 @@ let adminCurrentTab = 'users';
 
 function switchAdminTab(tab) {
     adminCurrentTab = tab;
-    ['users','groups','care-types','icons','links','system'].forEach(t => {
+    ['users','groups','plant-types','care-types','icons','links','system'].forEach(t => {
         document.getElementById(`admin-panel-${t}`).style.display = tab === t ? 'block' : 'none';
         document.getElementById(`admin-tab-${t}`).className = 'c-btn ' + (tab === t ? 'c-btn--secondary' : 'c-btn--text');
     });
+    if (tab === 'plant-types') loadAdminPlantTypes();
     if (tab === 'icons') loadAdminIcons();
     if (tab === 'links') loadAdminLinks();
     if (tab === 'system') loadSystemInfo();
@@ -41,6 +43,7 @@ async function loadAdminView() {
     await loadAdminUsers();
     loadAdminGroups();
     loadAdminCareTypes();
+    loadAdminPlantTypes();
 }
 
 // ========================
@@ -142,7 +145,12 @@ function renderGroupForm(data, onsubmit) {
     const fields = GROUP_FIELDS_ADMIN.map(f => {
         const val = data[f.key] ?? '';
         if (f.type === 'select') {
-            const opts = f.options.map((o, i) => `<option value="${o}" ${val == o ? 'selected' : ''}>${f.labels[i]}</option>`).join('');
+            let opts;
+            if (f.dynamicOptions) {
+                opts = plantTypesCache.map(t => `<option value="${t.key}" ${val == t.key ? 'selected' : ''}>${t.icon || ''} ${t.label}</option>`).join('');
+            } else {
+                opts = f.options.map((o, i) => `<option value="${o}" ${val == o ? 'selected' : ''}>${f.labels[i]}</option>`).join('');
+            }
             return `<div style="margin-bottom:8px;"><label style="font-size:0.8rem;color:var(--text-muted);">${f.label}${f.required ? ' *' : ''}</label><br><select name="${f.key}" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:var(--radius-sm);"><option value="">—</option>${opts}</select></div>`;
         }
         if (f.type === 'checkbox') {
@@ -320,6 +328,124 @@ async function adminDeleteCareType(id, name) {
     const res  = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'adminDeleteCareTaskType', id }) });
     const data = await res.json();
     if (data.success) loadAdminCareTypes();
+    else customAlert(data.error || 'Fehler');
+}
+
+// ========================
+// PFLANZENTYPEN (Admin)
+// ========================
+async function loadAdminPlantTypes() {
+    const panel = document.getElementById('admin-panel-plant-types');
+    if (!panel) return;
+    panel.innerHTML = '<p style="color:var(--text-muted)">Lade...</p>';
+    const res  = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'adminGetPlantTypes' }) });
+    const data = await res.json();
+    if (!data.success) { panel.innerHTML = '<p style="color:red">Fehler</p>'; return; }
+    renderAdminPlantTypes(panel, data.types);
+}
+
+function renderAdminPlantTypes(panel, types) {
+    const rows = types.map(t => `
+        <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:8px;width:48px;">
+                <span class="pt-display" data-id="${t.id}">${t.icon || ''}</span>
+                <input class="pt-edit c-input" data-id="${t.id}" id="pt-icon-${t.id}" value="${t.icon || ''}" style="display:none;width:50px;font-size:0.85rem;">
+            </td>
+            <td style="padding:8px;">
+                <span class="pt-display" data-id="${t.id}">
+                    ${t.label}
+                    <span style="font-size:0.75rem;color:var(--text-muted);margin-left:8px;">${t.marker_size ? t.marker_size + 'px' : ''}</span>
+                    ${t.marker_color ? `<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${t.marker_color};border:1px solid var(--border);vertical-align:middle;margin-left:4px;"></span>` : ''}
+                </span>
+                <div class="pt-edit" data-id="${t.id}" style="display:none;">
+                    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                        <input class="c-input" id="pt-label-${t.id}" value="${t.label}" style="width:140px;font-size:0.85rem;" placeholder="Name">
+                        <input class="c-input" id="pt-size-${t.id}" type="number" value="${t.marker_size || ''}" style="width:60px;font-size:0.85rem;" placeholder="px">
+                        <input id="pt-color-${t.id}" type="color" value="${t.marker_color || '#4a7c59'}" style="width:32px;height:28px;padding:0;border:1px solid var(--border);border-radius:4px;cursor:pointer;">
+                    </div>
+                </div>
+                <input type="hidden" id="pt-key-${t.id}" value="${t.key}">
+            </td>
+            <td style="padding:8px;width:120px;text-align:right;">
+                <span class="pt-display" data-id="${t.id}">
+                    <button class="c-btn c-btn--text" style="font-size:0.8rem;padding:4px 6px;" onclick="adminEditPlantTypeToggle(${t.id})">✎</button>
+                    <button class="c-btn c-btn--text" style="font-size:0.8rem;padding:4px 6px;color:var(--danger);" onclick="adminDeletePlantType(${t.id},'${t.label}')">✕</button>
+                </span>
+                <span class="pt-edit" data-id="${t.id}" style="display:none;">
+                    <button class="c-btn c-btn--primary" style="font-size:0.8rem;padding:4px 8px;" onclick="adminSavePlantType(${t.id})">✓</button>
+                    <button class="c-btn c-btn--text" style="font-size:0.8rem;padding:4px 6px;" onclick="adminEditPlantTypeToggle(${t.id})">✕</button>
+                </span>
+            </td>
+        </tr>`).join('');
+
+    panel.innerHTML = `
+        <table style="width:100%;border-collapse:collapse;font-size:0.9rem;margin-bottom:20px;">
+            <thead>
+                <tr style="border-bottom:2px solid var(--border);">
+                    <th style="text-align:left;padding:8px;width:48px;">Icon</th>
+                    <th style="text-align:left;padding:8px;">Name</th>
+                    <th style="padding:8px;width:120px;"></th>
+                </tr>
+            </thead>
+            <tbody>${rows || '<tr><td colspan="3" style="padding:12px;color:var(--text-muted);">Noch keine Typen angelegt.</td></tr>'}</tbody>
+        </table>
+        <div style="border:2px dashed var(--border);border-radius:var(--radius-md);padding:16px;">
+            <p style="font-weight:600;margin-bottom:12px;">Neuen Pflanzentyp anlegen</p>
+            <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">
+                <div>
+                    <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:4px;">Icon (Emoji)</label>
+                    <input type="text" id="pt-new-icon" class="c-input" placeholder="🌳" style="width:60px;">
+                </div>
+                <div style="flex:1;min-width:120px;">
+                    <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:4px;">Name *</label>
+                    <input type="text" id="pt-new-label" class="c-input" placeholder="z.B. Kraut">
+                </div>
+                <button class="c-btn c-btn--primary" onclick="adminAddPlantType()">Hinzufügen</button>
+            </div>
+        </div>`;
+}
+
+function adminEditPlantTypeToggle(id) {
+    document.querySelectorAll(`.pt-display[data-id="${id}"]`).forEach(el => el.style.display = el.style.display === 'none' ? '' : 'none');
+    document.querySelectorAll(`.pt-edit[data-id="${id}"]`).forEach(el => el.style.display = el.style.display === 'none' ? '' : 'none');
+}
+
+function labelToKey(label) {
+    return label.toLowerCase().replace(/[äÄ]/g,'ae').replace(/[öÖ]/g,'oe').replace(/[üÜ]/g,'ue').replace(/[ß]/g,'ss').replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
+}
+
+async function adminSavePlantType(id) {
+    const key   = document.getElementById(`pt-key-${id}`).value.trim();
+    const label = document.getElementById(`pt-label-${id}`).value.trim();
+    const icon  = document.getElementById(`pt-icon-${id}`).value.trim();
+    const marker_size  = document.getElementById(`pt-size-${id}`).value;
+    const marker_color = document.getElementById(`pt-color-${id}`).value;
+    if (!label) { customAlert('Name darf nicht leer sein.'); return; }
+    const res = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ action:'adminSavePlantType', id, key, label, icon, marker_size, marker_color }) });
+    const data = await res.json();
+    if (data.success) loadAdminPlantTypes();
+    else customAlert(data.error || 'Fehler');
+}
+
+async function adminAddPlantType() {
+    const label = document.getElementById('pt-new-label').value.trim();
+    const icon  = document.getElementById('pt-new-icon').value.trim();
+    if (!label) { customAlert('Bitte einen Namen eingeben.'); return; }
+    const key = labelToKey(label);
+    const res  = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ action:'adminSavePlantType', key, label, icon }) });
+    const data = await res.json();
+    if (data.success) loadAdminPlantTypes();
+    else customAlert(data.error || 'Fehler');
+}
+
+async function adminDeletePlantType(id, label) {
+    if (!await customConfirm(`Pflanzentyp "${label}" löschen?`, { confirmLabel: 'Löschen', danger: true })) return;
+    const res  = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ action:'adminDeletePlantType', id }) });
+    const data = await res.json();
+    if (data.success) loadAdminPlantTypes();
     else customAlert(data.error || 'Fehler');
 }
 
@@ -981,6 +1107,10 @@ window.adminUploadIcon = adminUploadIcon;
 window.adminEditIconToggle = adminEditIconToggle;
 window.adminSaveIcon = adminSaveIcon;
 window.adminDeleteIcon = adminDeleteIcon;
+window.adminEditPlantTypeToggle = adminEditPlantTypeToggle;
+window.adminSavePlantType = adminSavePlantType;
+window.adminAddPlantType = adminAddPlantType;
+window.adminDeletePlantType = adminDeletePlantType;
 window.adminLinkDragStart = adminLinkDragStart;
 window.adminLinkDragOver = adminLinkDragOver;
 window.adminLinkDragEnd = adminLinkDragEnd;

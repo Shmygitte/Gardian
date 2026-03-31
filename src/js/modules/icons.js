@@ -3,13 +3,10 @@
  * Icon-Caches, Icon-Picker, Icon-Auflösung
  */
 import { api, apiUpload } from '../core/api.js';
-import { iconLibraryCache, userIconsCache, setIconLibraryCache, setUserIconsCache } from '../core/state.js';
+import { iconLibraryCache, userIconsCache, setIconLibraryCache, setUserIconsCache, getTypeIcon } from '../core/state.js';
 
 function getEmoji(type) {
-    if (type === 'tree') return '🌳';
-    if (type === 'shrub') return '🌿';
-    if (type === 'climber') return '🌱';
-    return '🌸';
+    return getTypeIcon(type);
 }
 
 export async function loadIconCaches() {

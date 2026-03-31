@@ -3,7 +3,7 @@
  * filterState wird von markers.js (Karte), pflanzen.js (Liste) und galerie.js genutzt.
  */
 import { api } from './core/api.js';
-import { filterState } from './core/state.js';
+import { filterState, plantTypesCache } from './core/state.js';
 
 export function applyFilter() {
     filterState.types = Array.from(
@@ -170,6 +170,22 @@ export async function loadFilterGroups() {
     filterState.groups = new Set(data.groups.map(g => g.group_id ? String(g.group_id) : 'u' + g.id));
 }
 
+export function renderTypeFilters() {
+    const container = document.getElementById('filter-types');
+    if (!container) return;
+    const allLabel = container.querySelector('#filter-types-all')?.parentElement;
+    const checkboxes = plantTypesCache.map(t =>
+        `<label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;cursor:pointer;padding:3px 0;"><input type="checkbox" checked onchange="syncAllTypes();applyFilter()" data-type="${t.key}"> ${t.icon || ''} ${t.label}</label>`
+    ).join('');
+    if (allLabel) {
+        container.innerHTML = '';
+        container.appendChild(allLabel);
+        container.insertAdjacentHTML('beforeend', checkboxes);
+    } else {
+        container.innerHTML = checkboxes;
+    }
+}
+
 // Bridge
 window.applyFilter = applyFilter;
 window.toggleAllTypes = toggleAllTypes;
@@ -185,3 +201,4 @@ window.setAllCareMonths = setAllCareMonths;
 window.setCareOverlayMonth = setCareOverlayMonth;
 window.setCareFilterMonth = setCareFilterMonth;
 window.loadFilterGroups = loadFilterGroups;
+window.renderTypeFilters = renderTypeFilters;

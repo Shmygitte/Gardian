@@ -37,7 +37,7 @@ export let bloomObservations = [];
 export function setBloomObservations(obs) { bloomObservations = obs; }
 
 export const filterState = {
-    types: ['tree', 'shrub', 'flower', 'climber', 's_flower'],
+    types: [],
     groups: null,
     careFilter: false,
     careMonths: new Set(),
@@ -65,6 +65,25 @@ export const HOVER_SIZE_MAP = {
 };
 
 export const MONTH_NAMES = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+
+// Plant-Types Cache (dynamisch aus DB geladen)
+export let plantTypesCache = [];
+export function setPlantTypesCache(types) {
+    plantTypesCache = types;
+    filterState.types = types.map(t => t.key);
+    // DEFAULT_MARKER dynamisch aus Plant-Types befüllen
+    Object.keys(DEFAULT_MARKER).forEach(k => { if (k !== '_fallback') delete DEFAULT_MARKER[k]; });
+    types.forEach(t => {
+        if (t.marker_size) {
+            const size = parseInt(t.marker_size);
+            DEFAULT_MARKER[t.key] = { size, fontSize: Math.max(0.4, size / 28).toFixed(1) + 'rem' };
+        }
+    });
+}
+export function getTypeLabel(key) { return plantTypesCache.find(t => t.key === key)?.label || key; }
+export function getTypeIcon(key) { return plantTypesCache.find(t => t.key === key)?.icon || '🌸'; }
+export function getTypeLabelMap() { return Object.fromEntries(plantTypesCache.map(t => [t.key, t.label])); }
+export function getTypeIconMap() { return Object.fromEntries(plantTypesCache.map(t => [t.key, t.icon || '🌸'])); }
 
 // Icon-Caches (geteilt zwischen app.js und group-form.js)
 export let iconLibraryCache = null;

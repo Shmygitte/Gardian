@@ -2,10 +2,7 @@
  * Gardian – Gartengalerie
  */
 import { api } from './core/api.js';
-import { filterState } from './core/state.js';
-
-const TYPE_ICONS = { tree: '🌳', shrub: '🌿', flower: '🌸', climber: '🌱', s_flower: '🌼' };
-const TYPE_LABELS_GAL = { tree: 'Baum', shrub: 'Strauch', flower: 'Blume', climber: 'Kletterpflanze', s_flower: 'Blümchen' };
+import { filterState, getTypeIconMap, getTypeLabelMap } from './core/state.js';
 
 let _galerieImages = [];
 let _adminFilterActive = false;
@@ -130,8 +127,8 @@ export function renderGalerie() {
     }
 
     grid.innerHTML = images.map(img => {
-        const icon = TYPE_ICONS[img.group_type] || '🌿';
-        const label = TYPE_LABELS_GAL[img.group_type] || img.group_type || '';
+        const icon = getTypeIconMap()[img.group_type] || '🌿';
+        const label = getTypeLabelMap()[img.group_type] || img.group_type || '';
         const isPlant = img.type === 'plant';
         const isDefault = img.type === 'default';
         const badge = isPlant

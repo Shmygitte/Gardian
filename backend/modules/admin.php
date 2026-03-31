@@ -44,7 +44,8 @@ if ($action === 'adminAddGroup') {
     requireAdmin($db, $_SESSION['user_id']);
     $name = trim($data['name'] ?? '');
     $type = $data['type'] ?? null;
-    if (!$name || !in_array($type, ['tree','shrub','flower','climber','s_flower'])) {
+    $validTypes = $db->query("SELECT `key` FROM gd_plant_types")->fetchAll(PDO::FETCH_COLUMN);
+    if (!$name || !in_array($type, $validTypes)) {
         echo json_encode(['success' => false, 'error' => 'Name und Typ erforderlich']);
         exit;
     }
@@ -86,6 +87,64 @@ if ($action === 'adminDeleteGroup') {
         $db->rollBack();
         echo json_encode(['success' => false, 'error' => 'Fehler beim Löschen der Gruppe']);
     }
+    exit;
+}
+
+// Pflanzentypen
+if ($action === 'adminGetPlantTypes') {
+    requireAdmin($db, $_SESSION['user_id']);
+    $stmt = $db->query("SELECT id, `key`, label, icon, sort_order, marker_size, marker_color FROM gd_plant_types ORDER BY sort_order, id");
+    echo json_encode(['success' => true, 'types' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+    exit;
+}
+
+if ($action === 'adminSavePlantType') {
+    requireAdmin($db, $_SESSION['user_id']);
+    $id    = $data['id'] ?? null;
+    $key   = trim($data['key'] ?? '');
+    $label = trim($data['label'] ?? '');
+    $icon  = $data['icon'] ?? null;
+    $markerSize  = isset($data['marker_size']) && $data['marker_size'] !== '' ? (int)$data['marker_size'] : null;
+    $markerColor = trim($data['marker_color'] ?? '') ?: null;
+    if (!$key || !$label) { echo json_encode(['success' => false, 'error' => 'Name erforderlich']); exit; }
+    try {
+        if ($id) {
+            $db->prepare("UPDATE gd_plant_types SET label=?, icon=?, marker_size=?, marker_color=? WHERE id=?")->execute([$label, $icon, $markerSize, $markerColor, $id]);
+        } else {
+            $maxOrder = (int)$db->query("SELECT COALESCE(MAX(sort_order),0) FROM gd_plant_types")->fetchColumn();
+            $db->prepare("INSERT INTO gd_plant_types (`key`, label, icon, sort_order, marker_size, marker_color) VALUES (?,?,?,?,?,?)")->execute([$key, $label, $icon, $maxOrder + 1, $markerSize, $markerColor]);
+            $id = $db->lastInsertId();
+        }
+        echo json_encode(['success' => true, 'id' => $id]);
+    } catch (PDOException $e) {
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+    exit;
+}
+
+if ($action === 'adminDeletePlantType') {
+    requireAdmin($db, $_SESSION['user_id']);
+    $id = $data['id'] ?? null;
+    if (!$id) { echo json_encode(['success' => false]); exit; }
+    $typeKey = $db->prepare("SELECT `key` FROM gd_plant_types WHERE id=?");
+    $typeKey->execute([$id]);
+    $key = $typeKey->fetchColumn();
+    if ($key) {
+        $used = $db->prepare("SELECT COUNT(*) FROM gd_default_groups WHERE type=?");
+        $used->execute([$key]);
+        if ($used->fetchColumn() > 0) {
+            echo json_encode(['success' => false, 'error' => 'Typ wird noch verwendet']);
+            exit;
+        }
+        $usedUser = $db->prepare("SELECT COUNT(*) FROM gd_user_groups WHERE type=?");
+        $usedUser->execute([$key]);
+        if ($usedUser->fetchColumn() > 0) {
+            echo json_encode(['success' => false, 'error' => 'Typ wird noch von Benutzergruppen verwendet']);
+            exit;
+        }
+    }
+    $db->prepare("DELETE FROM gd_plant_types WHERE id=?")->execute([$id]);
+    echo json_encode(['success' => true]);
     exit;
 }
 

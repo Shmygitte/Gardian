@@ -5,7 +5,7 @@
 
 // Core
 import { api } from './core/api.js';
-import { state, elements } from './core/state.js';
+import { state, elements, setPlantTypesCache } from './core/state.js';
 import { setupMapStructure, setupEventListeners, loadGardenConfig, getOverlayCoords } from './core/map-engine.js';
 
 // Modules
@@ -30,6 +30,8 @@ async function init() {
     initBloomSlider();
 
     // 2. Data
+    await loadPlantTypes();
+    window.renderTypeFilters?.();
     await loadGardenConfig();
     await loadBloomObservationsAll();
     await loadIconCaches();
@@ -38,6 +40,15 @@ async function init() {
 
     // 3. Events
     setupEventListeners(handleMapClick, handleMarkerMouseDown);
+}
+
+async function loadPlantTypes() {
+    try {
+        const data = await api('getPlantTypes');
+        if (data.success) setPlantTypesCache(data.types);
+    } catch (err) {
+        console.error("Failed to load plant types", err);
+    }
 }
 
 async function loadPins() {

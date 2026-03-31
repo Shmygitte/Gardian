@@ -94,7 +94,7 @@ include 'src/layout/header.php';
 // ---- Config ----
 const MONTHS = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
 const OPTS = {
-    type:        [{v:'',l:'—'},{v:'tree',l:'Baum'},{v:'shrub',l:'Strauch'},{v:'flower',l:'Blume'},{v:'climber',l:'Kletterpflanze'},{v:'s_flower',l:'Blümchen'}],
+    type:        [{v:'',l:'—'}], // wird dynamisch befüllt
     location:    [{v:'',l:'—'},{v:'sonnig',l:'Sonnig'},{v:'halbschatten',l:'Halbschatten'},{v:'schatten',l:'Schatten'}],
     care:        [{v:'',l:'—'},{v:'gering',l:'Gering'},{v:'mittel',l:'Mittel'},{v:'hoch',l:'Hoch'}],
     water:       [{v:'',l:'—'},{v:'gering',l:'Gering'},{v:'mittel',l:'Mittel'},{v:'hoch',l:'Hoch'}],
@@ -134,6 +134,13 @@ async function init() {
         }
     } catch(e) {}
     if (typeof EffectManager !== 'undefined') EffectManager.initFromUrl();
+    // Plant-Types dynamisch laden
+    try {
+        const ptData = await api('getPlantTypes');
+        if (ptData.success) {
+            OPTS.type = [{v:'',l:'—'}, ...ptData.types.map(t => ({v: t.key, l: t.label}))];
+        }
+    } catch(e) {}
     await loadData();
 }
 

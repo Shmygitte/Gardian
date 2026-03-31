@@ -17,11 +17,7 @@ ob_start();
                         </button>
                         <div class="filter-accordion__body" id="filter-types" style="display:none; flex-direction:column; gap:0; padding:2px 0 4px 12px;">
                             <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;cursor:pointer;padding:3px 0;border-bottom:1px solid var(--border);margin-bottom:2px;font-weight:600;"><input type="checkbox" id="filter-types-all" checked onchange="toggleAllTypes(this)"> Alle</label>
-                            <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;cursor:pointer;padding:3px 0;"><input type="checkbox" checked onchange="syncAllTypes();applyFilter()" data-type="tree"> Baum</label>
-                            <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;cursor:pointer;padding:3px 0;"><input type="checkbox" checked onchange="syncAllTypes();applyFilter()" data-type="shrub"> Strauch</label>
-                            <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;cursor:pointer;padding:3px 0;"><input type="checkbox" checked onchange="syncAllTypes();applyFilter()" data-type="flower"> Blume</label>
-                            <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;cursor:pointer;padding:3px 0;"><input type="checkbox" checked onchange="syncAllTypes();applyFilter()" data-type="climber"> Kletterpflanze</label>
-                            <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;cursor:pointer;padding:3px 0;"><input type="checkbox" checked onchange="syncAllTypes();applyFilter()" data-type="s_flower"> Blümchen</label>
+                            <!-- Typen werden dynamisch befüllt -->
                         </div>
                     </div>
                     <!-- Aufgaben Filter -->
@@ -120,6 +116,7 @@ include 'src/layout/header.php';
                             <div style="display:flex; gap:8px; margin-bottom:20px;">
                                 <button id="admin-tab-users"      class="c-btn c-btn--secondary" onclick="switchAdminTab('users')">Benutzer</button>
                                 <button id="admin-tab-groups"     class="c-btn c-btn--text"      onclick="switchAdminTab('groups')">Pflanzengruppen</button>
+                                <button id="admin-tab-plant-types" class="c-btn c-btn--text"     onclick="switchAdminTab('plant-types')">Pflanzentypen</button>
                                 <button id="admin-tab-care-types" class="c-btn c-btn--text"      onclick="switchAdminTab('care-types')">Aufgaben-Typen</button>
                                 <button id="admin-tab-icons"      class="c-btn c-btn--text"      onclick="switchAdminTab('icons')">Icon-Bibliothek</button>
                                 <button id="admin-tab-links"      class="c-btn c-btn--text"      onclick="switchAdminTab('links')">Nützliche Links</button>
@@ -127,6 +124,7 @@ include 'src/layout/header.php';
                             </div>
                             <div id="admin-panel-users"></div>
                             <div id="admin-panel-groups"     style="display:none;"></div>
+                            <div id="admin-panel-plant-types" style="display:none;"></div>
                             <div id="admin-panel-care-types" style="display:none;"></div>
                             <div id="admin-panel-icons"      style="display:none;"></div>
                             <div id="admin-panel-links"      style="display:none;"></div>

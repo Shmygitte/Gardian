@@ -3,15 +3,11 @@
  * Wird von admin.js und app.js genutzt
  */
 import { api } from './core/api.js';
-import { iconLibraryCache } from './core/state.js';
+import { iconLibraryCache, plantTypesCache } from './core/state.js';
 
-const GF_TYPE_OPTIONS = [
-    { v: 'tree',     l: '🌳 Baum' },
-    { v: 'shrub',    l: '🌿 Strauch' },
-    { v: 'flower',   l: '🌸 Blume' },
-    { v: 'climber',  l: '🌱 Kletterpflanze' },
-    { v: 's_flower', l: '🌼 Blümchen' },
-];
+function getTypeOptions() {
+    return plantTypesCache.map(t => ({ v: t.key, l: `${t.icon || ''} ${t.label}`.trim() }));
+}
 
 const GF_STECKBRIEF = [
     { key: 'height',    label: 'Höhe',         icon: '📏', type: 'text',   placeholder: 'z.B. 1–2m' },
@@ -50,7 +46,7 @@ function renderGroupFormNice(data = {}, formId, onSubmit) {
                     <label class="c-gf__label" style="${GF_LABEL_STYLE}">Pflanzenart</label>
                     <select name="type" style="${GF_SELECT_STYLE}">
                         <option value="">— Wählen</option>
-                        ${GF_TYPE_OPTIONS.map(o => `<option value="${o.v}" ${v('type') === o.v ? 'selected' : ''}>${o.l}</option>`).join('')}
+                        ${getTypeOptions().map(o => `<option value="${o.v}" ${v('type') === o.v ? 'selected' : ''}>${o.l}</option>`).join('')}
                     </select>
                 </div>
                 <div>

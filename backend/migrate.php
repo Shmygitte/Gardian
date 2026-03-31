@@ -146,6 +146,50 @@ function getMigrations() {
             'name' => '020_type_enum_add_climber_user_groups',
             'sql'  => "ALTER TABLE gd_user_groups MODIFY COLUMN type ENUM('tree','shrub','flower','climber','s_flower') NULL"
         ],
+        [
+            'name' => '021_create_plant_types',
+            'sql'  => "CREATE TABLE IF NOT EXISTS gd_plant_types (
+                id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                `key`      VARCHAR(50) NOT NULL UNIQUE,
+                label      VARCHAR(100) NOT NULL,
+                icon       VARCHAR(10) NULL DEFAULT NULL,
+                sort_order INT UNSIGNED NOT NULL DEFAULT 0
+            )"
+        ],
+        [
+            'name' => '022_seed_plant_types',
+            'sql'  => "INSERT IGNORE INTO gd_plant_types (`key`, label, icon, sort_order) VALUES
+                ('tree',     'Baum',           '🌳', 1),
+                ('shrub',    'Strauch',        '🌿', 2),
+                ('flower',   'Blume',          '🌸', 3),
+                ('climber',  'Kletterpflanze', '🌱', 4),
+                ('s_flower', 'Blümchen',       '🌼', 5)"
+        ],
+        [
+            'name' => '023_default_groups_type_to_varchar',
+            'sql'  => "ALTER TABLE gd_default_groups MODIFY COLUMN type VARCHAR(50) NOT NULL"
+        ],
+        [
+            'name' => '024_user_groups_type_to_varchar',
+            'sql'  => "ALTER TABLE gd_user_groups MODIFY COLUMN type VARCHAR(50) NULL"
+        ],
+        [
+            'name' => '025_plant_types_marker_fields',
+            'sql'  => "ALTER TABLE gd_plant_types
+                ADD COLUMN marker_size INT UNSIGNED NULL DEFAULT NULL,
+                ADD COLUMN marker_color VARCHAR(7) NULL DEFAULT NULL"
+        ],
+        [
+            'name' => '026_seed_plant_types_marker_defaults',
+            'sql'  => "UPDATE gd_plant_types SET marker_size = CASE `key`
+                WHEN 'tree' THEN 44
+                WHEN 'shrub' THEN 34
+                WHEN 'flower' THEN 20
+                WHEN 'climber' THEN 20
+                WHEN 's_flower' THEN 10
+                ELSE 30 END
+                WHERE marker_size IS NULL"
+        ],
     ];
 }
 

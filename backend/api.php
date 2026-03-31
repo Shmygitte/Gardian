@@ -64,6 +64,9 @@ $moduleMap = [
     'duplicatePlant'  => 'plants',
     'deletePlant'     => 'plants',
 
+    // Plant Types
+    'getPlantTypes'    => 'plant-types',
+
     // Groups
     'getGroups'        => 'groups',
     'createUserGroup'  => 'groups',
@@ -105,6 +108,9 @@ $moduleMap = [
     'adminAddGroup'           => 'admin',
     'adminUpdateGroup'        => 'admin',
     'adminDeleteGroup'        => 'admin',
+    'adminGetPlantTypes'      => 'admin',
+    'adminSavePlantType'      => 'admin',
+    'adminDeletePlantType'    => 'admin',
     'adminGetCareTaskTypes'   => 'admin',
     'adminSaveCareTaskType'   => 'admin',
     'adminDeleteCareTaskType' => 'admin',
