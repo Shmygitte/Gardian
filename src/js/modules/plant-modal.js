@@ -138,19 +138,23 @@ export async function savePlantEdit() {
     const id = document.getElementById('edit-plant-id').value;
     const iconVal = document.getElementById('edit-marker-icon').value || null;
     const isSvgIcon = iconVal && (iconVal.startsWith('lib:') || iconVal.startsWith('user:'));
+    const colorEl = document.getElementById('edit-marker-color');
+    const iconColorEl = document.getElementById('edit-marker-icon-color');
+    const wasReset = colorEl.dataset.reset === '1';
     const payload = {
         id: parseInt(id),
         name: document.getElementById('edit-plant-name').value || null,
-        marker_color: document.getElementById('edit-marker-color').value,
+        marker_color: wasReset ? null : colorEl.value,
         marker_size: document.getElementById('edit-marker-size').value || null,
         marker_icon: iconVal,
-        marker_icon_color: isSvgIcon ? (function () {
-            const el = document.getElementById('edit-marker-icon-color');
-            const orig = el.dataset.original || '';
-            if (!orig && el.value === '#ffffff') return null;
-            return el.value;
+        marker_icon_color: isSvgIcon && !wasReset ? (function () {
+            const orig = iconColorEl.dataset.original || '';
+            if (!orig && iconColorEl.value === '#ffffff') return null;
+            return iconColorEl.value;
         })() : null,
     };
+    delete colorEl.dataset.reset;
+    delete iconColorEl.dataset.reset;
     const data = await api('updatePlant', payload);
     if (data.success) {
         if (typeof EffectManager !== 'undefined') EffectManager.trigger('save-success');

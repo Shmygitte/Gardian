@@ -101,10 +101,13 @@ export function resetMarkerIcon() {
 }
 
 export function resetAllMarkerSettings() {
+    // Alle Marker-Felder leeren → Gruppen-Defaults greifen
     document.getElementById('edit-marker-color').value = '#4CAF50';
+    document.getElementById('edit-marker-color').dataset.reset = '1';
     document.getElementById('edit-marker-size').value = '';
     document.getElementById('edit-marker-emoji').value = '';
     document.getElementById('edit-marker-icon-color').value = '#333333';
+    document.getElementById('edit-marker-icon-color').dataset.reset = '1';
     updateIconPreview(null);
     window.updateMarkerPreview?.();
 }

@@ -80,12 +80,15 @@ if ($action === 'deleteUserGroup') {
     $groupId = $data['group_id'] ?? null;
     if (!$groupId) { echo json_encode(['success' => false, 'error' => 'Keine group_id']); exit; }
 
-    $stmt = $db->prepare("SELECT id FROM gd_user_groups WHERE id = ? AND user_id = ?");
+    $stmt = $db->prepare("SELECT id, group_id FROM gd_user_groups WHERE id = ? AND user_id = ?");
     $stmt->execute([$groupId, $_SESSION['user_id']]);
-    if (!$stmt->fetch()) { echo json_encode(['success' => false, 'error' => 'Keine Berechtigung']); exit; }
+    $userGroup = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$userGroup) { echo json_encode(['success' => false, 'error' => 'Keine Berechtigung']); exit; }
+    $defaultGroupId = $userGroup['group_id'];
 
-    $plantStmt = $db->prepare("SELECT id FROM gd_user_plants WHERE user_group_id = ? AND user_id = ?");
-    $plantStmt->execute([$groupId, $_SESSION['user_id']]);
+    // Pflanzen über user_group_id ODER group_id finden
+    $plantStmt = $db->prepare("SELECT id FROM gd_user_plants WHERE (user_group_id = ? OR group_id = ?) AND user_id = ?");
+    $plantStmt->execute([$groupId, $defaultGroupId, $_SESSION['user_id']]);
     $plantIds = array_column($plantStmt->fetchAll(PDO::FETCH_ASSOC), 'id');
 
     foreach ($plantIds as $pid) {
@@ -118,7 +121,7 @@ if ($action === 'deleteUserGroup') {
     $db->prepare("DELETE FROM gd_bloom_observations WHERE user_group_id = ? AND user_id = ?")->execute([$groupId, $_SESSION['user_id']]);
 
     if ($plantIds) {
-        $db->prepare("DELETE FROM gd_user_plants WHERE user_group_id = ? AND user_id = ?")->execute([$groupId, $_SESSION['user_id']]);
+        $db->prepare("DELETE FROM gd_user_plants WHERE (user_group_id = ? OR group_id = ?) AND user_id = ?")->execute([$groupId, $defaultGroupId, $_SESSION['user_id']]);
     }
 
     $db->prepare("DELETE FROM gd_user_groups WHERE id = ? AND user_id = ?")->execute([$groupId, $_SESSION['user_id']]);

@@ -450,7 +450,7 @@ async function deletePlant(plantId) {
     const data = await res.json();
     if (data.success) {
         await loadPflanzenListe();
-        if (typeof loadPins === 'function') await loadPins();
+        if (window.loadPins) await window.loadPins();
     } else {
         customAlert(data.error || 'Fehler beim Löschen');
     }
@@ -472,8 +472,8 @@ async function deleteUserGroup(groupId, plantCount) {
     const data = await res.json();
     if (data.success) {
         await loadPflanzenListe();
-        if (typeof loadPins === 'function') await loadPins();
-        if (typeof loadFilterGroups === 'function') await loadFilterGroups();
+        if (window.loadPins) await window.loadPins();
+        if (window.loadFilterGroups) await window.loadFilterGroups();
     } else {
         customAlert(data.error || 'Fehler beim Löschen');
     }
@@ -507,7 +507,7 @@ async function saveGruppeBearbeiten(groupId, formId) {
         if (typeof EffectManager !== 'undefined') EffectManager.trigger('save-success');
         if (typeof closeNeueGruppeModal === 'function') closeNeueGruppeModal();
         await loadPflanzenListe();
-        if (typeof loadPins === 'function') await loadPins();
+        if (window.loadPins) await window.loadPins();
     } else {
         customAlert(data.error || 'Fehler beim Speichern');
     }

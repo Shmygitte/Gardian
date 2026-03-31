@@ -3,6 +3,25 @@
 
 if ($action === 'getPins') {
     try {
+        // Verwaiste Pflanzen bereinigen
+        // 1. user_group_id zeigt auf gelöschte Gruppe
+        $db->prepare("
+            DELETE p FROM gd_user_plants p
+            LEFT JOIN gd_user_groups ug ON p.user_group_id = ug.id
+            WHERE p.user_id = ?
+              AND p.user_group_id IS NOT NULL
+              AND ug.id IS NULL
+        ")->execute([$_SESSION['user_id']]);
+        // 2. Nur group_id (Default-Gruppe), aber User hat keine user_group mehr dafür
+        $db->prepare("
+            DELETE p FROM gd_user_plants p
+            LEFT JOIN gd_user_groups ug ON p.group_id = ug.group_id AND p.user_id = ug.user_id
+            WHERE p.user_id = ?
+              AND p.user_group_id IS NULL
+              AND p.group_id IS NOT NULL
+              AND ug.id IS NULL
+        ")->execute([$_SESSION['user_id']]);
+
         $stmt = $db->prepare("
             SELECT
                 p.id,
@@ -24,6 +43,7 @@ if ($action === 'getPins') {
             LEFT JOIN gd_user_groups ug ON p.group_id = ug.group_id AND p.user_id = ug.user_id
             LEFT JOIN gd_user_groups ug_direct ON p.user_group_id = ug_direct.id
             WHERE p.user_id = ?
+              AND (ug_direct.id IS NOT NULL OR dg.id IS NOT NULL)
         ");
         $stmt->execute([$_SESSION['user_id']]);
         $pins = $stmt->fetchAll(PDO::FETCH_ASSOC);
