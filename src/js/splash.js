@@ -72,8 +72,8 @@ function showSplash() {
         container.appendChild(s);
     }
 
-    setTimeout(function() {
+    splash.addEventListener('click', function() {
         splash.classList.add('splash--hidden');
         setTimeout(function() { splash.remove(); }, 1000);
-    }, 2800);
+    });
 }

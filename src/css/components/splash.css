@@ -10,6 +10,7 @@
     background: radial-gradient(ellipse at center, #0f1f0f 0%, #060d06 50%, #020502 100%);
     transition: opacity 1s ease;
     overflow: hidden;
+    cursor: pointer;
 }
 
 .splash--hidden {
