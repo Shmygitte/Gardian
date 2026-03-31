@@ -11,7 +11,7 @@
             <span id="user-name" style="font-size:0.82rem;font-weight:600;color:var(--text-main);"></span>
         </div>
         <div style="display:flex;align-items:center;gap:10px;">
-            <img src="assets/logo.png" alt="Gardian" style="height:38px;width:38px;border-radius:50%;object-fit:cover;">
+            <img src="assets/logo.png" alt="Gardian" style="height:38px;width:38px;border-radius:50%;object-fit:cover;cursor:pointer;" onclick="showSplash()" title="Splash abspielen">
             <h1 style="font-size:1.5rem;color:var(--primary-dark);">Gardian</h1>
         </div>
 <?php if (!empty($headerRightExtra)): ?>
