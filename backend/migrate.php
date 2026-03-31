@@ -151,6 +151,35 @@ function getMigrations() {
 
 // ─── GET: Status anzeigen ───
 if ($method === 'GET') {
+    // Datenbankstruktur abfragen
+    if (isset($_GET['action']) && $_GET['action'] === 'structure') {
+        $dbName = 'dev-gardian';
+        $tables = $db->query("
+            SELECT TABLE_NAME, TABLE_ROWS
+            FROM INFORMATION_SCHEMA.TABLES
+            WHERE TABLE_SCHEMA = '$dbName'
+            ORDER BY TABLE_NAME
+        ")->fetchAll(PDO::FETCH_ASSOC);
+
+        $structure = [];
+        foreach ($tables as $t) {
+            $tName = $t['TABLE_NAME'];
+            $cols = $db->query("
+                SELECT COLUMN_NAME, COLUMN_TYPE, COLUMN_KEY, EXTRA
+                FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_SCHEMA = '$dbName' AND TABLE_NAME = '$tName'
+                ORDER BY ORDINAL_POSITION
+            ")->fetchAll(PDO::FETCH_ASSOC);
+            $structure[] = [
+                'name'    => $tName,
+                'rows'    => (int)$t['TABLE_ROWS'],
+                'columns' => $cols
+            ];
+        }
+        echo json_encode(['success' => true, 'tables' => $structure]);
+        exit;
+    }
+
     $executed   = $db->query("SELECT name, executed_by, status, error_message, executed_at FROM gd_migrations ORDER BY executed_at DESC")->fetchAll(PDO::FETCH_ASSOC);
     $migrations = array_map(fn($m) => $m['name'], getMigrations());
     $successNames = array_column(array_filter($executed, fn($r) => $r['status'] === 'success'), 'name');

@@ -135,11 +135,13 @@ include 'src/layout/header.php';
                                 <div style="display:flex; gap:6px; margin-bottom:16px;">
                                     <button id="system-sub-colors" class="c-btn c-btn--secondary" onclick="switchSystemSub('colors')" style="font-size:0.8rem;">🎨 Farben</button>
                                     <button id="system-sub-typo"   class="c-btn c-btn--text"      onclick="switchSystemSub('typo')"   style="font-size:0.8rem;">📐 Typografie & Layout</button>
-                                    <button id="system-sub-db"     class="c-btn c-btn--text"      onclick="switchSystemSub('db')"     style="font-size:0.8rem;">🗄️ Datenbank</button>
+                                    <button id="system-sub-structure" class="c-btn c-btn--text"   onclick="switchSystemSub('structure')" style="font-size:0.8rem;">🗄️ Datenbank</button>
+                                    <button id="system-sub-db"     class="c-btn c-btn--text"      onclick="switchSystemSub('db')"     style="font-size:0.8rem;">🔄 Migration</button>
                                 </div>
                                 <div id="system-panel-colors"></div>
-                                <div id="system-panel-typo"   style="display:none;"></div>
-                                <div id="system-panel-db"     style="display:none;"></div>
+                                <div id="system-panel-typo"      style="display:none;"></div>
+                                <div id="system-panel-db"        style="display:none;"></div>
+                                <div id="system-panel-structure" style="display:none;"></div>
                             </div>
                         </div>
                     </div>
@@ -532,8 +534,8 @@ $extraScripts = '
     <script type="module" src="src/js/filter.js"></script>
     <script type="module" src="src/js/pflege.js"></script>
     <script type="module" src="src/js/app.js"></script>
-    <script src="src/js/admin.js"></script>
-    <script src="src/js/pflanzen.js"></script>';
+    <script type="module" src="src/js/admin.js"></script>
+    <script type="module" src="src/js/pflanzen.js"></script>';
 include 'src/layout/footer.php';
 ?>
     <script type="module">

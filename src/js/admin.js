@@ -595,13 +595,14 @@ let _systemSubTab = 'colors';
 
 function switchSystemSub(tab) {
     _systemSubTab = tab;
-    ['colors','typo','db'].forEach(t => {
+    ['colors','typo','db','structure'].forEach(t => {
         const panel = document.getElementById('system-panel-' + t);
         const btn   = document.getElementById('system-sub-' + t);
         if (panel) panel.style.display = tab === t ? 'block' : 'none';
         if (btn)   btn.className = 'c-btn ' + (tab === t ? 'c-btn--secondary' : 'c-btn--text');
     });
     if (tab === 'db') loadMigrations();
+    if (tab === 'structure') loadDbStructure();
 }
 
 function loadSystemInfo() {
@@ -840,6 +841,101 @@ async function runMigrations() {
     }
 }
 
+// ========================
+// DATENBANKSTRUKTUR
+// ========================
+async function loadDbStructure() {
+    const panel = document.getElementById('system-panel-structure');
+    panel.innerHTML = '<p style="color:var(--text-muted)">Lade Datenbankstruktur...</p>';
+    try {
+        const [structRes, migrateRes] = await Promise.all([
+            fetch('backend/migrate.php?action=structure'),
+            fetch('backend/migrate.php')
+        ]);
+        const structData  = await structRes.json();
+        const migrateData = await migrateRes.json();
+        if (!structData.success) { panel.innerHTML = '<p style="color:red">Fehler beim Laden.</p>'; return; }
+
+        const executed  = migrateData.success ? (migrateData.history || []).filter(h => h.status === 'success').length : 0;
+        const pending   = migrateData.success ? (migrateData.pending || []).length : 0;
+        const tableCount = structData.tables.length;
+
+        renderDbStructure(panel, structData.tables, executed, pending, tableCount);
+    } catch (e) {
+        panel.innerHTML = '<p style="color:red">Fehler: ' + e.message + '</p>';
+    }
+}
+
+function renderDbStructure(panel, tables, executed, pending, tableCount) {
+    const statCards = `
+        <div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;">
+            <div style="padding:16px 24px;border-radius:8px;background:linear-gradient(135deg,#d4edda,#c3e6cb);border:1px solid #b1dfbb;min-width:140px;">
+                <div style="font-size:1.8rem;font-weight:700;color:#155724;">${executed}</div>
+                <div style="font-size:0.75rem;color:#155724;">Migrationen ausgeführt</div>
+            </div>
+            <div style="padding:16px 24px;border-radius:8px;background:var(--bg-surface);border:1px solid var(--border);min-width:140px;">
+                <div style="font-size:1.8rem;font-weight:700;color:var(--text-muted);">${pending}</div>
+                <div style="font-size:0.75rem;color:var(--text-muted);">ausstehend</div>
+            </div>
+            <div style="padding:16px 24px;border-radius:8px;background:linear-gradient(135deg,#fff3cd,#ffeeba);border:1px solid #ffc107;min-width:140px;">
+                <div style="font-size:1.8rem;font-weight:700;color:#856404;">${tableCount}</div>
+                <div style="font-size:0.75rem;color:#856404;">Tabellen</div>
+            </div>
+        </div>`;
+
+    const keyBadge = (key) => {
+        if (key === 'PRI') return '<span style="display:inline-block;padding:1px 6px;font-size:0.65rem;font-weight:600;border-radius:3px;background:#d4edda;color:#155724;">PK</span>';
+        if (key === 'UNI') return '<span style="display:inline-block;padding:1px 6px;font-size:0.65rem;font-weight:600;border-radius:3px;background:#cce5ff;color:#004085;">UQ</span>';
+        if (key === 'MUL') return '<span style="display:inline-block;padding:1px 6px;font-size:0.65rem;font-weight:600;border-radius:3px;background:#fff3cd;color:#856404;">IDX</span>';
+        return '';
+    };
+
+    const tableItems = tables.map((t, i) => {
+        const colRows = t.columns.map(c => `
+            <tr style="font-size:0.8rem;border-bottom:1px solid var(--border);">
+                <td style="padding:6px 12px;font-family:monospace;font-weight:500;">${c.COLUMN_NAME}</td>
+                <td style="padding:6px 12px;color:var(--primary);font-family:monospace;font-size:0.75rem;">${c.COLUMN_TYPE}</td>
+                <td style="padding:6px 12px;text-align:center;">${keyBadge(c.COLUMN_KEY)}</td>
+                <td style="padding:6px 12px;color:var(--text-muted);font-size:0.75rem;">${c.EXTRA || ''}</td>
+            </tr>`).join('');
+
+        return `
+            <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--bg-card);">
+                <div onclick="toggleDbTable(${i})" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none;transition:background 0.15s;" onmouseover="this.style.background='var(--bg-surface)'" onmouseout="this.style.background='transparent'">
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <span style="font-size:0.9rem;font-weight:600;">${t.name}</span>
+                        <span style="font-size:0.7rem;color:var(--text-muted);">${t.columns.length} Spalten · ${t.rows} Zeilen</span>
+                    </div>
+                    <span id="db-table-arrow-${i}" style="font-size:0.7rem;color:var(--text-muted);transition:transform 0.2s;">▶</span>
+                </div>
+                <div id="db-table-detail-${i}" style="display:none;border-top:1px solid var(--border);">
+                    <table style="width:100%;border-collapse:collapse;">
+                        <thead>
+                            <tr style="font-size:0.7rem;color:var(--text-muted);text-align:left;background:var(--bg-surface);">
+                                <th style="padding:6px 12px;">Spalte</th>
+                                <th style="padding:6px 12px;">Typ</th>
+                                <th style="padding:6px 12px;text-align:center;">Key</th>
+                                <th style="padding:6px 12px;">Extra</th>
+                            </tr>
+                        </thead>
+                        <tbody>${colRows}</tbody>
+                    </table>
+                </div>
+            </div>`;
+    }).join('');
+
+    panel.innerHTML = statCards + `<div style="display:flex;flex-direction:column;gap:8px;">${tableItems}</div>`;
+}
+
+function toggleDbTable(index) {
+    const detail = document.getElementById('db-table-detail-' + index);
+    const arrow  = document.getElementById('db-table-arrow-' + index);
+    if (!detail) return;
+    const open = detail.style.display !== 'none';
+    detail.style.display = open ? 'none' : 'block';
+    arrow.style.transform = open ? 'rotate(0deg)' : 'rotate(90deg)';
+}
+
 // Bridge
 window.switchAdminTab = switchAdminTab;
 window.loadAdminView = loadAdminView;
@@ -870,3 +966,4 @@ window.adminSaveLink = adminSaveLink;
 window.adminAddLink = adminAddLink;
 window.adminDeleteLink = adminDeleteLink;
 window.runMigrations = runMigrations;
+window.toggleDbTable = toggleDbTable;
