@@ -1032,14 +1032,16 @@ function renderDbStructure(panel, tables, executed, pending, tableCount, comment
         const hasComment = !!comments[t.name];
 
         return `
-            <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--bg-card);">
-                <div onclick="toggleDbTable(${i})" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none;transition:background 0.15s;" onmouseover="this.style.background='var(--bg-surface)'" onmouseout="this.style.background='transparent'">
-                    <div style="display:flex;align-items:center;gap:10px;">
-                        <span style="font-size:0.9rem;font-weight:600;">${t.name}</span>
-                        <span style="font-size:0.7rem;color:var(--text-muted);">${t.columns.length} Spalten · ${t.rows} Zeilen</span>
-                        ${hasComment ? '<span style="font-size:0.7rem;color:var(--primary);">💬</span>' : ''}
+            <div class="db-table-item" style="border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--bg-card);">
+                <div class="db-table-header" onclick="toggleDbTable(${i})" style="padding:12px 16px;cursor:pointer;user-select:none;transition:background 0.15s;" onmouseover="this.style.background='var(--bg-surface)'" onmouseout="this.style.background='transparent'">
+                    <div style="display:flex;align-items:center;justify-content:space-between;">
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <span style="font-size:0.9rem;font-weight:600;">${t.name}</span>
+                            <span style="font-size:0.7rem;color:var(--text-muted);">${t.columns.length} Spalten · ${t.rows} Zeilen</span>
+                        </div>
+                        <span id="db-table-arrow-${i}" style="font-size:0.7rem;color:var(--text-muted);transition:transform 0.2s;">▶</span>
                     </div>
-                    <span id="db-table-arrow-${i}" style="font-size:0.7rem;color:var(--text-muted);transition:transform 0.2s;">▶</span>
+                    ${hasComment ? `<div id="db-comment-preview-${i}" style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${existingComment}</div>` : ''}
                 </div>
                 <div id="db-table-detail-${i}" style="display:none;border-top:1px solid var(--border);">
                     <div style="padding:8px 12px;background:var(--bg-surface);">
@@ -1066,12 +1068,27 @@ function renderDbStructure(panel, tables, executed, pending, tableCount, comment
 async function saveDbComment(textarea) {
     const tableName = textarea.dataset.table;
     const comment   = textarea.value.trim();
+    const index     = textarea.id.replace('db-comment-', '');
     try {
         await fetch('backend/migrate.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'save_comment', table_name: tableName, comment })
         });
+        // Preview aktualisieren
+        let preview = document.getElementById('db-comment-preview-' + index);
+        if (comment) {
+            if (!preview) {
+                const header = textarea.closest('.db-table-item')?.querySelector('.db-table-header');
+                if (header) {
+                    header.insertAdjacentHTML('beforeend', `<div id="db-comment-preview-${index}" style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>`);
+                    preview = document.getElementById('db-comment-preview-' + index);
+                }
+            }
+            if (preview) preview.textContent = comment;
+        } else if (preview) {
+            preview.remove();
+        }
     } catch (e) {
         console.error('Kommentar speichern fehlgeschlagen:', e);
     }
@@ -1084,6 +1101,9 @@ function toggleDbTable(index) {
     const open = detail.style.display !== 'none';
     detail.style.display = open ? 'none' : 'block';
     arrow.style.transform = open ? 'rotate(0deg)' : 'rotate(90deg)';
+    // Preview verstecken wenn offen
+    const preview = document.getElementById('db-comment-preview-' + index);
+    if (preview) preview.style.display = open ? '' : 'none';
 }
 
 // Bridge
