@@ -62,11 +62,17 @@ if ($action === 'adminUpdateGroup') {
     requireAdmin($db, $_SESSION['user_id']);
     $id = $data['id'] ?? null;
     if (!$id) { echo json_encode(['success' => false]); exit; }
-    $fields = ['name','type','bloom_months','marker_icon','marker_color','marker_size','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen'];
-    $set  = implode(',', array_map(fn($f) => "$f=?", $fields));
-    $vals = array_map(fn($f) => $data[$f] ?? null, $fields);
+    $allowed = ['name','type','bloom_months','marker_icon','marker_color','marker_size','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen'];
+    $sets = []; $vals = [];
+    foreach ($allowed as $f) {
+        if (array_key_exists($f, $data)) {
+            $sets[] = "$f = ?";
+            $vals[] = ($data[$f] !== '' && $data[$f] !== null) ? $data[$f] : null;
+        }
+    }
+    if (!$sets) { echo json_encode(['success' => true]); exit; }
     $vals[] = $id;
-    $db->prepare("UPDATE gd_default_groups SET $set WHERE id=?")->execute($vals);
+    $db->prepare("UPDATE gd_default_groups SET " . implode(', ', $sets) . " WHERE id=?")->execute($vals);
     echo json_encode(['success' => true]);
     exit;
 }
