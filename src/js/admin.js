@@ -106,7 +106,7 @@ async function adminDeleteUser(id, username) {
 // ========================
 // PFLANZENGRUPPEN
 // ========================
-async function loadAdminGroups() {
+async function loadAdminGroups(openEditId) {
     const panel = document.getElementById('admin-panel-groups');
     panel.innerHTML = '<p style="color:var(--text-muted)">Lade...</p>';
     const res  = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'adminGetGroups' }) });
@@ -140,6 +140,12 @@ async function loadAdminGroups() {
 
     // Fotos für jede bestehende Gruppe laden
     data.groups.forEach(g => gfLoadPhotos('gform-' + g.id, g.id));
+
+    // Nach Save: bearbeitetes Formular wieder aufklappen
+    if (openEditId) {
+        const el = document.getElementById('edit-' + openEditId);
+        if (el) el.style.display = 'block';
+    }
 }
 
 function renderGroupForm(data, onsubmit) {
@@ -215,10 +221,23 @@ function toggleAdminGroupEdit(id) {
 }
 
 async function adminSaveGroup(id) {
+    const btn = document.querySelector(`#gform-${id} button[type="submit"]`);
+    if (btn) { btn.disabled = true; btn.textContent = 'Speichern…'; }
     const formData = { ...getGroupFormNiceData('gform-' + id), action: 'adminUpdateGroup', id };
-    await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(formData) });
-    if (typeof EffectManager !== 'undefined') EffectManager.trigger('save-success');
-    loadAdminGroups();
+    try {
+        const res  = await fetch('backend/api.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(formData) });
+        const data = await res.json();
+        if (data.success) {
+            if (typeof EffectManager !== 'undefined') EffectManager.trigger('save-success');
+            await loadAdminGroups(id);
+        } else {
+            customAlert(data.error || 'Fehler beim Speichern');
+        }
+    } catch (e) {
+        customAlert('Netzwerkfehler beim Speichern');
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Speichern'; }
+    }
 }
 
 async function adminAddGroup() {
