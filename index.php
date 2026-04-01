@@ -235,6 +235,16 @@ include 'src/layout/header.php';
                                             <span style="font-size:0.8rem; color:var(--text-muted); line-height: 1.2;">Animationen & Konfetti</span>
                                         </div>
                                     </label>
+                                    <label class="c-switch" style="margin-top:12px;">
+                                        <input type="checkbox" id="settings-sounds-toggle" class="c-switch__input" onchange="setSoundsEnabled(this.checked)">
+                                        <div class="c-switch__track">
+                                            <div class="c-switch__handle"></div>
+                                        </div>
+                                        <div style="display:flex; flex-direction:column;">
+                                            <span style="font-weight:600; font-size:0.95rem;">Sounds</span>
+                                            <span style="font-size:0.8rem; color:var(--text-muted); line-height: 1.2;">Magische Klänge bei Aktionen</span>
+                                        </div>
+                                    </label>
                                 </div>
                             </div>
                         </div>

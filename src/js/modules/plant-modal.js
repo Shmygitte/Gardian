@@ -93,6 +93,7 @@ export async function deletePlantFromModal() {
     try {
         const data = await api('deletePlant', { plant_id: parseInt(id) });
         if (data.success) {
+            if (typeof MagicSounds !== 'undefined') MagicSounds.playDelete();
             closePlantEditModal();
             await window.loadPins();
         } else {

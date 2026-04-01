@@ -29,6 +29,9 @@ async function loadAvatar() {
         if (c.theme) document.documentElement.setAttribute('data-theme', c.theme);
         const effectsToggle = document.getElementById('settings-effects-toggle');
         if (effectsToggle) effectsToggle.checked = parseInt(c.effects_enabled) !== 0;
+        const soundsToggle = document.getElementById('settings-sounds-toggle');
+        if (soundsToggle) soundsToggle.checked = parseInt(c.sounds_enabled) !== 0;
+        window.soundsEnabled = parseInt(c.sounds_enabled) !== 0;
         updateSettingsThemeBtn();
 
         // Animation-Trigger aus URL prüfen
@@ -210,6 +213,15 @@ function setEffectsEnabled(enabled) {
     });
 }
 
+function setSoundsEnabled(enabled) {
+    window.soundsEnabled = enabled;
+    fetch('backend/api.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'saveGardenConfig', sounds_enabled: enabled ? 1 : 0 })
+    });
+}
+
 function toggleTheme() {
     const current = document.documentElement.getAttribute('data-theme') || 'light';
     setTheme(current === 'light' ? 'dark' : 'light');
@@ -245,6 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
 window.showView = showView;
 window.setTheme = setTheme;
 window.setEffectsEnabled = setEffectsEnabled;
+window.setSoundsEnabled = setSoundsEnabled;
 window.toggleTheme = toggleTheme;
 window.settingsSaveProfile = settingsSaveProfile;
 window.openCropModal = openCropModal;

@@ -146,12 +146,14 @@ function bloomAutoplayStep() {
 function startBloomAutoplay() {
     document.getElementById('bloom-autoplay-btn').textContent = '⏸';
     bloomAutoplayTimer = setInterval(bloomAutoplayStep, bloomAutoplaySpeed);
+    if (typeof MagicSounds !== 'undefined') MagicSounds.playGarden();
 }
 
 function stopBloomAutoplay() {
     clearInterval(bloomAutoplayTimer);
     bloomAutoplayTimer = null;
     document.getElementById('bloom-autoplay-btn').textContent = '▶';
+    if (typeof MagicSounds !== 'undefined') MagicSounds.stopGarden();
 }
 
 // Bridge

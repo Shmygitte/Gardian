@@ -68,7 +68,7 @@ if ($action === 'getGardenConfig') {
 }
 
 if ($action === 'saveGardenConfig') {
-    $fields = ['zoom', 'pan_x', 'pan_y', 'theme', 'effects_enabled'];
+    $fields = ['zoom', 'pan_x', 'pan_y', 'theme', 'effects_enabled', 'sounds_enabled'];
     $sets   = []; $vals = [];
     foreach ($fields as $f) {
         if (array_key_exists($f, $data)) { $sets[] = $f; $vals[] = $data[$f]; }

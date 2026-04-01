@@ -93,7 +93,7 @@ export async function showHoverGallery(e, pin) {
             <p style="font-size:0.65rem;color:var(--primary);font-weight:700;text-align:center;margin:4px 0 0;text-transform:uppercase;letter-spacing:0.03em;">🖼 Klick für Galerie</p>
             ` : ''}
         `;
-        popup.addEventListener('mouseenter', () => clearTimeout(_hoverHideTimeout));
+        popup.addEventListener('mouseenter', () => { clearTimeout(_hoverHideTimeout); clearTimeout(window._hoverHideTimeout); });
         popup.addEventListener('mouseleave', () => hideHoverGallery());
         if (hasImages) popup.addEventListener('click', () => { hideHoverGallery(); openGalleryModal(pin); });
         document.body.appendChild(popup);

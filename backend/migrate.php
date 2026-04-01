@@ -190,6 +190,10 @@ function getMigrations() {
                 ELSE 30 END
                 WHERE marker_size IS NULL"
         ],
+        [
+            'name' => '027_garden_config_sounds_enabled',
+            'sql'  => "ALTER TABLE gd_user_garden_config ADD COLUMN sounds_enabled TINYINT(1) NOT NULL DEFAULT 0"
+        ],
     ];
 }
 

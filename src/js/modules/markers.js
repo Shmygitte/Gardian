@@ -76,7 +76,7 @@ export function renderMarkers() {
         marker.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); window.openPlantEditModal(pin); });
         marker.addEventListener('mouseenter', (e) => window.showHoverGallery?.(e, pin));
         marker.addEventListener('mouseleave', () => {
-            window._hoverHideTimeout = setTimeout(() => window.hideHoverGallery?.(), 200);
+            window._hoverHideTimeout = setTimeout(() => window.hideHoverGallery?.(), 400);
         });
         overlay.appendChild(marker);
     });

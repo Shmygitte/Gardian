@@ -9,6 +9,7 @@ const EffectLibrary = {
      */
     triggerConfetti: function(element) {
         if (typeof confetti !== 'function') return;
+        if (typeof MagicSounds !== 'undefined') MagicSounds.playConfetti();
 
         let origin = { y: 0.7 }; // Fallback
         if (element && typeof element.getBoundingClientRect === 'function') {
@@ -53,6 +54,7 @@ const EffectLibrary = {
      * Triggers soap bubbles rising from an element.
      */
     triggerBubbles: function(element) {
+        if (typeof MagicSounds !== 'undefined') MagicSounds.playBubbles();
         // Keyframes sicherstellen bevor Bubbles erzeugt werden
         if (!document.getElementById('effect-bubble-keyframes')) {
             const style = document.createElement('style');
@@ -121,6 +123,7 @@ const EffectLibrary = {
      */
     triggerSprout: function(element) {
         if (!element) return;
+        if (typeof MagicSounds !== 'undefined') MagicSounds.playPlace();
         const rect = element.getBoundingClientRect();
         const cx = rect.left + rect.width / 2;
         const cy = rect.top + rect.height / 2;
@@ -244,6 +247,7 @@ const EffectLibrary = {
      */
     triggerSeedFly: function(fromElement, toElement) {
         if (!fromElement) return;
+        if (typeof MagicSounds !== 'undefined') MagicSounds.playDuplicate();
         const fromRect = fromElement.getBoundingClientRect();
         const fx = fromRect.left + fromRect.width / 2;
         const fy = fromRect.top + fromRect.height / 2;
@@ -335,6 +339,7 @@ const EffectLibrary = {
      */
     triggerPlantDrop: function(element) {
         if (!element) return;
+        if (typeof MagicSounds !== 'undefined') MagicSounds.playMove();
         const rect = element.getBoundingClientRect();
         const cx = rect.left + rect.width / 2;
         const cy = rect.top + rect.height / 2;
@@ -418,6 +423,7 @@ const EffectLibrary = {
      * Glitzer-Partikel beim Zoomen – steigen auf (rein) oder schweben weg (raus)
      */
     triggerZoomSparkle: function(element, _el2, direction) {
+        if (typeof MagicSounds !== 'undefined') MagicSounds.playZoom();
         // Mausposition nutzen
         const cx = EffectManager._mouseX ?? window.innerWidth / 2;
         const cy = EffectManager._mouseY ?? window.innerHeight / 2;
@@ -476,6 +482,7 @@ const EffectLibrary = {
      * Leuchtende Spur beim Pannen der Karte
      */
     triggerPanTrail: function(x, y) {
+        if (typeof MagicSounds !== 'undefined') MagicSounds.playPan();
         const count = 3 + Math.floor(Math.random() * 2);
         const colors = ['#d946ef', '#a78bfa', '#f9a8d4', '#7dd3fc', '#fbbf24'];
 

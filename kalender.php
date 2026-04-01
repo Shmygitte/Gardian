@@ -164,6 +164,7 @@ async function init() {
             const c = cfg.config;
             if (c.theme) document.documentElement.setAttribute('data-theme', c.theme);
             window.effectsEnabled = parseInt(c.effects_enabled) !== 0;
+            window.soundsEnabled = parseInt(c.sounds_enabled) !== 0;
         }
     } catch(e) {}
     if (typeof EffectManager !== 'undefined') EffectManager.initFromUrl();

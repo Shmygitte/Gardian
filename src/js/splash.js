@@ -72,8 +72,23 @@ function showSplash() {
         container.appendChild(s);
     }
 
+    // Splash-Sound abspielen (Loop bis Klick)
+    var splashAudio = new Audio('assets/sounds/splash.mp3');
+    splashAudio.volume = 0.5;
+    splashAudio.loop = true;
+    splashAudio.play().catch(function() {});
+
     splash.addEventListener('click', function() {
         splash.classList.add('splash--hidden');
+        // Sound ausfaden
+        var fadeInt = setInterval(function() {
+            if (splashAudio.volume > 0.02) {
+                splashAudio.volume = Math.max(0, splashAudio.volume - 0.03);
+            } else {
+                splashAudio.pause();
+                clearInterval(fadeInt);
+            }
+        }, 25);
         setTimeout(function() { splash.remove(); }, 1000);
     });
 }
