@@ -61,6 +61,10 @@ Gardian hat ein **Theme-abhaengiges Effekt-System**. Je nach aktivem Theme reagi
 
 Alle Effekte sind prozedural generiert (keine GIFs oder Videos) und nutzen CSS-Keyframes mit zufaelligen Parametern fuer natuerliche Variation.
 
+### Sound-System
+
+Passend zu den visuellen Effekten spielt Gardian **kontextabhaengige Sounds** ab – kurze, magische Klangsamples fuer Aktionen wie Platzieren, Duplizieren, Verschieben, Loeschen, Zoomen und Pannen. Pan- und Zoom-Sounds laufen als Loop und faden sanft aus, wenn die Aktion endet. Der Bluete-Autoplay bekommt eine eigene Garten-Atmosphaere, der Splash Screen seinen eigenen Klang. Alles ueber ein zentrales `MagicSounds`-Modul mit Audio-Caching und einem eigenen Toggle in den Einstellungen.
+
 ## Splash Screen
 
 Der Ladebildschirm wird **komplett prozedural erzeugt**: 45 kleine Partikel, 10 leuchtende Gluehwuermchen, 20 funkelnde Sterne und 3 Nebel-Schichten – jedes Element mit zufaelliger Position, Geschwindigkeit und Timing. Kein einziges Bild, nur DOM-Elemente und CSS-Animationen.

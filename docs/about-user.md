@@ -28,6 +28,10 @@ Alle Pflanzenfotos an einem Ort – durchblaettern, zoomen und vergleichen. Dein
 
 Waehle fuer jede Pflanze ein eigenes Icon und eine eigene Farbe. So erkennst du auf der Karte sofort, was wo steht – Baeume, Straeuchern, Blumen, alles auf einen Blick unterscheidbar.
 
+### Sounds
+
+Gardian kann deine Aktionen mit magischen Klaengen untermalen – beim Platzieren, Verschieben, Duplizieren und mehr. Aktiviere die Sounds in den **Einstellungen** unter dem Effekte-Toggle.
+
 ## Tipps
 
 - **Alt + Klick** auf eine Pflanze dupliziert sie – praktisch fuer Reihen oder Beete
