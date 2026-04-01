@@ -42,18 +42,19 @@ export function renderMarkers() {
         if (bloomState.enabled) {
             const bitmask = getBloomBitmaskForPin(pin);
             const isBlooming = !!((bitmask >> bloomState.month) & 1);
+            let targetOpacity = '1';
             if (isBlooming) {
                 markerLayer = 'blooming';
-                marker.style.opacity = '1';
             } else if (pin.evergreen == 1) {
                 markerLayer = 'evergreen';
-                marker.style.opacity = '1';
                 markerColor = '#4CAF50';
             } else {
                 markerLayer = 'resting';
-                marker.style.opacity = '0.2';
+                targetOpacity = '0.2';
             }
-            marker.style.transition = 'opacity 0.3s ease';
+            marker.style.opacity = '0';
+            marker.style.transition = 'opacity 0.5s ease';
+            marker._targetOpacity = targetOpacity;
             if (!bloomLayerFilter[markerLayer]) {
                 marker.style.display = 'none';
             }
@@ -81,7 +82,64 @@ export function renderMarkers() {
         overlay.appendChild(marker);
     });
 
+    // Bloom-Fade: Opacity per rAF setzen damit CSS-Transition greift
+    if (bloomState.enabled) {
+        requestAnimationFrame(() => {
+            overlay.querySelectorAll('.marker').forEach(m => {
+                if (m._targetOpacity !== undefined) m.style.opacity = m._targetOpacity;
+            });
+        });
+    }
+
     // Pflege-Badges neu zeichnen falls Overlay aktiv
+}
+
+/**
+ * Aktualisiert nur Bloom-Opacity bestehender Marker (ohne DOM-Rebuild).
+ * Wird beim Monatswechsel aufgerufen fuer sanftes Fading.
+ */
+export function updateBloomOpacity() {
+    const overlay = elements.mapCanvas?.querySelector('.map__markers-overlay');
+    if (!overlay || !bloomState.enabled) return;
+
+    overlay.querySelectorAll('.marker').forEach(marker => {
+        const id = marker.dataset.id;
+        const pin = state.pins.find(p => String(p.id) === id);
+        if (!pin) return;
+
+        const bitmask = getBloomBitmaskForPin(pin);
+        const isBlooming = !!((bitmask >> bloomState.month) & 1);
+        let markerLayer, targetOpacity, markerColor;
+
+        if (isBlooming) {
+            markerLayer = 'blooming';
+            targetOpacity = '1';
+            markerColor = pin.marker_color || '#4CAF50';
+        } else if (pin.evergreen == 1) {
+            markerLayer = 'evergreen';
+            targetOpacity = '1';
+            markerColor = '#4CAF50';
+        } else {
+            markerLayer = 'resting';
+            targetOpacity = '0.2';
+            markerColor = pin.marker_color || '#4CAF50';
+        }
+
+        marker.style.transition = 'opacity 0.5s ease';
+        marker.style.opacity = targetOpacity;
+        marker.dataset.layer = markerLayer;
+
+        // Farbe updaten
+        const pinEl = marker.querySelector('.marker__pin');
+        if (pinEl) pinEl.style.background = markerColor;
+
+        // Layer-Filter
+        if (!bloomLayerFilter[markerLayer]) {
+            marker.style.display = 'none';
+        } else {
+            marker.style.display = '';
+        }
+    });
     if (window._careOverlayActive && typeof window.renderCareBadges === 'function') {
         window.renderCareBadges();
     }

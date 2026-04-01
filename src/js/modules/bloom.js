@@ -4,10 +4,11 @@
  */
 import { api } from '../core/api.js';
 import { bloomState, bloomLayerFilter, bloomObservations, setBloomObservations, MONTH_NAMES } from '../core/state.js';
+import { updateBloomOpacity } from './markers.js';
 
 const BLOOM_YEARS = [2025, 2026, 2027, 2028, 2029, 2030];
 let bloomAutoplayTimer = null;
-let bloomAutoplaySpeed = 800;
+let bloomAutoplaySpeed = 1500;
 
 export async function loadBloomObservationsAll() {
     try {
@@ -75,7 +76,7 @@ export function setBloomMonth(value) {
     bloomState.month = parseInt(value);
     document.getElementById('bloom-month-label').textContent = MONTH_NAMES[bloomState.month];
     document.getElementById('bloom-month-input').value = bloomState.month;
-    window.renderMarkers();
+    updateBloomOpacity();
 }
 
 export function setBloomSpeed(ms) {

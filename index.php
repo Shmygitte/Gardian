@@ -281,8 +281,8 @@ include 'src/layout/header.php';
                         <div id="bloom-month-controls" style="display:none; align-items:center; gap:8px;">
                             <button onclick="toggleBloomAutoplay()" id="bloom-autoplay-btn" style="width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--bg-app);cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;">▶</button>
                             <select id="bloom-speed-select" onchange="setBloomSpeed(this.value)" style="padding:3px 6px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:0.75rem;background:var(--bg-app);color:var(--text-main);">
-                                <option value="1500">Langsam</option>
-                                <option value="800" selected>Normal</option>
+                                <option value="1500" selected>Langsam</option>
+                                <option value="800">Normal</option>
                                 <option value="300">Schnell</option>
                             </select>
                             <span style="font-size:0.75rem; color:var(--text-muted); font-weight:600; min-width:28px;" id="bloom-month-label">Jan</span>
