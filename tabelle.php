@@ -54,6 +54,7 @@ include 'src/layout/header.php';
                 <thead>
                     <tr>
                         <th style="width:36px;"></th>
+                        <th style="width:30px;" title="Vererbungsstatus">⬡</th>
                         <th style="width:155px;">Name</th>
                         <th style="width:90px;">Typ</th>
                         <th style="width:75px;">Höhe</th>
@@ -80,7 +81,7 @@ include 'src/layout/header.php';
                     </tr>
                 </thead>
                 <tbody id="tbl-body">
-                    <tr><td colspan="23" style="text-align:center;padding:32px;color:var(--text-muted);">Lade…</td></tr>
+                    <tr><td colspan="24" style="text-align:center;padding:32px;color:var(--text-muted);">Lade…</td></tr>
                 </tbody>
             </table>
         </div>
@@ -105,6 +106,30 @@ const BOOL_FIELDS   = new Set(['hardy','scented','cutflower','evergreen']);
 const SELECT_FIELDS = new Set(Object.keys(OPTS));
 const INHERIT_FIELDS = new Set(['height','location','spacing','care','water','hardy','scented',
     'cutflower','lifespan','features','evergreen','marker_icon','marker_color','marker_size','bloom_months']);
+const STECKBRIEF_FIELDS = ['type','bloom_months','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen','marker_icon','marker_color','marker_size'];
+
+function inheritStatus(raw, fields) {
+    let total = 0, own = 0;
+    for (const f of fields) {
+        total++;
+        const v = raw[f];
+        if (v !== null && v !== undefined && v !== '') own++;
+    }
+    if (own === 0) return { icon: '●', color: 'var(--primary)', title: 'Erbt alle Werte' };
+    if (own < total) return { icon: '◐', color: '#f0a030', title: own + ' von ' + total + ' Feldern überschrieben' };
+    return { icon: '●', color: '#f0a030', title: 'Alle Werte überschrieben' };
+}
+
+function groupInheritStatus(g) {
+    if (!g.group_id) return { icon: '◆', color: 'var(--text-muted)', title: 'Eigenständige Gruppe (kein Admin-Template)' };
+    const raw = {};
+    STECKBRIEF_FIELDS.forEach(f => raw[f] = g['raw_' + f] ?? null);
+    return inheritStatus(raw, STECKBRIEF_FIELDS);
+}
+
+function plantInheritStatus(p) {
+    return inheritStatus(p, STECKBRIEF_FIELDS.filter(f => f !== 'type'));
+}
 
 let tblData = null;
 const expanded = new Set();
@@ -140,7 +165,7 @@ async function loadData() {
     const r = await api('getPlantsList');
     if (!r.success) {
         document.getElementById('tbl-body').innerHTML =
-            '<tr><td colspan="23" style="text-align:center;color:red;padding:24px;">Fehler beim Laden.</td></tr>';
+            '<tr><td colspan="24" style="text-align:center;color:red;padding:24px;">Fehler beim Laden.</td></tr>';
         return;
     }
     tblData = r;
@@ -158,7 +183,7 @@ function render() {
             for (const p of g.plants) rows.push(plantRow(p, g));
     }
     document.getElementById('tbl-body').innerHTML = rows.join('') ||
-        '<tr><td colspan="23" style="padding:24px;text-align:center;color:var(--text-muted);">Keine Einträge.</td></tr>';
+        '<tr><td colspan="24" style="padding:24px;text-align:center;color:var(--text-muted);">Keine Einträge.</td></tr>';
 }
 
 // ---- Display helpers ----
@@ -241,9 +266,11 @@ function td(field, rt, id, html) {
 function groupRow(g) {
     const accent = g.marker_color || 'var(--primary)';
     const isOpen  = expanded.has(g.id);
+    const gs = groupInheritStatus(g);
     return `<tr class="row-g" data-gid="${g.id}">
         <td style="text-align:center;cursor:pointer;border-left:4px solid ${esc(accent)};"
             onclick="toggleGroup(${g.id})">${isOpen ? '▼' : '▶'}</td>
+        <td style="text-align:center;font-size:0.7rem;color:${gs.color};" title="${gs.title}">${gs.icon}</td>
         ${td('name','g',g.id,
             `<strong>${esc(g.name||'(Unbenannt)')}</strong>&nbsp;<span style="font-size:0.73rem;color:var(--text-muted);">${g.plants.length}&thinsp;Pfl.</span>`)}
         ${td('type','g',g.id,        optLabel('type', g.type))}
@@ -272,8 +299,10 @@ function groupRow(g) {
 
 function plantRow(p, g) {
     const accent = g.marker_color || 'var(--primary)';
+    const ps = plantInheritStatus(p);
     return `<tr class="row-p" data-pid="${p.id}" data-gid="${g.id}">
         <td style="text-align:center;border-left:4px solid ${esc(accent)};color:var(--text-muted);">└</td>
+        <td style="text-align:center;font-size:0.6rem;color:${ps.color};" title="${ps.title}">${ps.icon}</td>
         ${td('name','p',p.id,         esc(p.plant_name || 'Pflanze #'+p.id))}
         <td style="color:var(--text-muted);font-style:italic;font-size:0.8rem;">${optLabel('type', g.type)}</td>
         ${td('height','p',p.id,       plantCellDisp(p, g, 'height'))}

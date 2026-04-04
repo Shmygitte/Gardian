@@ -26,7 +26,14 @@ if ($action === 'getPlantsList') {
                 COALESCE(ug.cutflower, dg.cutflower) AS cutflower,
                 COALESCE(ug.lifespan, dg.lifespan) AS lifespan,
                 COALESCE(ug.features, dg.features) AS features,
-                COALESCE(ug.evergreen, dg.evergreen) AS evergreen
+                COALESCE(ug.evergreen, dg.evergreen) AS evergreen,
+                ug.type AS raw_type, ug.bloom_months AS raw_bloom_months,
+                ug.marker_icon AS raw_marker_icon, ug.marker_color AS raw_marker_color,
+                ug.marker_size AS raw_marker_size,
+                ug.height AS raw_height, ug.location AS raw_location, ug.spacing AS raw_spacing,
+                ug.care AS raw_care, ug.water AS raw_water, ug.hardy AS raw_hardy,
+                ug.scented AS raw_scented, ug.cutflower AS raw_cutflower,
+                ug.lifespan AS raw_lifespan, ug.features AS raw_features, ug.evergreen AS raw_evergreen
             FROM gd_user_groups ug
             LEFT JOIN gd_default_groups dg ON ug.group_id = dg.id
             WHERE ug.user_id = ?
