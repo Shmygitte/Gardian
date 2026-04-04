@@ -8,15 +8,14 @@ const MagicSounds = {
         return !!window.soundsEnabled;
     },
 
-    _play: function(src, volume, skipIfPlaying) {
+    _play: function(src, volume, startTime) {
         if (!this._isEnabled()) return;
         if (!this._cache[src]) {
             this._cache[src] = new Audio(src);
         }
         const audio = this._cache[src];
-        if (skipIfPlaying && !audio.paused) return;
         audio.volume = volume ?? 0.4;
-        audio.currentTime = 0;
+        audio.currentTime = startTime || 0;
         audio.play().catch(() => {});
     },
 
@@ -37,7 +36,7 @@ const MagicSounds = {
     },
 
     playConfetti: function() {
-        this._play('assets/sounds/confetti.mp3');
+        this._play('assets/sounds/confetti.mp3', 1.0, 0.3);
     },
 
     playDelete: function() {
@@ -49,7 +48,7 @@ const MagicSounds = {
 
     playPan: function() {
         if (!this._isEnabled()) return;
-        const src = 'assets/sounds/pan.mp3';
+        const src = 'assets/sounds/zoom.mp3';
         if (!this._cache[src]) {
             this._cache[src] = new Audio(src);
             this._cache[src].loop = true;

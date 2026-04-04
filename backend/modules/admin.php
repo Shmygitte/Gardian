@@ -49,7 +49,7 @@ if ($action === 'adminAddGroup') {
         echo json_encode(['success' => false, 'error' => 'Name und Typ erforderlich']);
         exit;
     }
-    $fields = ['name','type','bloom_months','marker_icon','marker_color','marker_size','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen'];
+    $fields = ['name','botanical_name','type','bloom_months','marker_icon','marker_color','marker_size','marker_icon_color','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen'];
     $vals = array_map(fn($f) => $data[$f] ?? null, $fields);
     $placeholders = implode(',', array_fill(0, count($fields), '?'));
     $cols = implode(',', $fields);
@@ -62,7 +62,7 @@ if ($action === 'adminUpdateGroup') {
     requireAdmin($db, $_SESSION['user_id']);
     $id = $data['id'] ?? null;
     if (!$id) { echo json_encode(['success' => false]); exit; }
-    $allowed = ['name','type','bloom_months','marker_icon','marker_color','marker_size','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen'];
+    $allowed = ['name','botanical_name','type','bloom_months','marker_icon','marker_color','marker_size','marker_icon_color','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen'];
     $sets = []; $vals = [];
     foreach ($allowed as $f) {
         if (array_key_exists($f, $data)) {

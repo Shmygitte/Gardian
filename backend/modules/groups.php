@@ -32,7 +32,7 @@ if ($action === 'createUserGroup') {
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     if ($row && $row['role'] === 'admin') {
         $isAdmin = true;
-        $dgFields = ['name','type','bloom_months','marker_icon','marker_color','marker_size','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen'];
+        $dgFields = ['name','botanical_name','type','bloom_months','marker_icon','marker_color','marker_size','marker_icon_color','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen'];
         $dgVals = array_map(fn($f) => ($data[$f] ?? null) !== '' ? ($data[$f] ?? null) : null, $dgFields);
         $dgCols = implode(',', $dgFields);
         $dgPh   = implode(',', array_fill(0, count($dgFields), '?'));
@@ -40,10 +40,21 @@ if ($action === 'createUserGroup') {
         $defaultGroupId = $db->lastInsertId();
     }
 
-    $fields = ['name','group_id','type','bloom_months','marker_icon','marker_color','marker_size','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen'];
-    $vals   = array_map(fn($f) => ($data[$f] ?? null) !== '' ? ($data[$f] ?? null) : null, $fields);
-    $cols   = implode(',', $fields);
-    $ph     = implode(',', array_fill(0, count($fields), '?'));
+    $allowed = ['name','botanical_name','group_id','type','bloom_months','marker_icon','marker_color','marker_size','marker_icon_color','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen'];
+    $fields = []; $vals = [];
+    foreach ($allowed as $f) {
+        if (array_key_exists($f, $data) && $data[$f] !== '' && $data[$f] !== null) {
+            $fields[] = $f;
+            $vals[] = $data[$f];
+        }
+    }
+    // group_id immer übernehmen wenn vorhanden (auch wenn gerade erst erstellt)
+    if ($defaultGroupId && !in_array('group_id', $fields)) {
+        $fields[] = 'group_id';
+        $vals[] = $defaultGroupId;
+    }
+    $cols = implode(',', $fields);
+    $ph   = implode(',', array_fill(0, count($fields), '?'));
     try {
         $db->prepare("INSERT INTO gd_user_groups (user_id, $cols) VALUES (?, $ph)")->execute(array_merge([$_SESSION['user_id']], $vals));
         echo json_encode(['success' => true, 'id' => $db->lastInsertId()]);
@@ -56,7 +67,7 @@ if ($action === 'createUserGroup') {
 if ($action === 'updateUserGroup') {
     $id = $data['id'] ?? null;
     if (!$id) { echo json_encode(['success' => false, 'error' => 'ID fehlt']); exit; }
-    $allowed = ['name','type','bloom_months','marker_icon','marker_color','marker_size','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen'];
+    $allowed = ['name','botanical_name','type','bloom_months','marker_icon','marker_color','marker_size','marker_icon_color','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen'];
     $sets = []; $vals = [];
     foreach ($allowed as $f) {
         if (array_key_exists($f, $data)) {

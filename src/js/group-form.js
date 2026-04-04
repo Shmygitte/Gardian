@@ -11,7 +11,7 @@ function getTypeOptions() {
 
 const GF_STECKBRIEF = [
     { key: 'height',    label: 'Höhe',         icon: '📏', type: 'text',   placeholder: 'z.B. 1–2m' },
-    { key: 'location',  label: 'Standort',      icon: '☀️', type: 'select', options: [{v:'sonnig',l:'Sonnig'},{v:'halbschatten',l:'Halbschatten'},{v:'schatten',l:'Schatten'}] },
+    { key: 'location',  label: 'Standort',      icon: '☀️', type: 'select', options: [{v:'sonnig',l:'Sonnig'},{v:'Sonne bis Halbschatten',l:'Sonne bis Halbschatten'},{v:'halbschatten',l:'Halbschatten'},{v:'schatten',l:'Schatten'}] },
     { key: 'spacing',   label: 'Abstand',       icon: '↔️', type: 'text',   placeholder: 'z.B. 40cm' },
     { key: 'care',      label: 'Pflege',        icon: '🔧', type: 'select', options: [{v:'gering',l:'Gering'},{v:'mittel',l:'Mittel'},{v:'hoch',l:'Hoch'}] },
     { key: 'water',     label: 'Wasser',        icon: '💧', type: 'select', options: [{v:'gering',l:'Gering'},{v:'mittel',l:'Mittel'},{v:'hoch',l:'Hoch'}] },
@@ -19,6 +19,7 @@ const GF_STECKBRIEF = [
     { key: 'scented',   label: 'Duft',          icon: '🌺', type: 'select', options: [{v:'1',l:'Ja'},{v:'0',l:'Nein'}] },
     { key: 'cutflower', label: 'Schnittblume',  icon: '✂️', type: 'select', options: [{v:'1',l:'Ja'},{v:'0',l:'Nein'}] },
     { key: 'lifespan',  label: 'Lebensdauer',   icon: '📅', type: 'select', options: [{v:'einjährig',l:'Einjährig'},{v:'zweijährig',l:'Zweijährig'},{v:'mehrjährig',l:'Mehrjährig'}] },
+    { key: 'features',  label: 'Besonderheiten', icon: '⭐', type: 'text',   placeholder: 'z.B. bienenfreundlich' },
 ];
 
 // Fallback-Styles falls CSS nicht greift (Admin-Seite etc.)
@@ -40,6 +41,8 @@ function renderGroupFormNice(data = {}, formId, onSubmit) {
             <div style="${GF_SECTION}">
                 <label class="c-gf__label" style="${GF_LABEL_STYLE}">Name der Pflanze</label>
                 <input type="text" name="name" value="${v('name')}" placeholder="z.B. Pfirsich 'Red Haven'" style="${GF_INPUT_STYLE}" required>
+                <label class="c-gf__label" style="${GF_LABEL_STYLE}margin-top:8px;">Botanischer Name</label>
+                <input type="text" name="botanical_name" value="${v('botanical_name')}" placeholder="z.B. Wisteria sinensis" style="${GF_INPUT_STYLE}font-style:italic;">
             </div>
             <div style="${GF_SECTION}display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                 <div>
@@ -127,7 +130,7 @@ function getGroupFormNiceData(formId) {
     const form = document.getElementById(formId);
     if (!form) return {};
     const obj = {};
-    const fields = ['name','type','marker_color','marker_icon','bloom_months','evergreen','height','location','spacing','care','water','hardy','scented','cutflower','lifespan'];
+    const fields = ['name','botanical_name','type','marker_color','marker_icon','bloom_months','evergreen','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features'];
     fields.forEach(key => {
         const el = form.querySelector(`[name="${key}"]`);
         if (!el) return;
