@@ -62,7 +62,8 @@ $moduleMap = [
     'updatePlant'     => 'plants',
     'movePlant'       => 'plants',
     'duplicatePlant'  => 'plants',
-    'deletePlant'     => 'plants',
+    'deletePlant'      => 'plants',
+    'resetPlantFields' => 'plants',
 
     // Plant Types
     'getPlantTypes'    => 'plant-types',
@@ -70,8 +71,9 @@ $moduleMap = [
     // Groups
     'getGroups'        => 'groups',
     'createUserGroup'  => 'groups',
-    'updateUserGroup'  => 'groups',
-    'deleteUserGroup'  => 'groups',
+    'updateUserGroup'       => 'groups',
+    'resetUserGroupFields'  => 'groups',
+    'deleteUserGroup'       => 'groups',
 
     // Bloom
     'getAllBloomObservations' => 'bloom',

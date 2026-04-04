@@ -488,7 +488,16 @@ function openGruppeBearbeitenModal(groupId) {
 
     const body = document.getElementById('modal-neue-gruppe-body');
     const formId = `form-edit-gruppe-${groupId}`;
-    body.innerHTML = renderGroupFormNice(group, formId, `saveGruppeBearbeiten(${groupId}, '${formId}')`);
+    const resetConfig = group.group_id ? { action: 'resetUserGroupFields', id: groupId } : null;
+    if (resetConfig) window._gfResetCallback = async () => {
+        await loadPflanzenListe();
+        const updated = (_pflanzenData?.groups || []).find(g => String(g.id) === String(groupId));
+        if (updated) {
+            const body = document.getElementById('modal-neue-gruppe-body');
+            body.innerHTML = renderGroupFormNice(updated, formId, `saveGruppeBearbeiten(${groupId}, '${formId}')`, resetConfig);
+        }
+    };
+    body.innerHTML = renderGroupFormNice(group, formId, `saveGruppeBearbeiten(${groupId}, '${formId}')`, resetConfig);
     document.getElementById('modal-neue-gruppe-title').textContent = 'Pflanzengruppe bearbeiten';
     document.getElementById('modal-neue-gruppe').style.display = 'flex';
 }

@@ -87,6 +87,27 @@ if ($action === 'updateUserGroup') {
     exit;
 }
 
+if ($action === 'resetUserGroupFields') {
+    $id = $data['id'] ?? null;
+    if (!$id) { echo json_encode(['success' => false, 'error' => 'ID fehlt']); exit; }
+    $resettable = ['botanical_name','type','bloom_months','marker_icon','marker_color','marker_size','marker_icon_color','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen'];
+    $fields = $data['fields'] ?? $resettable; // wenn keine Felder angegeben → alle resetten
+    $sets = [];
+    foreach ($fields as $f) {
+        if (in_array($f, $resettable)) {
+            $sets[] = "$f = NULL";
+        }
+    }
+    if (!$sets) { echo json_encode(['success' => true]); exit; }
+    try {
+        $db->prepare("UPDATE gd_user_groups SET " . implode(', ', $sets) . " WHERE id = ? AND user_id = ?")->execute([$id, $_SESSION['user_id']]);
+        echo json_encode(['success' => true]);
+    } catch (PDOException $e) {
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+    exit;
+}
+
 if ($action === 'deleteUserGroup') {
     $groupId = $data['group_id'] ?? null;
     if (!$groupId) { echo json_encode(['success' => false, 'error' => 'Keine group_id']); exit; }

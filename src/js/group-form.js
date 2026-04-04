@@ -27,7 +27,9 @@ const GF_INPUT_STYLE  = 'width:100%;padding:6px 10px;border:1px solid var(--bord
 const GF_SELECT_STYLE = GF_INPUT_STYLE;
 const GF_LABEL_STYLE  = 'font-size:0.75rem;color:var(--text-muted);font-weight:600;display:flex;align-items:center;gap:5px;margin-bottom:4px;';
 
-function renderGroupFormNice(data = {}, formId, onSubmit) {
+function renderGroupFormNice(data = {}, formId, onSubmit, resetConfig = null) {
+    // resetConfig am window speichern, damit onclick darauf zugreifen kann
+    if (resetConfig) window._gfResetConfig = resetConfig;
     const v = (key) => data[key] ?? '';
 
     // Accent-Border Styles für Sektionen
@@ -91,8 +93,12 @@ function renderGroupFormNice(data = {}, formId, onSubmit) {
         </div>`;
 
     // Rechte Spalte: Steckbrief
+    const resetBtnStyle = 'background:none;border:none;cursor:pointer;font-size:0.7rem;color:var(--text-muted);padding:0 2px;opacity:0.5;transition:opacity 0.2s;';
     const steckbriefFields = GF_STECKBRIEF.map(f => {
         const val = v(f.key);
+        const resetBtn = resetConfig
+            ? `<button type="button" title="Zurücksetzen auf vererbten Wert" style="${resetBtnStyle}" onmouseenter="this.style.opacity='1'" onmouseleave="this.style.opacity='0.5'" onclick="gfResetField('${formId}','${f.key}')">↩</button>`
+            : '';
         const input = f.type === 'select'
             ? `<select name="${f.key}" style="${GF_SELECT_STYLE}">
                 <option value="">—</option>
@@ -100,14 +106,21 @@ function renderGroupFormNice(data = {}, formId, onSubmit) {
                </select>`
             : `<input type="text" name="${f.key}" value="${val}" placeholder="${f.placeholder || ''}" style="${GF_INPUT_STYLE}">`;
         return `<div>
-            <label class="c-gf__label" style="${GF_LABEL_STYLE}">${f.icon} ${f.label}</label>
+            <label class="c-gf__label" style="${GF_LABEL_STYLE}"><span>${f.icon} ${f.label}</span>${resetBtn}</label>
             ${input}
         </div>`;
     }).join('');
 
+    const resetAllBtn = resetConfig
+        ? `<button type="button" onclick="gfResetAllFields('${formId}')" style="font-size:0.68rem;color:var(--text-muted);background:none;border:1px solid var(--border);border-radius:4px;padding:3px 8px;cursor:pointer;transition:all 0.2s;" onmouseenter="this.style.borderColor='var(--primary)';this.style.color='var(--primary)'" onmouseleave="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">↩ Alle zurücksetzen</button>`
+        : '';
+
     const rightCol = `
         <div style="background:var(--bg-app);border:1px solid var(--border);border-left:3px solid var(--primary);border-radius:6px;padding:12px;">
-            <div style="font-size:0.68rem;font-weight:700;color:var(--primary);letter-spacing:0.06em;margin-bottom:10px;">📋 STECKBRIEF</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                <span style="font-size:0.68rem;font-weight:700;color:var(--primary);letter-spacing:0.06em;">📋 STECKBRIEF</span>
+                ${resetAllBtn}
+            </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                 ${steckbriefFields}
             </div>
@@ -240,10 +253,43 @@ async function gfDeletePhoto(imageId, formId, groupId) {
     if (data.success) gfLoadPhotos(formId, groupId);
 }
 
+// ========================
+// Reset-Funktionen
+// ========================
+
+/** Setzt ein einzelnes Feld auf den vererbten Wert zurück */
+async function gfResetField(formId, fieldKey) {
+    const rc = window._gfResetConfig;
+    if (!rc) return;
+    const label = GF_STECKBRIEF.find(f => f.key === fieldKey)?.label || fieldKey;
+    if (!await window.customConfirm(`„${label}" auf vererbten Wert zurücksetzen?`, { confirmLabel: 'Zurücksetzen' })) return;
+    const result = await api(rc.action, { id: rc.id, fields: [fieldKey] });
+    if (result.success) {
+        if (window._gfResetCallback) window._gfResetCallback();
+    } else {
+        window.customAlert('Reset fehlgeschlagen: ' + (result.error || 'Unbekannter Fehler'));
+    }
+}
+
+/** Setzt alle Steckbrief-Felder auf vererbte Werte zurück */
+async function gfResetAllFields(formId) {
+    const rc = window._gfResetConfig;
+    if (!rc) return;
+    if (!await window.customConfirm('Alle Steckbrief-Felder auf vererbte Werte zurücksetzen?', { confirmLabel: 'Alle zurücksetzen', danger: true })) return;
+    const result = await api(rc.action, { id: rc.id });
+    if (result.success) {
+        if (window._gfResetCallback) window._gfResetCallback();
+    } else {
+        window.customAlert('Reset fehlgeschlagen: ' + (result.error || 'Unbekannter Fehler'));
+    }
+}
+
 // Bridge
 window.renderGroupFormNice = renderGroupFormNice;
 window.getGroupFormNiceData = getGroupFormNiceData;
 window.gfSelectIcon = gfSelectIcon;
+window.gfResetField = gfResetField;
+window.gfResetAllFields = gfResetAllFields;
 window.gfResetIcon = gfResetIcon;
 window.gfRenderIconGrid = gfRenderIconGrid;
 window.gfLoadPhotos = gfLoadPhotos;

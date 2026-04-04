@@ -195,6 +195,27 @@ if ($action === 'movePlant') {
     exit;
 }
 
+if ($action === 'resetPlantFields') {
+    $id = $data['id'] ?? null;
+    if (!$id) { echo json_encode(['success' => false, 'error' => 'ID fehlt']); exit; }
+    $resettable = ['name','botanical_name','type','bloom_months','marker_icon','marker_color','marker_size','marker_icon_color','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen'];
+    $fields = $data['fields'] ?? $resettable;
+    $sets = [];
+    foreach ($fields as $f) {
+        if (in_array($f, $resettable)) {
+            $sets[] = "$f = NULL";
+        }
+    }
+    if (!$sets) { echo json_encode(['success' => true]); exit; }
+    try {
+        $db->prepare("UPDATE gd_user_plants SET " . implode(', ', $sets) . " WHERE id = ? AND user_id = ?")->execute([$id, $_SESSION['user_id']]);
+        echo json_encode(['success' => true]);
+    } catch (PDOException $e) {
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+    exit;
+}
+
 if ($action === 'duplicatePlant') {
     $plantId = $data['id'] ?? null;
     if (!$plantId) {
