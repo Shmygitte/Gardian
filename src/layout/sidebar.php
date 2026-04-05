@@ -10,6 +10,7 @@ $navItems = [
     ['id' => 'galerie',       'label' => 'Galerie',        'indexView' => true],
     ['id' => 'tabelle',       'label' => 'Tabelle',        'href' => 'tabelle.php'],
     ['id' => 'kalender',      'label' => 'Gartenkalender',  'href' => 'kalender.php'],
+    ['id' => 'gartentalk',    'label' => 'Gartentalk',      'href' => 'gartentalk.php'],
     ['id' => 'einstellungen', 'label' => 'Einstellungen',  'indexView' => true],
     ['id' => 'about',         'label' => 'About',          'indexView' => true],
     ['id' => 'admin',         'label' => 'Admin',          'indexView' => true, 'admin' => true],

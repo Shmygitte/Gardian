@@ -95,6 +95,13 @@ $moduleMap = [
     'adminUpdateIcon' => 'icons',
     'deleteIcon'      => 'icons',
 
+    // Pest Info (KI-generiert, read-only)
+    'getPestInfo' => 'pest-info',
+
+    // Gartenanalyse
+    'saveGartenanalyse'        => 'gartenanalyse',
+    'getGartenanalyseHistory'  => 'gartenanalyse',
+
     // Care / Kalender
     'getCareTasksList' => 'care',
     'saveCareTask'     => 'care',

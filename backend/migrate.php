@@ -194,6 +194,17 @@ function getMigrations() {
             'name' => '027_garden_config_sounds_enabled',
             'sql'  => "ALTER TABLE gd_user_garden_config ADD COLUMN sounds_enabled TINYINT(1) NOT NULL DEFAULT 0"
         ],
+        [
+            'name' => '028_create_gartenanalyse',
+            'sql'  => "CREATE TABLE IF NOT EXISTS gd_gartenanalyse (
+                id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                user_id    INT UNSIGNED NOT NULL,
+                content    TEXT NOT NULL,
+                created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                INDEX (user_id),
+                FOREIGN KEY (user_id) REFERENCES gd_users(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+        ],
     ];
 }
 
