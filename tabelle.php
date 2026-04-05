@@ -106,7 +106,7 @@ const BOOL_FIELDS   = new Set(['hardy','scented','cutflower','evergreen']);
 const SELECT_FIELDS = new Set(Object.keys(OPTS));
 const INHERIT_FIELDS = new Set(['height','location','spacing','care','water','hardy','scented',
     'cutflower','lifespan','features','evergreen','marker_icon','marker_color','marker_size','bloom_months']);
-const STECKBRIEF_FIELDS = ['type','bloom_months','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen','marker_icon','marker_color','marker_size'];
+const STECKBRIEF_FIELDS = ['type','bloom_months','height','location','spacing','care','water','hardy','scented','cutflower','lifespan','features','evergreen'];
 
 function inheritStatus(raw, fields) {
     let total = 0, own = 0;
@@ -262,6 +262,18 @@ function td(field, rt, id, html) {
     return `<td class="ed" data-f="${field}" data-rt="${rt}" data-id="${id}">${html}</td>`;
 }
 
+function groupCellDisp(g, field) {
+    // bloom_months hat eigene Benennung: raw = bloom_months, resolved = bloom_months_resolved
+    const resolved = field === 'bloom_months' ? g.bloom_months_resolved : g[field];
+    const hasResolved = resolved !== null && resolved !== undefined && resolved !== '';
+    if (!hasResolved) return '<span style="color:var(--text-muted)">—</span>';
+    if (!g.group_id) return fieldDisp(field, resolved);
+    const raw = field === 'bloom_months' ? g.bloom_months : g['raw_' + field];
+    const hasOwn = raw !== null && raw !== undefined && raw !== '';
+    if (hasOwn) return fieldDisp(field, resolved);
+    return `<span style="color:var(--text-muted);font-style:italic;" title="Vererbt vom Admin-Template">${fieldDisp(field, resolved)}</span>`;
+}
+
 // ---- Row builders ----
 function groupRow(g) {
     const accent = g.marker_color || 'var(--primary)';
@@ -273,22 +285,22 @@ function groupRow(g) {
         <td style="text-align:center;font-size:0.7rem;color:${gs.color};" title="${gs.title}">${gs.icon}</td>
         ${td('name','g',g.id,
             `<strong>${esc(g.name||'(Unbenannt)')}</strong>&nbsp;<span style="font-size:0.73rem;color:var(--text-muted);">${g.plants.length}&thinsp;Pfl.</span>`)}
-        ${td('type','g',g.id,        optLabel('type', g.type))}
-        ${td('height','g',g.id,      dash(g.height))}
-        ${td('location','g',g.id,    optLabel('location', g.location))}
-        ${td('spacing','g',g.id,     dash(g.spacing))}
-        ${td('care','g',g.id,        optLabel('care', g.care))}
-        ${td('water','g',g.id,       optLabel('water', g.water))}
-        ${td('hardy','g',g.id,       boolBadge(g.hardy))}
-        ${td('scented','g',g.id,     boolBadge(g.scented))}
-        ${td('cutflower','g',g.id,   boolBadge(g.cutflower))}
-        ${td('evergreen','g',g.id,   boolBadge(g.evergreen))}
-        ${td('lifespan','g',g.id,    optLabel('lifespan', g.lifespan))}
-        ${td('features','g',g.id,    dash(g.features))}
-        ${td('bloom_months','g',g.id,bloomDisp(g.bloom_months))}
-        ${td('marker_color','g',g.id,colorDisp(g.marker_color))}
-        ${td('marker_size','g',g.id, optLabel('marker_size', g.marker_size))}
-        ${td('marker_icon','g',g.id, dash(g.marker_icon))}
+        ${td('type','g',g.id,        groupCellDisp(g, 'type'))}
+        ${td('height','g',g.id,      groupCellDisp(g, 'height'))}
+        ${td('location','g',g.id,    groupCellDisp(g, 'location'))}
+        ${td('spacing','g',g.id,     groupCellDisp(g, 'spacing'))}
+        ${td('care','g',g.id,        groupCellDisp(g, 'care'))}
+        ${td('water','g',g.id,       groupCellDisp(g, 'water'))}
+        ${td('hardy','g',g.id,       groupCellDisp(g, 'hardy'))}
+        ${td('scented','g',g.id,     groupCellDisp(g, 'scented'))}
+        ${td('cutflower','g',g.id,   groupCellDisp(g, 'cutflower'))}
+        ${td('evergreen','g',g.id,   groupCellDisp(g, 'evergreen'))}
+        ${td('lifespan','g',g.id,    groupCellDisp(g, 'lifespan'))}
+        ${td('features','g',g.id,    groupCellDisp(g, 'features'))}
+        ${td('bloom_months','g',g.id,groupCellDisp(g, 'bloom_months'))}
+        ${td('marker_color','g',g.id,groupCellDisp(g, 'marker_color'))}
+        ${td('marker_size','g',g.id, groupCellDisp(g, 'marker_size'))}
+        ${td('marker_icon','g',g.id, groupCellDisp(g, 'marker_icon'))}
         <td style="color:var(--text-muted);">—</td>
         <td style="color:var(--text-muted);">—</td>
         <td style="color:var(--text-muted);">—</td>

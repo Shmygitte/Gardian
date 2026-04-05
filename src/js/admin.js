@@ -138,8 +138,11 @@ async function loadAdminGroups(openEditId) {
         </div>
         ${groupsHtml}`;
 
-    // Fotos für jede bestehende Gruppe laden
-    data.groups.forEach(g => gfLoadPhotos('gform-' + g.id, g.id));
+    // Fotos und Pest-Info für jede bestehende Gruppe laden
+    data.groups.forEach(g => {
+        gfLoadPhotos('gform-' + g.id, g.id);
+        gfLoadPestInfo('gform-' + g.id, g.id);
+    });
 
     // Nach Save: bearbeitetes Formular wieder aufklappen
     if (openEditId) {

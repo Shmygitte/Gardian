@@ -194,6 +194,25 @@ function renderPflanzenListe(data) {
                         <button class="c-btn c-btn--text" style="font-size:0.8rem;" onclick="document.getElementById('file-group-${group.id}').click()">+ Foto hochladen</button>
                     </div>
                 </div>
+                <div style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
+                    <button class="c-btn c-btn--text" style="font-size:0.78rem; padding:4px 10px; border:1px solid var(--border); border-radius:4px;" onclick="toggleGroupPanel('steckbrief-${group.id}')">📋 Steckbrief</button>
+                    <button class="c-btn c-btn--text" style="font-size:0.78rem; padding:4px 10px; border:1px solid var(--border); border-radius:4px;" onclick="toggleGroupPanel('pflege-${group.id}'); loadPestPanel('pflege-${group.id}', ${group.group_id || null}, 'pflegetipps')">🌱 Pflegetipps</button>
+                    <button class="c-btn c-btn--text" style="font-size:0.78rem; padding:4px 10px; border:1px solid var(--border); border-radius:4px;" onclick="toggleGroupPanel('schaedlinge-${group.id}'); loadPestPanel('schaedlinge-${group.id}', ${group.group_id || null}, 'schaedlinge')">🐛 Schädlinge</button>
+                </div>
+                <div id="steckbrief-${group.id}" style="display:none; background:var(--bg-app); border:1px solid var(--border); border-left:3px solid var(--primary); border-radius:6px; padding:12px; margin-bottom:12px;">
+                    <p style="font-size:0.68rem; font-weight:700; color:var(--primary); letter-spacing:0.06em; margin-bottom:8px;">📋 STECKBRIEF</p>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px 16px; font-size:0.82rem;">
+                        ${renderSteckbriefReadonly(group)}
+                    </div>
+                </div>
+                <div id="pflege-${group.id}" style="display:none; background:var(--bg-app); border:1px solid var(--border); border-left:3px solid #4CAF50; border-radius:6px; padding:12px; margin-bottom:12px;">
+                    <p style="font-size:0.68rem; font-weight:700; color:#4CAF50; letter-spacing:0.06em; margin-bottom:8px;">🌱 PFLEGETIPPS</p>
+                    <div id="pflege-content-${group.id}" style="font-size:0.82rem; line-height:1.5;"><p style="color:var(--text-muted);">Lade...</p></div>
+                </div>
+                <div id="schaedlinge-${group.id}" style="display:none; background:var(--bg-app); border:1px solid var(--border); border-left:3px solid #e67e22; border-radius:6px; padding:12px; margin-bottom:12px;">
+                    <p style="font-size:0.68rem; font-weight:700; color:#e67e22; letter-spacing:0.06em; margin-bottom:8px;">🐛 SCHÄDLINGE</p>
+                    <div id="schaedlinge-content-${group.id}" style="font-size:0.82rem; line-height:1.5;"><p style="color:var(--text-muted);">Lade...</p></div>
+                </div>
                 <div style="border-top:1px solid var(--border); padding-top:10px;">
                     <p style="font-size:0.85rem; font-weight:700; color:var(--text-main); margin-bottom:6px;">BLÜTEZEIT & BEOBACHTUNGEN</p>
                     <div id="bloom-group-${group.id}"><p style="font-size:0.8rem;color:var(--text-muted);">Lade...</p></div>
@@ -282,6 +301,87 @@ function toggleAccordion(id) {
     el.style.display = open ? 'none' : 'block';
     if (icon) icon.textContent = open ? '▼' : '▲';
 }
+
+// ========================
+// GRUPPEN-INFO-PANELS
+// ========================
+
+const STECKBRIEF_LABELS = {
+    height: '📏 Höhe', location: '☀️ Standort', spacing: '↔️ Abstand',
+    care: '🔧 Pflege', water: '💧 Wasser', hardy: '❄️ Frostfest',
+    scented: '🌺 Duft', cutflower: '✂️ Schnittblume', lifespan: '📅 Lebensdauer',
+    features: '⭐ Besonderheiten'
+};
+
+function renderSteckbriefReadonly(group) {
+    return Object.entries(STECKBRIEF_LABELS).map(([key, label]) => {
+        let val = group[key];
+        if (val === null || val === undefined || val === '') val = '—';
+        else if (key === 'hardy' || key === 'scented' || key === 'cutflower') val = val == 1 ? 'Ja' : 'Nein';
+        return `<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border);">
+            <span style="color:var(--text-muted);font-size:0.78rem;">${label}</span>
+            <span style="font-weight:500;">${val}</span>
+        </div>`;
+    }).join('');
+}
+
+function parseMd(text) {
+    const lines = text.split('\n');
+    let html = '', inList = false;
+    for (const line of lines) {
+        const trimmed = line.trim();
+        const listMatch = trimmed.match(/^[-*]\s+(.+)/);
+        if (listMatch) {
+            if (!inList) { html += '<ul style="margin:4px 0 8px 16px;padding:0;">'; inList = true; }
+            html += `<li style="margin-bottom:2px;">${trimmed.substring(2)}</li>`;
+        } else {
+            if (inList) { html += '</ul>'; inList = false; }
+            if (/^### /.test(trimmed)) html += `<h4 style="font-size:0.85rem;margin:8px 0 4px;color:var(--text-main);">${trimmed.substring(4)}</h4>`;
+            else if (/^## /.test(trimmed)) html += `<h3 style="font-size:0.9rem;margin:10px 0 4px;color:var(--text-main);">${trimmed.substring(3)}</h3>`;
+            else if (/^# /.test(trimmed)) html += `<h2 style="font-size:0.95rem;margin:10px 0 6px;color:var(--text-main);">${trimmed.substring(2)}</h2>`;
+            else if (trimmed === '') html += '<br>';
+            else html += `<p style="margin:2px 0;">${trimmed}</p>`;
+        }
+    }
+    if (inList) html += '</ul>';
+    return html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+}
+
+function toggleGroupPanel(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+const _pestLoaded = new Set();
+async function loadPestPanel(panelId, groupId, field) {
+    if (!groupId || _pestLoaded.has(panelId)) return;
+    _pestLoaded.add(panelId);
+    const monat = new Date().getMonth() + 1;
+    const prefix = field === 'pflegetipps' ? 'pflege' : 'schaedlinge';
+    const groupIdStr = panelId.replace(prefix + '-', '');
+    const contentEl = document.getElementById(prefix + '-content-' + groupIdStr);
+    if (!contentEl) return;
+    try {
+        const res = await fetch('backend/api.php', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'getPestInfo', group_id: groupId, monat })
+        });
+        const data = await res.json();
+        if (data.success && data.pest_info && data.pest_info[field]) {
+            const html = parseMd(data.pest_info[field]);
+            contentEl.innerHTML = `<p style="white-space:pre-line;">${html}</p>`;
+        } else {
+            contentEl.innerHTML = '<p style="color:var(--text-muted);">Keine Daten für diesen Monat.</p>';
+        }
+    } catch {
+        contentEl.innerHTML = '<p style="color:var(--danger);">Fehler beim Laden.</p>';
+    }
+}
+
+window.toggleGroupPanel = toggleGroupPanel;
+window.loadPestPanel = loadPestPanel;
+window.renderSteckbriefReadonly = renderSteckbriefReadonly;
 
 // ========================
 // BLÜTEZEIT & BEOBACHTUNGEN
@@ -495,9 +595,11 @@ function openGruppeBearbeitenModal(groupId) {
         if (updated) {
             const body = document.getElementById('modal-neue-gruppe-body');
             body.innerHTML = renderGroupFormNice(updated, formId, `saveGruppeBearbeiten(${groupId}, '${formId}')`, resetConfig);
+            if (updated.group_id) gfLoadPestInfo(formId, updated.group_id);
         }
     };
     body.innerHTML = renderGroupFormNice(group, formId, `saveGruppeBearbeiten(${groupId}, '${formId}')`, resetConfig);
+    if (group.group_id) gfLoadPestInfo(formId, group.group_id);
     document.getElementById('modal-neue-gruppe-title').textContent = 'Pflanzengruppe bearbeiten';
     document.getElementById('modal-neue-gruppe').style.display = 'flex';
 }
