@@ -73,7 +73,7 @@ function renderGroupFormNice(data = {}, formId, onSubmit, resetConfig = null) {
             </div>
             <div style="${GF_SECTION_GREEN}">
                 <label class="c-gf__label" style="${GF_LABEL_STYLE}">Blütezeit</label>
-                ${renderBloomToggle('', parseInt(v('bloom_months')) || 0, 'bloom_months')}
+                ${renderBloomToggle('', parseInt(v('bloom_months_resolved') || v('bloom_months')) || 0, 'bloom_months')}
             </div>
             <label style="${GF_SECTION_GREEN}background:var(--bg-app);border:1px solid var(--border);border-left:3px solid #4CAF50;border-radius:6px;padding:8px 10px;padding-left:10px;display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.82rem;">
                 <input type="checkbox" name="evergreen" id="${formId}-evergreen" ${v('evergreen') == 1 ? 'checked' : ''}
@@ -119,11 +119,18 @@ function renderGroupFormNice(data = {}, formId, onSubmit, resetConfig = null) {
         <div style="background:var(--bg-app);border:1px solid var(--border);border-left:3px solid var(--primary);border-radius:6px;padding:12px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
                 <span style="font-size:0.68rem;font-weight:700;color:var(--primary);letter-spacing:0.06em;">📋 STECKBRIEF</span>
-                ${resetAllBtn}
+                <div style="display:flex;gap:6px;align-items:center;">
+                    <button type="button" onclick="gfFillFromAI('${formId}')" style="font-size:0.68rem;color:white;background:var(--primary);border:1px solid var(--primary);border-radius:4px;padding:3px 8px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:4px;" onmouseenter="this.style.opacity='0.85'" onmouseleave="this.style.opacity='1'">🤖 KI ausfüllen</button>
+                    ${resetAllBtn}
+                </div>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                 ${steckbriefFields}
             </div>
+        </div>
+        <div id="${formId}-pest-info" style="display:none;background:var(--bg-app);border:1px solid var(--border);border-left:3px solid #e67e22;border-radius:6px;padding:12px;margin-top:12px;">
+            <span style="font-size:0.68rem;font-weight:700;color:#e67e22;letter-spacing:0.06em;" id="${formId}-pest-title"></span>
+            <div id="${formId}-pest-content" style="margin-top:8px;font-size:0.82rem;color:var(--text-main);display:flex;flex-direction:column;gap:10px;"></div>
         </div>`;
 
     // Icon-Grid nach DOM-Insert befüllen
@@ -284,7 +291,142 @@ async function gfResetAllFields(formId) {
     }
 }
 
+// ========================
+// Pest Info (KI-generiert, read-only)
+// ========================
+const MONATSNAMEN = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+
+function _gfParseMd(text) {
+    const lines = text.split('\n');
+    let html = '', inList = false;
+    for (const line of lines) {
+        const trimmed = line.trim();
+        const listMatch = trimmed.match(/^[-*]\s+(.+)/);
+        if (listMatch) {
+            if (!inList) { html += '<ul style="margin:4px 0 8px 16px;padding:0;">'; inList = true; }
+            html += `<li style="margin-bottom:2px;">${trimmed.substring(2)}</li>`;
+        } else {
+            if (inList) { html += '</ul>'; inList = false; }
+            if (/^### /.test(trimmed)) html += `<h4 style="font-size:0.85rem;margin:8px 0 4px;color:var(--text-main);">${trimmed.substring(4)}</h4>`;
+            else if (/^## /.test(trimmed)) html += `<h3 style="font-size:0.9rem;margin:10px 0 4px;color:var(--text-main);">${trimmed.substring(3)}</h3>`;
+            else if (/^# /.test(trimmed)) html += `<h2 style="font-size:0.95rem;margin:10px 0 6px;color:var(--text-main);">${trimmed.substring(2)}</h2>`;
+            else if (trimmed === '') html += '<br>';
+            else html += `<p style="margin:2px 0;">${trimmed}</p>`;
+        }
+    }
+    if (inList) html += '</ul>';
+    return html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+}
+
+function gfLoadPestInfo(formId, groupId) {
+    const container = document.getElementById(formId + '-pest-info');
+    if (!container || !groupId) return;
+    const monat = new Date().getMonth() + 1;
+    api('getPestInfo', { group_id: groupId, monat })
+    .then(data => {
+        if (!data.success || !data.pest_info) {
+            container.style.display = 'none';
+            return;
+        }
+        const info = data.pest_info;
+        const title = document.getElementById(formId + '-pest-title');
+        const content = document.getElementById(formId + '-pest-content');
+        title.textContent = `🐛 Aktuell im ${MONATSNAMEN[monat - 1]}`;
+        let html = '';
+        if (info.pflegetipps) {
+            const pt = _gfParseMd(info.pflegetipps);
+            html += `<div><span style="font-weight:600;font-size:0.75rem;">🌱 Pflegetipps</span><div style="margin:4px 0 0;line-height:1.5;">${pt}</div></div>`;
+        }
+        if (info.schaedlinge) {
+            const sc = _gfParseMd(info.schaedlinge);
+            html += `<div><span style="font-weight:600;font-size:0.75rem;">🐛 Schädlinge & Krankheiten</span><div style="margin:4px 0 0;line-height:1.5;">${sc}</div></div>`;
+        }
+        content.innerHTML = html;
+        container.style.display = '';
+    });
+}
+
+// ========================
+// KI-Steckbrief ausfüllen
+// ========================
+
+async function gfFillFromAI(formId) {
+    const form = document.getElementById(formId);
+    if (!form) return;
+    const nameEl = form.querySelector('[name="name"]');
+    const plantName = nameEl?.value?.trim();
+    if (!plantName) {
+        window.customAlert('Bitte zuerst einen Pflanzennamen eingeben.');
+        return;
+    }
+
+    const btn = form.querySelector('[onclick*="gfFillFromAI"]');
+    const origText = btn?.innerHTML;
+    if (btn) { btn.innerHTML = '⏳ Lade…'; btn.disabled = true; }
+
+    try {
+        const res = await fetch('http://localhost:5678/webhook/steckbrief-ki', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: plantName })
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const raw = await res.json();
+        const data = raw.output || raw;
+
+        // Einfache Felder mappen
+        const fieldMap = {
+            lat_name: 'botanical_name',
+            type: 'type',
+            height: 'height',
+            location: 'location',
+            spacing: 'spacing',
+            hardy: 'hardy',
+            scented: 'scented',
+            care: 'care',
+            water: 'water'
+        };
+        for (const [src, target] of Object.entries(fieldMap)) {
+            if (data[src] == null) continue;
+            const el = form.querySelector(`[name="${target}"]`);
+            if (el) el.value = String(data[src]);
+        }
+
+        // Evergreen-Checkbox
+        if (data.evergreen != null) {
+            const eg = form.querySelector('[name="evergreen"]');
+            if (eg) eg.checked = !!Number(data.evergreen);
+        }
+
+        // Blütezeit: bloom_start/bloom_end → Bitmask + Toggle-Buttons aktualisieren
+        if (data.bloom_start != null && data.bloom_end != null) {
+            let bitmask = 0;
+            const start = Number(data.bloom_start);
+            const end = Number(data.bloom_end);
+            for (let m = start; m <= end; m++) {
+                bitmask |= (1 << (m - 1));
+            }
+            const hidden = form.querySelector('[name="bloom_months"]');
+            if (hidden) hidden.value = bitmask;
+            // Toggle-Buttons visuell aktualisieren
+            const btns = hidden?.closest('div')?.querySelectorAll('button[data-active]');
+            if (btns) btns.forEach((b, i) => {
+                const active = (bitmask >> i) & 1;
+                b.dataset.active = String(active);
+                b.style.background = active ? 'var(--primary)' : 'var(--bg-app)';
+                b.style.color = active ? 'white' : 'var(--text-main)';
+            });
+        }
+    } catch (err) {
+        window.customAlert?.('KI-Abfrage fehlgeschlagen: ' + err.message) || alert('KI-Abfrage fehlgeschlagen: ' + err.message);
+    } finally {
+        if (btn) { btn.innerHTML = origText; btn.disabled = false; }
+    }
+}
+
 // Bridge
+window.gfFillFromAI = gfFillFromAI;
+window.gfLoadPestInfo = gfLoadPestInfo;
 window.renderGroupFormNice = renderGroupFormNice;
 window.getGroupFormNiceData = getGroupFormNiceData;
 window.gfSelectIcon = gfSelectIcon;
